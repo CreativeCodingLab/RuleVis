@@ -9,35 +9,25 @@ d3.select("body")
 // Set up the SVG attributes
 var w = 600;
 var h = 600;
-/*
-// Find the window width to determine how far svg needs to be translated
-var windowW = document.documentElement.clientWidth || document.documentElement.body.clientWidth;
-var translateSVGx = windowW/2 - w/2;
 
-// Append an svg to the body and center it horizontally
-var svg = d3.select("body").append("svg")
-                .attr("width", w)
-                .attr("height", h)
-                .attr("transform", "translate(" + translateSVGx + ", 0)");
-*/
-//--------------------
+// Create container div for styling purposes
 var main = d3.select('body').append('div')
                 .attr('id', 'main')
                 .style('text-align', 'center');
 
+// Create parent div for svg
 var svgDiv = d3.select('#main').append('div')
                 .attr('id', 'svgDiv')                
                 .style('width', w + "px")
                 .style('height', h + "px")
                 .style('display', 'inline-block');
 
+// Append svg to the div
 var svg = d3.select("#svgDiv").append("svg")
                 .attr('width', w + 'px')
                 .attr('height', h + 'px')
                 .attr('id', 'svg');
 
-
-//-------------
 
 // Manual dataset - sanity checks & experimentation
 var dataset = [ 5, 10, 15, 20, 25 ];
