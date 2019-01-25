@@ -1,13 +1,16 @@
+/* Page heading */
 h1 {
+    padding-top: 50px;
     color: black;
     font-family: 'Helvetica Neue', sans-serif;
-    font-size: 27px;
+    font-size: 30px;
     font-weight: bold;
     letter-spacing: -1px;
     line-height: 1;
     text-align: center;
 }
 
+/* Page subheading */
 h2 {
     color: black;
     font-family: 'Helvetica Neue', sans-serif;
@@ -16,4 +19,36 @@ h2 {
     letter-spacing: -1px;
     line-height: 1;
     text-align: center;
+}
+
+p {
+    color: black;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 20px;
+    font-weight: medium;
+    letter-spacing: 0px;
+    line-height: 1;
+    text-align: center;
+}
+
+/* Some style formatting for text box */
+input[type=text] {
+    width: 50%;
+    padding: 12px 12px;
+    margin: 15px 0;
+    box-sizing: border-box;
+    border: 2px solid black;
+    border-radius: 20px;
+    background-color: whitesmoke;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    line-height: 1;
+}
+
+/* Removes blue highlighting around text box*/
+/*  Note - May create an accessibilty issue on different platforms*/
+input[type=text]:focus {
+    outline:none;
 }
