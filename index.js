@@ -14,7 +14,7 @@ var main = d3.select('body').append('div')
 
 
 // Load grammar library
-tinynlp = require('https://cdn.jsdelivr.net/gh/lagodiuk/earley-parser-js@master/earley-oop.js').catch(() => window.tinynlp)
+//tinynlp = require('https://cdn.jsdelivr.net/gh/lagodiuk/earley-parser-js@master/earley-oop.js').catch(() => window.tinynlp)
 
 // Initialize pattern grammar
 pattern = new tinynlp.Grammar([
@@ -141,7 +141,7 @@ simplify = (chart) => {
     }
     return simplify(res[0])
   }
-
+/*
 Agent = {
     function Agent(idx) {
     this.interface = []
@@ -157,6 +157,7 @@ Site = {
     }
     return Site
 }
+*/
 // Dummy function just to explore the usage of input box value
 // will contain dynamic Visualization
 function visualize(input) {
