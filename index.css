@@ -17,3 +17,7 @@ h2 {
     line-height: 1;
     text-align: center;
 }
+
+#svgDiv {
+    display: inline-block;
+}

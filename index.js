@@ -7,24 +7,18 @@ d3.select("body")
     .text("Rule-based modeling for complex biological systems");
 
 // Set up the SVG attributes
-var svgW = 500;
-var svgH = 500;
+var w = 600;
+var h = 600;
 
+// Find the window width to determine how far svg needs to be translated
 var windowW = document.documentElement.clientWidth || document.documentElement.body.clientWidth;
+var translateSVGx = windowW/2 - w/2;
 
-var windowH = document.documentElement.clientHeight || document.documentElement.body.clientHeight;
-
-console.log(windowW);
-
-// Create a div that holds 
-var svgDiv = d3.select("body").append("div")
-                .attr("id", "svgDiv")
-                .attr("width", svgW)
-                .attr("height", svgH);
-var svg = svgDiv.append("svg")
-                .attr("width", svgW)
-                .attr("height", svgH)
-                .attr("transform", "translate(" + (windowW/2 - svgW/2) + ", 0)");
+// Append an svg to the body and center it horizontally
+var svg = d3.select("body").append("svg")
+                .attr("width", w)
+                .attr("height", h)
+                .attr("transform", "translate(" + translateSVGx + ", 0)");
 
 // Manual dataset - sanity checks & experimentation
 var dataset = [ 5, 10, 15, 20, 25 ];
@@ -44,7 +38,7 @@ circles
     .attr("cx", function(d, i) {
         return (i * 50) + 25;
     })
-    .attr("cy", svgH/2)
+    .attr("cy", h/2)
     .attr("r", function(d) {
         if (d == "agent") {
             return 10;
