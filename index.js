@@ -12,6 +12,7 @@ var main = d3.select('body').append('div')
                 .attr('id', 'main')
                 .style('text-align', 'center');
 
+// DEBUG TOOL: Prints expression JSON from text box
 var expression = main.append('p')
 
 // Input text box for expression
