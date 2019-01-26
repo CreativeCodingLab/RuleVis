@@ -5,7 +5,7 @@ body.append("h2").text("Rule-based modeling for complex biological systems");
 
 // Set up the SVG attributes
 var w = 600;
-var h = 600;
+var h = 400;
 
 // Create container div for styling purposes
 var main = d3.select('body').append('div')
@@ -36,43 +36,44 @@ inputBox.on("input", function() {
     var coloragent = '#40bf80';
 
     // force directed graph - currently only nodes are implemented
-    const manuallinks = [];
+    const manuallinks = []; // Add links from json
     const manualnodes = jsonExpression.agents.map(d => Object.create(d));
 
     const simulation = d3.forceSimulation(manualnodes)
-      .force("link", d3.forceLink(manuallinks))
-      .force("charge", d3.forceManyBody())
-      .force("center", d3.forceCenter(w / 2, h / 2));
+                          .force("link", d3.forceLink(manuallinks))
+                          .force("charge", d3.forceManyBody())
+                          .force("center", d3.forceCenter(w / 2, h / 2));
 
-     const link = svg.append("g")
-       .attr("stroke", "#999")
-       .attr("stroke-opacity", 0.6)
-     .selectAll("line")
-     .data(manuallinks)
-     .enter().append("line")
-       .attr("stroke-width", d => Math.sqrt(d.value));
+    const link = svg.append("g")
+                    .attr("stroke", "#999")
+                    .attr("stroke-opacity", 0.6)
+                    .selectAll("line")
+                    .data(manuallinks)
+                    .enter()
+                    .append("line")
+                    .attr("stroke-width", d => Math.sqrt(d.value));
 
-       const node = svg.append("g")
-       .attr("stroke", "#fff")
-       .attr("stroke-width", 1.5)
-     .selectAll("circle")
-     .data(manualnodes)
-     .enter().append("circle")
-       .attr("r", 5)
-       .attr("fill", coloragent);
+    const node = svg.append("g")
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 1.5)
+                    .selectAll("circle")
+                    .data(manualnodes)
+                    .enter()
+                    .append("circle")
+                    .attr("r", 20)
+                    .attr("fill", coloragent);
 
+     simulation.on("tick", () => {
+                     link
+                         .attr("x1", d => d.source.x)
+                         .attr("y1", d => d.source.y)
+                         .attr("x2", d => d.target.x)
+                         .attr("y2", d => d.target.y);
 
-       simulation.on("tick", () => {
-     link
-         .attr("x1", d => d.source.x)
-         .attr("y1", d => d.source.y)
-         .attr("x2", d => d.target.x)
-         .attr("y2", d => d.target.y);
-
-     node
-         .attr("cx", d => d.x)
-         .attr("cy", d => d.y);
-   });
+                     node
+                         .attr("cx", d => d.x)
+                         .attr("cy", d => d.y);
+                     });
 
 });
 
