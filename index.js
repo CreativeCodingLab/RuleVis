@@ -25,6 +25,19 @@ var inputBox = inputDiv.append('input')
                     .style('text-align', 'center');
                     //.attr('placeholder', 'expression');
 
+                    // Create parent div for svg
+                    var svgDiv = d3.select('#main').append('div')
+                                    .attr('id', 'svgDiv')
+                                    .style('width', w + "px")
+                                    .style('height', h + "px")
+                                    .style('display', 'inline-block');
+
+                    // Append svg to the div
+                    var svg = d3.select("#svgDiv").append("svg")
+                                    .attr('width', w + 'px')
+                                    .attr('height', h + 'px')
+                                    .attr('id', 'svg');
+
 var jsonExpression = '';
 inputBox.on("input", function() {
     jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
@@ -85,19 +98,6 @@ function getJSON(input) {
     });
     return expression.text();
 };
-
-// Create parent div for svg
-var svgDiv = d3.select('#main').append('div')
-                .attr('id', 'svgDiv')
-                .style('width', w + "px")
-                .style('height', h + "px")
-                .style('display', 'inline-block');
-
-// Append svg to the div
-var svg = d3.select("#svgDiv").append("svg")
-                .attr('width', w + 'px')
-                .attr('height', h + 'px')
-                .attr('id', 'svg');
 
 // Default Visualization
 
