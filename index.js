@@ -13,7 +13,7 @@ var main = d3.select('body').append('div')
                 .style('text-align', 'center');
 
 // DEBUG TOOL: Prints expression JSON from text box
-var expression = main.append('p')
+var expression = main.append('p');
 
 // Input text box for expression
 var inputDiv = main.append('div')
@@ -26,26 +26,34 @@ var inputBox = inputDiv.append('input')
                     .style('text-align', 'center');
                     //.attr('placeholder', 'expression');
 
-                    // Create parent div for svg
-                    var svgDiv = d3.select('#main').append('div')
-                                    .attr('id', 'svgDiv')
-                                    .style('width', w + "px")
-                                    .style('height', h + "px")
-                                    .style('display', 'inline-block');
+// Create parent div for svg
+var svgDiv = d3.select('#main').append('div')
+                .attr('id', 'svgDiv')
+                .style('width', w + "px")
+                .style('height', h + "px")
+                .style('display', 'inline-block');
 
-                    // Append svg to the div
-                    var svg = d3.select("#svgDiv").append("svg")
-                                    .attr('width', w + 'px')
-                                    .attr('height', h + 'px')
-                                    .attr('id', 'svg');
+// Append svg to the div
+var svg = d3.select("#svgDiv").append("svg")
+                .attr('width', w + 'px')
+                .attr('height', h + 'px')
+                .attr('id', 'svg');
 
 var jsonExpression = '';
 inputBox.on("input", function() {
     jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
+    visualizeExpression(jsonExpression);
     console.log(jsonExpression);
     //console.log(jsonExpression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?
+
+});
+
+function visualizeExpression(expression) {
+
+    // Clear svg before loading new graph (accommodates for added text)
+    d3.selectAll("svg > *").remove();
 
     var coloragent = '#40bf80';
 
@@ -88,8 +96,7 @@ inputBox.on("input", function() {
                          .attr("cx", d => d.x)
                          .attr("cy", d => d.y);
                      });
-
-});
+};
 
 // Prints expression to expression
 function getJSON(input) {
