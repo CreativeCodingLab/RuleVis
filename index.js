@@ -109,8 +109,9 @@ function visualizeExpression(expression) {
                     .enter()
                         .append("circle")
                         .attr("r", d => d.parent === undefined ? 27 : 13)
-                        .attr("fill", d => d.parent === undefined ? coloragent : colorsite)
-                        .attr("stroke", "#fff")
+                        .attr("fill", d => d.parent === undefined ? coloragent :
+                                           d.bond == undefined ? "#fff" : colorsite)
+                        .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
                         .attr("stroke-width", 1.5)
                         .call(simulation.drag);
 
