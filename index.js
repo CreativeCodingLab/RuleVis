@@ -86,11 +86,6 @@ function visualizeExpression(expression) {
       .force("charge", d3.forceManyBody())
       .force("center", d3.forceRadial(100, w / 2, h / 2));*/
 
-    // force directed graph
-    /* const manuallinks = [...links.map(([src,tar]) => ({'source': getNodeId(src),
-                                                       'target': getNodeId(tar)}))]; */
-    // const manualnodes = [...nodes.map(u => ({...u}))]; // deep copy
-
     // CoLa graph - using constraint based optimization
     const simulation = cola.d3adaptor(d3)
         .size([600,400])
@@ -141,9 +136,3 @@ function getJSON(input) {
     });
     return expression.text();
 };
-
-// Default Visualization
-
-// TODO: Force directed graph based on input received
-//  POTENTIAL INTERMEDIATE STEP: Base graphics for nodes, links, etc to mirror
-//      figure 5 in Kappa manual (create a 'node' etc)
