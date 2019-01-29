@@ -56,6 +56,7 @@ function visualizeExpression(expression) {
     d3.selectAll("svg > *").remove();
 
     var coloragent = '#40bf80';
+    var colorinterface = '#28A8A8';
 
     // force directed graph - currently only nodes are implemented
     const manuallinks = []; // Add links from json
