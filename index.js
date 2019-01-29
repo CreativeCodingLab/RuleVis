@@ -76,17 +76,28 @@ function visualizeExpression(expression) {
                                 'isParent': true
                                }))
 
-    console.log(nodes)
+
+
+    // force directed graph
+    /*console.log(nodes)
     const simulation = d3.forceSimulation(nodes)
       .force("bonds", d3.forceLink(bonds).strength(0.1).distance(100))
       .force("site", d3.forceLink(parents).strength(0.9).distance(20))
       .force("charge", d3.forceManyBody())
-      .force("center", d3.forceRadial(100, w / 2, h / 2));
+      .force("center", d3.forceRadial(100, w / 2, h / 2));*/
 
     // force directed graph
     /* const manuallinks = [...links.map(([src,tar]) => ({'source': getNodeId(src),
                                                        'target': getNodeId(tar)}))]; */
     // const manualnodes = [...nodes.map(u => ({...u}))]; // deep copy
+
+    // CoLa graph - using constraint based optimization
+    const simulation = cola.d3adaptor(d3)
+        .size([600,400])
+        .nodes(nodes)
+        .links([...bonds, ...parents])
+        .linkDistance(d => d.isParent ? 20 : 100)
+        .avoidOverlaps(true);
 
     const link = svg.append("g")
                     .selectAll("line")
@@ -102,17 +113,23 @@ function visualizeExpression(expression) {
                     .data(nodes)
                     .enter()
                         .append("circle")
-                        .attr("r", d => d.parent === undefined ? 30 : 13)
+                        .attr("r", d => d.parent === undefined ? 27 : 13)
                         .attr("fill", d => d.parent === undefined ? coloragent : colorsite)
                         .attr("stroke", "#fff")
                         .attr("stroke-width", 1.5)
+                        .call(simulation.drag);
+
+     simulation.start(30,30,30);
 
      simulation.on("tick", () => {
                      link
-                         .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-                         .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                         .attr("x1", d => d.source.x)
+                         .attr("y1", d => d.source.y)
+                         .attr("x2", d => d.target.x)
+                         .attr("y2", d => d.target.y);
                      node
-                         .attr("cx", d => d.x).attr("cy", d => d.y);
+                         .attr("cx", d => d.x)
+                         .attr("cy", d => d.y);
                      });
 };
 
