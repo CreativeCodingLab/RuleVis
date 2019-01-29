@@ -76,8 +76,6 @@ function visualizeExpression(expression) {
                                 'isParent': true
                                }))
 
-
-
     // force directed graph
     /*console.log(nodes)
     const simulation = d3.forceSimulation(nodes)
