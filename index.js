@@ -55,8 +55,8 @@ function visualizeExpression(expression) {
     // Clear svg before loading new graph (accommodates for added text)
     d3.selectAll("svg > *").remove();
 
-    var coloragent = '#40bf80';
-    var colorsite = '#28A8A8';
+    var coloragent = '#3eb78a';
+    var colorsite = '#fcc84e';
 
     let nodes = [...jsonExpression.agents,
                  ...jsonExpression.sites]
@@ -108,11 +108,15 @@ function visualizeExpression(expression) {
                     .data(nodes)
                     .enter()
                         .append("circle")
-                        .attr("r", d => d.parent === undefined ? 27 : 13)
+                        .attr("r", d => d.parent === undefined ? 27 : 12)
                         .attr("fill", d => d.parent === undefined ? coloragent :
                                            d.bond == undefined ? "#fff" : colorsite)
                         .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
-                        .attr("stroke-width", 1.5)
+                        .attr("stroke-width", 3)
+                        .attr("stroke-opacity", d => d.parent === undefined ? 1 :
+                                                    d.bond == undefined ? 0.7 : 1)
+                        .attr("fill-opacity", d => d.parent === undefined ? 1 :
+                                                   d.bond == undefined ? 0.5 : 1)
                         .call(simulation.drag);
 
      simulation.start(30,30,30);
