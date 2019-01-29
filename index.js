@@ -44,13 +44,13 @@ inputBox.on("input", function() {
     let input = tokenize(inputBox.property('value')),
           // [...inputBox.property('value')]
         chart = tinynlp.parse(input, pattern, 'start')
-    console.log(input)
+    // console.log(input)
 
     let expression = simplify(chart)
     paragraph.text( () => JSON.stringify(expression, null, 2));
 
     visualizeExpression(expression);
-    console.log(expression);
+    // console.log(expression);
     //console.log(expression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?

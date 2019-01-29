@@ -33,21 +33,17 @@ let tokenize = (raw) => {
     return str.split(re).filter(s => s)
 }
 pattern.terminalSymbols = (token) => {
-    console.log(token)
-
-    if (token.match(regex.identifier)) {
-        console.log('identifier')
+    // console.log(token)
+    if (token.match(regex.identifier)) { // console.log('identifier')
         return ['agent-name', 'site-name', 'state-name']
     }
-    else if (token.match(regex.digits)) {
-        console.log('number')
+    else if (token.match(regex.digits)) { // console.log('number')
         return ['number']
     }
-    else {
-        console.log('something else')
+    else { // console.log('something else')
         return [token]
     }
-        // throw new Error('Bad token: ' + token)
+    // throw new Error('Bad token: ' + token)
 }
 
 let simplify = (chart) => {
