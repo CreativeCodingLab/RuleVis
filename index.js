@@ -102,7 +102,7 @@ function visualizeExpression(expression) {
 // Prints expression to expression
 function getJSON(input) {
     expression.text( () => {
-      let chart = tinynlp.parse([...input], pattern, 'start')
+      let chart = tinynlp.parse([...input].filter(c => c != ' '), pattern, 'start')
       return JSON.stringify(simplify(chart), null, 2)
     });
     return expression.text();
