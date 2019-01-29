@@ -75,7 +75,8 @@ function visualizeExpression(expression) {
         parents = jsonExpression.sites
                     .map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
-                                'isParent': true
+                                'isParent': true,
+                                'sibCount': nodes[u.parent].siteCount,
                                }))
 
     // force directed graph
@@ -91,7 +92,8 @@ function visualizeExpression(expression) {
         .size([600,400])
         .nodes(nodes)
         .links([...bonds, ...parents])
-        .linkDistance(d => d.isParent ? 20 : 100)
+        .linkDistance(d => !d.isParent ? 100 :
+                            d.sibCount > 4 ? 50 : 20)
         .avoidOverlaps(true);
 
     const link = svg.append("g")
@@ -108,7 +110,8 @@ function visualizeExpression(expression) {
                     .data(nodes)
                     .enter()
                         .append("circle")
-                        .attr("r", d => d.parent === undefined ? 27 : 13)
+                        .attr("r", d => d.siteCount === undefined ? 13 /*:
+                                        d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
                         .attr("fill", d => d.parent === undefined ? coloragent :
                                            d.bond == undefined ? "#fff" : colorsite)
                         .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
