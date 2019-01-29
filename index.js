@@ -56,11 +56,11 @@ function visualizeExpression(expression) {
     d3.selectAll("svg > *").remove();
 
     var coloragent = '#40bf80';
-    var colorinterface = '#28A8A8';
+    var colorsite = '#28A8A8';
 
     let nodes = [...jsonExpression.agents,
                  ...jsonExpression.sites]
-    
+
     let getIndex = (siteId) => {
       let [a,b] = siteId
       return jsonExpression.agents.length +
@@ -75,11 +75,11 @@ function visualizeExpression(expression) {
                                 'target': getIndex(u.id),
                                 'isParent': true
                                }))
-    
+
     console.log(nodes)
     const simulation = d3.forceSimulation(nodes)
-      .force("bonds", d3.forceLink(bonds).strength(.1))
-      .force("site", d3.forceLink(parents).strength(.9))
+      .force("bonds", d3.forceLink(bonds).strength(0.1).distance(100))
+      .force("site", d3.forceLink(parents).strength(0.9).distance(20))
       .force("charge", d3.forceManyBody())
       .force("center", d3.forceRadial(100, w / 2, h / 2));
 
@@ -88,24 +88,24 @@ function visualizeExpression(expression) {
                                                        'target': getNodeId(tar)}))]; */
     // const manualnodes = [...nodes.map(u => ({...u}))]; // deep copy
 
-    const node = svg.append("g")
-                    .selectAll("circle")
-                    .data(nodes)
-                    .enter()
-                      .append("circle")
-                      .attr("r", d => d.parent === undefined ? 20 : 5)
-                      .attr("fill", coloragent)
-                      .attr("stroke", "#fff")
-                      .attr("stroke-width", 1.5)
-
     const link = svg.append("g")
                     .selectAll("line")
                     .data([...bonds, ...parents])
                     .enter()
-                      .append("line")
-                      .attr("stroke-width", d => d.isParent ? 1 : 5)
-                      .attr("stroke", "#999")
-                      .attr("stroke-opacity", 0.6)
+                        .append("line")
+                        .attr("stroke-width", d => d.isParent ? 1 : 5)
+                        .attr("stroke", d => d.isParent ? "darkgray" : "black")
+                        .attr("stroke-opacity", 0.5)
+
+    const node = svg.append("g")
+                    .selectAll("circle")
+                    .data(nodes)
+                    .enter()
+                        .append("circle")
+                        .attr("r", d => d.parent === undefined ? 30 : 13)
+                        .attr("fill", d => d.parent === undefined ? coloragent : colorsite)
+                        .attr("stroke", "#fff")
+                        .attr("stroke-width", 1.5)
 
      simulation.on("tick", () => {
                      link
