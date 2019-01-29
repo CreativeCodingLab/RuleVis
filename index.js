@@ -62,11 +62,13 @@ function visualizeExpression(expression) {
                  ...jsonExpression.sites]
 
     let getIndex = (siteId) => {
+      if (!siteId) return
       let [a,b] = siteId
       return jsonExpression.agents.length +
              jsonExpression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
     }
     let bonds = jsonExpression.namedBonds.slice(1)
+                  .filter(bnd => bnd && bnd[1])
                   .map(([src,tar]) => ({'source': getIndex(src),
                                        'target': getIndex(tar)
                                        })),
@@ -75,8 +77,6 @@ function visualizeExpression(expression) {
                                 'target': getIndex(u.id),
                                 'isParent': true
                                }))
-
-
 
     // force directed graph
     /*console.log(nodes)
