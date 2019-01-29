@@ -1,10 +1,12 @@
 
 function Agent(idx) {
-    this.interface = []
+    // this.interface = []
+    this.siteCount = 0
     this.id = idx
 }
 function Site(par, idx) {
     this.id = [par, idx]
+    this.parent = par
 }
 
 pattern = new tinynlp.Grammar([
@@ -34,26 +36,33 @@ let simplify = (chart) => {
         // TODO: gracefully append to existing contact network?
         if (!ret) ret = {'interfacing': false,
                         'agents': [],
+                        'sites': [],
                         'bonds': [],
                         'namedBonds': []}
 
         let curr = ret.agents ? ret.agents.slice(-1)[0] : null,
-            loc = curr ? curr.interface ? curr.interface.slice(-1)[0] : null : null
+            loc = ret.sites ? ret.sites.slice(-1)[0] : null
+            // loc = curr ? curr.interface ? curr.interface.slice(-1)[0] : null : null
         
         let rule = {
         'agent': () => {ret.agents.push(new Agent(ret.agents.length))},
         'agent-name': () => {
             if (ret.interfacing) {
-            loc.boundTo = new Agent() // FIXME
-            loc.boundTo.name = node.subtrees[0].root
+                loc.boundTo = new Agent() // TODO: propagate stub to top
+                loc.boundTo.name = node.subtrees[0].root
             }
             else curr.name = node.subtrees[0].root
         },
-        'site': () => {curr.interface.push(new Site(curr.id, curr.interface.length))},
+        'site': () => {
+            let v = new Site(curr.id, curr.siteCount) // curr.interface.length
+            // curr.interface.push(v.id)
+            curr.siteCount += 1
+            ret.sites.push(v)
+        },
         'site-name': () => {
             if (ret.interfacing) {
-            loc.boundAt = new Site() // FIXME
-            loc.boundAt.name = node.subtrees[0].root
+                loc.boundAt = new Site() // TODO: propagate stub to top
+                loc.boundAt.name = node.subtrees[0].root
             }
             else loc.name = node.subtrees[0].root
         },
@@ -62,26 +71,26 @@ let simplify = (chart) => {
         },
         'number': () => {
             if (ret.interfacing) {
-            let k = node.subtrees[0].root
-            loc.bond = [parseInt(k), true]
-            
-            let v = ret.namedBonds[k]
+                let k = node.subtrees[0].root
+                loc.bond = [parseInt(k), true]
+                
+                let v = ret.namedBonds[k]
             if (v) ret.namedBonds[k].push(loc.id)
             else ret.namedBonds[k] = [loc.id]
             }},
         
         '_': () => {
             if (ret.interfacing) {
-            let k = ret.bonds.push([loc.id])
-            loc.bond = [k-1, false]
+                let k = ret.bonds.push([loc.id])
+                loc.bond = [k-1, false]
             }},
         '.': () => {
             if (ret.interfacing) {
-            loc.bond = null
+                loc.bond = null
             }},
         '#': () => {
             if (ret.interfacing) {
-            loc.bond = undefined // TODO
+                loc.bond = undefined // TODO
             }},
 
         '[': () => {ret.interfacing = true},
@@ -92,7 +101,7 @@ let simplify = (chart) => {
         if (rule) rule()
         
         node.subtrees.forEach((u) => {
-        ret = simplify(u, ret)
+            ret = simplify(u, ret)
         })
 
         return ret

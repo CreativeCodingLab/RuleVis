@@ -58,44 +58,61 @@ function visualizeExpression(expression) {
     var coloragent = '#40bf80';
     var colorinterface = '#28A8A8';
 
-    // force directed graph - currently only nodes are implemented
-    const manuallinks = []; // Add links from json
-    const manualnodes = jsonExpression.agents.map(d => Object.create(d));
+    let nodes = [...jsonExpression.agents,
+                 ...jsonExpression.sites]
+    
+    let getIndex = (siteId) => {
+      let [a,b] = siteId
+      return jsonExpression.agents.length +
+             jsonExpression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+    }
+    let bonds = jsonExpression.namedBonds.slice(1)
+                  .map(([src,tar]) => ({'source': getIndex(src),
+                                       'target': getIndex(tar)
+                                       })),
+        parents = jsonExpression.sites
+                    .map(u => ({'source': u.parent, // agentId is already a valid index
+                                'target': getIndex(u.id),
+                                'isParent': true
+                               }))
+    
+    console.log(nodes)
+    const simulation = d3.forceSimulation(nodes)
+      .force("bonds", d3.forceLink(bonds).strength(.1))
+      .force("site", d3.forceLink(parents).strength(.9))
+      .force("charge", d3.forceManyBody())
+      .force("center", d3.forceRadial(100, w / 2, h / 2));
 
-    const simulation = d3.forceSimulation(manualnodes)
-                          .force("link", d3.forceLink(manuallinks))
-                          .force("charge", d3.forceManyBody())
-                          .force("center", d3.forceCenter(w / 2, h / 2));
-
-    const link = svg.append("g")
-                    .attr("stroke", "#999")
-                    .attr("stroke-opacity", 0.6)
-                    .selectAll("line")
-                    .data(manuallinks)
-                    .enter()
-                    .append("line")
-                    .attr("stroke-width", d => Math.sqrt(d.value));
+    // force directed graph
+    /* const manuallinks = [...links.map(([src,tar]) => ({'source': getNodeId(src),
+                                                       'target': getNodeId(tar)}))]; */
+    // const manualnodes = [...nodes.map(u => ({...u}))]; // deep copy
 
     const node = svg.append("g")
-                    .attr("stroke", "#fff")
-                    .attr("stroke-width", 1.5)
                     .selectAll("circle")
-                    .data(manualnodes)
+                    .data(nodes)
                     .enter()
-                    .append("circle")
-                    .attr("r", 20)
-                    .attr("fill", coloragent);
+                      .append("circle")
+                      .attr("r", d => d.parent === undefined ? 20 : 5)
+                      .attr("fill", coloragent)
+                      .attr("stroke", "#fff")
+                      .attr("stroke-width", 1.5)
+
+    const link = svg.append("g")
+                    .selectAll("line")
+                    .data([...bonds, ...parents])
+                    .enter()
+                      .append("line")
+                      .attr("stroke-width", d => d.isParent ? 1 : 5)
+                      .attr("stroke", "#999")
+                      .attr("stroke-opacity", 0.6)
 
      simulation.on("tick", () => {
                      link
-                         .attr("x1", d => d.source.x)
-                         .attr("y1", d => d.source.y)
-                         .attr("x2", d => d.target.x)
-                         .attr("y2", d => d.target.y);
-
+                         .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                         .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
                      node
-                         .attr("cx", d => d.x)
-                         .attr("cy", d => d.y);
+                         .attr("cx", d => d.x).attr("cy", d => d.y);
                      });
 };
 
