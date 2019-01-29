@@ -13,7 +13,7 @@ var main = d3.select('body').append('div')
                 .style('text-align', 'center');
 
 // DEBUG TOOL: Prints expression JSON from text box
-var expression = main.append('p');
+var paragraph = main.append('p');
 
 // Input text box for expression
 var inputDiv = main.append('div')
@@ -39,12 +39,19 @@ var svg = d3.select("#svgDiv").append("svg")
                 .attr('height', h + 'px')
                 .attr('id', 'svg');
 
-var jsonExpression = '';
+var expression = '';
 inputBox.on("input", function() {
-    jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
-    visualizeExpression(jsonExpression);
-    console.log(jsonExpression);
-    //console.log(jsonExpression['agents']);
+    let input = tokenize(inputBox.property('value')),
+          // [...inputBox.property('value')]
+        chart = tinynlp.parse(input, pattern, 'start')
+    console.log(input)
+
+    let expression = simplify(chart)
+    paragraph.text( () => JSON.stringify(expression, null, 2));
+
+    visualizeExpression(expression);
+    console.log(expression);
+    //console.log(expression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?
 
@@ -58,21 +65,21 @@ function visualizeExpression(expression) {
     var coloragent = '#40bf80';
     var colorsite = '#28A8A8';
 
-    let nodes = [...jsonExpression.agents,
-                 ...jsonExpression.sites]
+    let nodes = [...expression.agents,
+                 ...expression.sites]
 
     let getIndex = (siteId) => {
       if (!siteId) return
       let [a,b] = siteId
-      return jsonExpression.agents.length +
-             jsonExpression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+      return expression.agents.length +
+             expression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
     }
-    let bonds = jsonExpression.namedBonds.slice(1)
+    let bonds = expression.namedBonds.slice(1)
                   .filter(bnd => bnd && bnd[1])
                   .map(([src,tar]) => ({'source': getIndex(src),
                                        'target': getIndex(tar)
                                        })),
-        parents = jsonExpression.sites
+        parents = expression.sites
                     .map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
@@ -130,13 +137,4 @@ function visualizeExpression(expression) {
                          .attr("cx", d => d.x)
                          .attr("cy", d => d.y);
                      });
-};
-
-// Prints expression to expression
-function getJSON(input) {
-    expression.text( () => {
-      let chart = tinynlp.parse([...input].filter(c => c != ' '), pattern, 'start')
-      return JSON.stringify(simplify(chart), null, 2)
-    });
-    return expression.text();
 };
