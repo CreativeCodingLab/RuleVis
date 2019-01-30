@@ -13,8 +13,13 @@ var main = d3.select('body').append('div')
                 .style('text-align', 'center');
 
 // DEBUG TOOL: Prints expression JSON from text box
-var expression = main.append('p');
-
+var expression = main.append('svg')
+                    .attr('height', 0);
+main.append('p')
+    .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
+                .style('width', w + "px")
+                .style('height', 10 + "px")
+                .style('display', 'inline-block');
 // Input text box for expression
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv');
