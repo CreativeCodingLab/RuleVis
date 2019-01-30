@@ -13,8 +13,13 @@ var main = d3.select('body').append('div')
                 .style('text-align', 'center');
 
 // DEBUG TOOL: Prints expression JSON from text box
-var paragraph = main.append('p');
-
+var expression = main.append('svg')
+                    .attr('height', 0);
+main.append('p')
+    .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
+                .style('width', w + "px")
+                .style('height', 10 + "px")
+                .style('display', 'inline-block');
 // Input text box for expression
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv');
@@ -23,7 +28,8 @@ var inputBox = inputDiv.append('input')
                     .attr('type', 'text')
                     .attr('name', 'expression')
                     .attr('size', 50)
-                    .style('text-align', 'center');
+                    .style('text-align', 'center')
+                    .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
 
 // Create parent div for svg
@@ -39,47 +45,48 @@ var svg = d3.select("#svgDiv").append("svg")
                 .attr('height', h + 'px')
                 .attr('id', 'svg');
 
-var expression = '';
+var jsonExpression = '';
 inputBox.on("input", function() {
-    let input = tokenize(inputBox.property('value')),
-          // [...inputBox.property('value')]
-        chart = tinynlp.parse(input, pattern, 'start')
-    // console.log(input)
+    var inputBoxId = document.getElementById("inputBox");
+    inputBoxId.setAttribute = ("border-color", "red");
 
-    let expression = simplify(chart)
-    paragraph.text( () => JSON.stringify(expression, null, 2));
+    jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
+    visualizeExpression(jsonExpression);
+    
+    // If code reaches this line, then jsonExpression contains a valid expression
 
-    visualizeExpression(expression);
-    // console.log(expression);
-    //console.log(expression['agents']);
+
+    //console.log(jsonExpression);
+    //console.log(jsonExpression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?
 
 });
 
 function visualizeExpression(expression) {
+    console.log("visualize expression called");
 
     // Clear svg before loading new graph (accommodates for added text)
     d3.selectAll("svg > *").remove();
 
-    var coloragent = '#40bf80';
-    var colorsite = '#28A8A8';
+    var coloragent = '#3eb78a';
+    var colorsite = '#fcc84e';
 
-    let nodes = [...expression.agents,
-                 ...expression.sites]
+    let nodes = [...jsonExpression.agents,
+                 ...jsonExpression.sites]
 
     let getIndex = (siteId) => {
       if (!siteId) return
       let [a,b] = siteId
-      return expression.agents.length +
-             expression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+      return jsonExpression.agents.length +
+             jsonExpression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
     }
-    let bonds = expression.namedBonds.slice(1)
+    let bonds = jsonExpression.namedBonds.slice(1)
                   .filter(bnd => bnd && bnd[1])
                   .map(([src,tar]) => ({'source': getIndex(src),
                                        'target': getIndex(tar)
                                        })),
-        parents = expression.sites
+        parents = jsonExpression.sites
                     .map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
@@ -110,7 +117,7 @@ function visualizeExpression(expression) {
                         .append("line")
                         .attr("stroke-width", d => d.isParent ? 1 : 5)
                         .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                        .attr("stroke-opacity", 0.5)
+                        .attr("stroke-opacity", 0.4)
 
     const node = svg.append("g")
                     .selectAll("circle")
@@ -122,8 +129,28 @@ function visualizeExpression(expression) {
                         .attr("fill", d => d.parent === undefined ? coloragent :
                                            d.bond == undefined ? "#fff" : colorsite)
                         .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
-                        .attr("stroke-width", 1.5)
+                        .attr("stroke-width", 3)
                         .call(simulation.drag);
+
+    const freeNode = svg.append("g")
+                    .selectAll("circle")
+                    .data(nodes)
+                    .enter()
+                        .append("circle")
+                        .filter(d => d.parent !== undefined && d.bond == undefined)
+                        .attr("r", 4)
+                        .attr("fill", "black");
+
+    const name = svg.append("g")
+                    .selectAll("text")
+                    .data(nodes)
+                    .enter()
+                        .append("text")
+                        .text(d => d.name)
+                        .attr("fill", "black")
+                        .attr("font-size", d => d.parent === undefined ? 16 : 12)
+                        .attr("font-family", "Helvetica Neue");
+                        
 
      simulation.start(30,30,30);
 
@@ -136,5 +163,20 @@ function visualizeExpression(expression) {
                      node
                          .attr("cx", d => d.x)
                          .attr("cy", d => d.y);
+                     freeNode
+                         .attr("cx", d => d.x - 10)
+                         .attr("cy", d => d.y + 10);
+                     name
+                         .attr("x", d => d.parent === undefined ? (d.x-5) : (d.x-3))
+                         .attr("y", d => d.parent === undefined ? (d.y+4) : (d.y+3));
                      });
+};
+
+// Prints expression to expression
+function getJSON(input) {
+    expression.text( () => {
+      let chart = tinynlp.parse([...input].filter(c => c != ' '), pattern, 'start')
+      return JSON.stringify(simplify(chart), null, 2)
+    });
+    return expression.text();
 };
