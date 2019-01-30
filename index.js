@@ -23,7 +23,8 @@ var inputBox = inputDiv.append('input')
                     .attr('type', 'text')
                     .attr('name', 'expression')
                     .attr('size', 50)
-                    .style('text-align', 'center');
+                    .style('text-align', 'center')
+                    .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
 
 // Create parent div for svg
@@ -41,9 +42,16 @@ var svg = d3.select("#svgDiv").append("svg")
 
 var jsonExpression = '';
 inputBox.on("input", function() {
+    var inputBoxId = document.getElementById("inputBox");
+    inputBoxId.setAttribute = ("border-color", "red");
+
     jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
     visualizeExpression(jsonExpression);
-    console.log(jsonExpression);
+    
+    // If code reaches this line, then jsonExpression contains a valid expression
+
+
+    //console.log(jsonExpression);
     //console.log(jsonExpression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?
@@ -51,6 +59,7 @@ inputBox.on("input", function() {
 });
 
 function visualizeExpression(expression) {
+    console.log("visualize expression called");
 
     // Clear svg before loading new graph (accommodates for added text)
     d3.selectAll("svg > *").remove();
@@ -103,7 +112,7 @@ function visualizeExpression(expression) {
                         .append("line")
                         .attr("stroke-width", d => d.isParent ? 1 : 5)
                         .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                        .attr("stroke-opacity", 0.5)
+                        .attr("stroke-opacity", 0.4)
 
     const node = svg.append("g")
                     .selectAll("circle")
@@ -118,15 +127,21 @@ function visualizeExpression(expression) {
                         .attr("stroke-width", 3)
                         .call(simulation.drag);
 
+    const freeNode = svg.append("g")
+                    .selectAll("circle")
+                    .data(nodes)
+                    .enter()
+                        .append("circle")
+                        .filter(d => d.parent !== undefined && d.bond == undefined)
+                        .attr("r", 4)
+                        .attr("fill", "black");
+
     const name = svg.append("g")
                     .selectAll("text")
                     .data(nodes)
                     .enter()
                         .append("text")
-                        .text(function (d) {
-                            console.log(d.name);
-                            return d.name;
-                        })
+                        .text(d => d.name)
                         .attr("fill", "black")
                         .attr("font-size", d => d.parent === undefined ? 16 : 12)
                         .attr("font-family", "Helvetica Neue");
@@ -143,9 +158,12 @@ function visualizeExpression(expression) {
                      node
                          .attr("cx", d => d.x)
                          .attr("cy", d => d.y);
+                     freeNode
+                         .attr("cx", d => d.x - 10)
+                         .attr("cy", d => d.y + 10);
                      name
-                         .attr("x", d => (d.x - 4))
-                         .attr("y", d => (d.y + 2.5));
+                         .attr("x", d => d.parent === undefined ? (d.x-5) : (d.x-3))
+                         .attr("y", d => d.parent === undefined ? (d.y+4) : (d.y+3));
                      });
 };
 
