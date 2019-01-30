@@ -116,11 +116,14 @@ function visualizeExpression(expression) {
                                            d.bond == undefined ? "#fff" : colorsite)
                         .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
                         .attr("stroke-width", 3)
-                        .attr("stroke-opacity", d => d.parent === undefined ? 1 :
-                                                    d.bond == undefined ? 0.7 : 1)
-                        .attr("fill-opacity", d => d.parent === undefined ? 1 :
-                                                   d.bond == undefined ? 0.5 : 1)
                         .call(simulation.drag);
+
+
+    // const freeSite = node.append("g")
+    //                 .selectAll("circle")
+    //                 .data(nodes)
+
+    console.log("nodes: " + nodes.agents);
 
      simulation.start(30,30,30);
 
