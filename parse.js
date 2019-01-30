@@ -54,6 +54,7 @@ let simplify = (chart) => {
     let simplify = (node, ret) => {
         // TODO: gracefully append to existing contact network?
         if (!ret) ret = {'interfacing': false,
+                         'subscripting': false,
                         'agents': [],
                         'sites': [],
                         'bonds': [],
@@ -85,9 +86,6 @@ let simplify = (chart) => {
             }
             else loc.name = node.subtrees[0].root[0]
         },
-        'internal-state': () => {
-            loc.state = node.subtrees[1].subtrees[0].root[0]
-        },
         'number': () => {
             if (ret.interfacing) {
                 let k = node.subtrees[0].root[0]
@@ -97,6 +95,11 @@ let simplify = (chart) => {
             if (v) ret.namedBonds[k].push(loc.id)
             else ret.namedBonds[k] = [loc.id]
             }},
+        'state-name': () => {
+            if (ret.subscripting) {
+                loc.state = node.subtrees[0].root[0]
+            }
+        },
         
         '_': () => {
             if (ret.interfacing) {
@@ -110,10 +113,15 @@ let simplify = (chart) => {
         '#': () => {
             if (ret.interfacing) {
                 loc.bond = undefined // TODO
+            } else if (ret.subscripting) {
+                loc.state = undefined
             }},
 
         '[': () => {ret.interfacing = true},
         ']': () => {ret.interfacing = false},
+
+        '}': () => {ret.subscripting = false},
+        '{': () => {ret.subscripting = false},
 
         }[node.root]
         if (rule) rule()
@@ -126,6 +134,6 @@ let simplify = (chart) => {
         return ret
     }
     let ret = simplify(res[0])
-    delete ret.interfacing // remove internal parse state
+    delete ret.interfacing, ret.subscripting // remove internal parse state
     return ret
 }

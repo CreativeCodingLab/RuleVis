@@ -48,14 +48,13 @@ var svg = d3.select("#svgDiv").append("svg")
                 .attr('height', h + 'px')
                 .attr('id', 'svg');
 
-var expression = '';
+var chart, expression;
 inputBox.on("input", function() {
-    let input = tokenize(inputBox.property('value')),
+    let input = tokenize(inputBox.property('value'))
           // [...inputBox.property('value')]
-        chart = tinynlp.parse(input, pattern, 'start')
-    // console.log(input)
-    
-    let expression = simplify(chart)
+
+    chart = tinynlp.parse(input, pattern, 'start')    
+    expression = simplify(chart)
     paragraph.text( () => JSON.stringify(expression, null, 2));
 
     visualizeExpression(expression)
@@ -68,16 +67,13 @@ inputBox.on("input", function() {
     
     // If code reaches this line, then expression contains a valid expression
 
-
-    //console.log(expression);
-    //console.log(expression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?
 
 });
 
 function visualizeExpression(expression) {
-    console.log("visualize expression called");
+    // console.log("visualize expression called");
 
     // Clear svg before loading new graph (accommodates for added text)
     d3.selectAll("svg > *").remove();
