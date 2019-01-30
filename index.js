@@ -13,7 +13,7 @@ var main = d3.select('body').append('div')
                 .style('text-align', 'center');
 
 // DEBUG TOOL: Prints expression JSON from text box
-var paragraph = main.append('p');
+var expression = main.append('p');
 
 // Input text box for expression
 var inputDiv = main.append('div')
@@ -39,19 +39,12 @@ var svg = d3.select("#svgDiv").append("svg")
                 .attr('height', h + 'px')
                 .attr('id', 'svg');
 
-var expression = '';
+var jsonExpression = '';
 inputBox.on("input", function() {
-    let input = tokenize(inputBox.property('value')),
-          // [...inputBox.property('value')]
-        chart = tinynlp.parse(input, pattern, 'start')
-    // console.log(input)
-
-    let expression = simplify(chart)
-    paragraph.text( () => JSON.stringify(expression, null, 2));
-
-    visualizeExpression(expression);
-    // console.log(expression);
-    //console.log(expression['agents']);
+    jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
+    visualizeExpression(jsonExpression);
+    console.log(jsonExpression);
+    //console.log(jsonExpression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?
 
@@ -65,21 +58,21 @@ function visualizeExpression(expression) {
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
 
-    let nodes = [...expression.agents,
-                 ...expression.sites]
+    let nodes = [...jsonExpression.agents,
+                 ...jsonExpression.sites]
 
     let getIndex = (siteId) => {
       if (!siteId) return
       let [a,b] = siteId
-      return expression.agents.length +
-             expression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+      return jsonExpression.agents.length +
+             jsonExpression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
     }
-    let bonds = expression.namedBonds.slice(1)
+    let bonds = jsonExpression.namedBonds.slice(1)
                   .filter(bnd => bnd && bnd[1])
                   .map(([src,tar]) => ({'source': getIndex(src),
                                        'target': getIndex(tar)
                                        })),
-        parents = expression.sites
+        parents = jsonExpression.sites
                     .map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
@@ -125,12 +118,19 @@ function visualizeExpression(expression) {
                         .attr("stroke-width", 3)
                         .call(simulation.drag);
 
-
-    // const freeSite = node.append("g")
-    //                 .selectAll("circle")
-    //                 .data(nodes)
-
-    console.log("nodes: " + nodes.agents);
+    const name = svg.append("g")
+                    .selectAll("text")
+                    .data(nodes)
+                    .enter()
+                        .append("text")
+                        .text(function (d) {
+                            console.log(d.name);
+                            return d.name;
+                        })
+                        .attr("fill", "black")
+                        .attr("font-size", "30px")
+                        .attr("font-family", "Helvetica-Neue");
+                        
 
      simulation.start(30,30,30);
 
@@ -143,5 +143,17 @@ function visualizeExpression(expression) {
                      node
                          .attr("cx", d => d.x)
                          .attr("cy", d => d.y);
+                     name
+                         .attr("x", d => d.x)
+                         .attr("y", d => d.y);
                      });
+};
+
+// Prints expression to expression
+function getJSON(input) {
+    expression.text( () => {
+      let chart = tinynlp.parse([...input].filter(c => c != ' '), pattern, 'start')
+      return JSON.stringify(simplify(chart), null, 2)
+    });
+    return expression.text();
 };
