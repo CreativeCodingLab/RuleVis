@@ -20,6 +20,7 @@ main.append('p')
                 .style('width', w + "px")
                 .style('height', 10 + "px")
                 .style('display', 'inline-block');
+
 // Input text box for expression
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv');
@@ -52,7 +53,7 @@ inputBox.on("input", function() {
 
     jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
     visualizeExpression(jsonExpression);
-    
+
     // If code reaches this line, then jsonExpression contains a valid expression
 
 
@@ -139,7 +140,8 @@ function visualizeExpression(expression) {
                         .append("circle")
                         .filter(d => d.parent !== undefined && d.bond == undefined)
                         .attr("r", 4)
-                        .attr("fill", "black");
+                        .attr("fill", "black")
+                        .call(simulation.drag);
 
     const name = svg.append("g")
                     .selectAll("text")
@@ -150,7 +152,7 @@ function visualizeExpression(expression) {
                         .attr("fill", "black")
                         .attr("font-size", d => d.parent === undefined ? 16 : 12)
                         .attr("font-family", "Helvetica Neue");
-                        
+
 
      simulation.start(30,30,30);
 
