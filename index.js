@@ -128,8 +128,8 @@ function visualizeExpression(expression) {
                             return d.name;
                         })
                         .attr("fill", "black")
-                        .attr("font-size", "30px")
-                        .attr("font-family", "Helvetica-Neue");
+                        .attr("font-size", d => d.parent === undefined ? 16 : 12)
+                        .attr("font-family", "Helvetica Neue");
                         
 
      simulation.start(30,30,30);
@@ -144,8 +144,8 @@ function visualizeExpression(expression) {
                          .attr("cx", d => d.x)
                          .attr("cy", d => d.y);
                      name
-                         .attr("x", d => d.x)
-                         .attr("y", d => d.y);
+                         .attr("x", d => (d.x - 4))
+                         .attr("y", d => (d.y + 2.5));
                      });
 };
 
