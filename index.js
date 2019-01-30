@@ -13,14 +13,16 @@ var main = d3.select('body').append('div')
                 .style('text-align', 'center');
 
 // DEBUG TOOL: Prints expression JSON from text box
-var expression = main.append('svg')
+var paragraph = main.append('svg')
                     .attr('height', 0);
+
+//var expression = main.append('svg')
+//                    .attr('height', 0);
 main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
                 .style('width', w + "px")
                 .style('height', 10 + "px")
                 .style('display', 'inline-block');
-
 // Input text box for expression
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv');
@@ -46,19 +48,29 @@ var svg = d3.select("#svgDiv").append("svg")
                 .attr('height', h + 'px')
                 .attr('id', 'svg');
 
-var jsonExpression = '';
+var expression = '';
 inputBox.on("input", function() {
-    var inputBoxId = document.getElementById("inputBox");
+    let input = tokenize(inputBox.property('value')),
+          // [...inputBox.property('value')]
+        chart = tinynlp.parse(input, pattern, 'start')
+    // console.log(input)
+    
+    let expression = simplify(chart)
+    paragraph.text( () => JSON.stringify(expression, null, 2));
+
+    visualizeExpression(expression)
+    
+    /*var inputBoxId = document.getElementById("inputBox");
     inputBoxId.setAttribute = ("border-color", "red");
 
-    jsonExpression = JSON.parse(getJSON(inputBox.property('value')));
-    visualizeExpression(jsonExpression);
+    expression = JSON.parse(getJSON(inputBox.property('value')));
+    visualizeExpression(expression);*/
+    
+    // If code reaches this line, then expression contains a valid expression
 
-    // If code reaches this line, then jsonExpression contains a valid expression
 
-
-    //console.log(jsonExpression);
-    //console.log(jsonExpression['agents']);
+    //console.log(expression);
+    //console.log(expression['agents']);
     // if valid input, then visualize() without requiring 'enter' key to be pressed
     // NOTE: How to implement 'onSumbit' in this format?
 
@@ -73,21 +85,21 @@ function visualizeExpression(expression) {
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
 
-    let nodes = [...jsonExpression.agents,
-                 ...jsonExpression.sites]
+    let nodes = [...expression.agents,
+                 ...expression.sites]
 
     let getIndex = (siteId) => {
       if (!siteId) return
       let [a,b] = siteId
-      return jsonExpression.agents.length +
-             jsonExpression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+      return expression.agents.length +
+             expression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
     }
-    let bonds = jsonExpression.namedBonds.slice(1)
+    let bonds = expression.namedBonds.slice(1)
                   .filter(bnd => bnd && bnd[1])
                   .map(([src,tar]) => ({'source': getIndex(src),
                                        'target': getIndex(tar)
                                        })),
-        parents = jsonExpression.sites
+        parents = expression.sites
                     .map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
@@ -140,8 +152,7 @@ function visualizeExpression(expression) {
                         .append("circle")
                         .filter(d => d.parent !== undefined && d.bond == undefined)
                         .attr("r", 4)
-                        .attr("fill", "black")
-                        .call(simulation.drag);
+                        .attr("fill", "black");
 
     const name = svg.append("g")
                     .selectAll("text")
@@ -152,7 +163,7 @@ function visualizeExpression(expression) {
                         .attr("fill", "black")
                         .attr("font-size", d => d.parent === undefined ? 16 : 12)
                         .attr("font-family", "Helvetica Neue");
-
+                        
 
      simulation.start(30,30,30);
 
