@@ -31,9 +31,9 @@ p {
     text-align: center;
 }
 
-/* Some style formatting for text box */
-input[type=text] {
-    width: 50%;
+/* Some style formatting for text box [VERIFY] */
+textarea {
+    width: 75%;
     padding: 12px 12px;
     margin: 15px 0;
     box-sizing: border-box;
@@ -44,11 +44,16 @@ input[type=text] {
     font-size: 20px;
     font-weight: 600;
     letter-spacing: 2px;
-    line-height: 1;
+    line-height: 1.2;
 }
 
 /* Removes blue highlighting around text box*/
 /*  Note - May create an accessibilty issue on different platforms*/
-input[type=text]:focus {
+textarea:focus {
     outline:none;
+}
+
+/* prevent labels from intercepting mouse events (todo: disable being highlighted at all) */
+svg text {
+    pointer-events: none;
 }

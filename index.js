@@ -27,11 +27,11 @@ var main = d3.select('body').append('div')
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv');
 
-var inputBox = inputDiv.append('input')
-                    .attr('type', 'text')
+var inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
-                    .style('text-align', 'center')
+                    .attr('rows', 4)
+                    // .style('text-align', 'center')
                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
 
@@ -45,7 +45,7 @@ var svg = undefined
 
 var chart, expression;
 inputBox.on("input", function() {
-    let input = inputBox.property('value').split('=>'),
+    let input = inputBox.property('value').split('->'),
         lhs = tokenize(input[0]),
         rhs = input.length > 1 ? tokenize(input[1]) : undefined
           // [...inputBox.property('value')]
@@ -109,13 +109,17 @@ function visualizeExpression(expression, group) {
                                }))
 
     // CoLa graph - using constraint based optimization
+    let rs = nodes.map(d => d.siteCount === undefined ? 13 /*:
+                            d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
+    // nodes = nodes.map((d,i) => ({...d, 'width': rs[i]*2, 'height': rs[i]*2}))
+        // annotate nodes for cola's avoidOverlaps
+
     const simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
         .links([...bonds, ...parents])
-        .linkDistance(d => !d.isParent ? 100 : d.sibCount > 4 ? 50 : 20)
-        // .symmetricDiffLinkLengths(20)
-        .avoidOverlaps(true);
+        .linkDistance(d => !d.isParent ? 50 : d.sibCount > 8 ? 50 : d.sibCount > 4 ? 35 : 20)
+        // .avoidOverlaps(true);
     
     /* // force directed graph
     const simulation = d3.forceSimulation(nodes)
@@ -138,8 +142,7 @@ function visualizeExpression(expression, group) {
                     .data(nodes)
                     .enter()
                         .append("circle")
-                        .attr("r", d => d.siteCount === undefined ? 13 /*:
-                                        d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
+                        .attr("r", (d,i) => rs[i])
                         .attr("fill", d => d.parent === undefined ? coloragent :
                                            d.bond == undefined ? "#fff" : colorsite)
                         .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)

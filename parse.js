@@ -14,13 +14,13 @@ let pattern = new tinynlp.Grammar([
 'pattern -> agent more-pattern | agent',
 'more-pattern -> , pattern',
 
-'agent -> agent-name ( interface )',
+'agent -> agent-name ( interface ) | . ( interface ) | .', // VERIFY
 'interface -> site more-interface | site',
 'more-interface -> , interface',
 
 'site -> site-name internal-state link-state | site-name link-state internal-state | site-name internal-state | site-name link-state | site-name',
 'internal-state -> { state-name } | { # }',
-'link-state -> [ number ] | [ . ] | [ _ ] | [ # ] | [ site-name . agent-name ]',
+'link-state -> [ number ] | [ . ] | [ _ ] | [ # ] | [ site-name . agent-name ]', //  [ . / number ] |
 ])
 
 let regex = {'digits': /^\d+$/g,
@@ -28,8 +28,8 @@ let regex = {'digits': /^\d+$/g,
               // todo: labels
             }
 let tokenize = (raw) => {
-    let str = raw.replace(/\s+/g, '')
-        re = /(\d+|_?[A-Za-z]+[A-Za-z\d_~\-+]*|[\[\]\(\)\{\}#,])/g
+    let str = raw.replace(/\s+/g, '') // kill whitespace
+        re = /(\d+|_?[A-Za-z]+[A-Za-z\d_~\-+]*|[\[\]\(\)\{\}\/#,])/g
     return str.split(re).filter(s => s)
 }
 pattern.terminalSymbols = (token) => {
