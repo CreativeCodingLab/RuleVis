@@ -13,16 +13,16 @@ var main = d3.select('body').append('div')
                 .style('text-align', 'center');
 
 // DEBUG TOOL: Prints expression JSON from text box
-var paragraph = main.append('svg')
-                    .attr('height', 0);
+// var paragraph = main.append('svg').attr('height', 0);
 
 //var expression = main.append('svg')
 //                    .attr('height', 0);
-main.append('p')
+/* main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
                 .style('width', w + "px")
                 .style('height', 10 + "px")
-                .style('display', 'inline-block');
+                .style('display', 'inline-block'); */
+
 // Input text box for expression
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv');
@@ -36,47 +36,53 @@ var inputBox = inputDiv.append('input')
                     //.attr('placeholder', 'expression');
 
 // Create parent div for svg
-var svgDiv = d3.select('#main').append('div')
+let svgDiv = d3.select('#main').append('div')
                 .attr('id', 'svgDiv')
                 .style('width', w + "px")
                 .style('height', h + "px")
                 .style('display', 'inline-block');
-
-// Append svg to the div
-var svg = d3.select("#svgDiv").append("svg")
-                .attr('width', w + 'px')
-                .attr('height', h + 'px')
-                .attr('id', 'svg');
+var svg = undefined
 
 var chart, expression;
 inputBox.on("input", function() {
-    let input = tokenize(inputBox.property('value'))
+    let input = inputBox.property('value').split('=>'),
+        lhs = tokenize(input[0]),
+        rhs = input.length > 1 ? tokenize(input[1]) : undefined
           // [...inputBox.property('value')]
 
-    chart = tinynlp.parse(input, pattern, 'start')    
+    chart = tinynlp.parse(lhs, pattern, 'start')
     expression = simplify(chart)
-    paragraph.text( () => JSON.stringify(expression, null, 2));
+    // paragraph.text( () => JSON.stringify(expression, null, 2));
 
-    visualizeExpression(expression)
+    clearExpressions()
+    visualizeExpression(expression,
+        svg.append('g').attr('transform', `translate(0,0)`))
+    if (rhs)
+        visualizeExpression(
+            simplify(tinynlp.parse(rhs, pattern, 'start')),
+            svg.append('g').attr('transform', `translate(${w/2},0)`))
     
     /*var inputBoxId = document.getElementById("inputBox");
-    inputBoxId.setAttribute = ("border-color", "red");
-
-    expression = JSON.parse(getJSON(inputBox.property('value')));
-    visualizeExpression(expression);*/
+    inputBoxId.setAttribute = ("border-color", "red");*/
     
     // If code reaches this line, then expression contains a valid expression
 
     // if valid input, then visualize() without requiring 'enter' key to be pressed
-    // NOTE: How to implement 'onSumbit' in this format?
+    // NOTE: How to implement 'onSubmit' in this format?
 
 });
 
-function visualizeExpression(expression) {
-    // console.log("visualize expression called");
-
+function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
-    d3.selectAll("svg > *").remove();
+    svgDiv.selectAll('svg').remove()
+    svg = svgDiv.append('svg') // FIXME: dupe code
+                .attr('width', w+'px')
+                .attr('height', h+'px')
+                .attr('id', 'svg')
+}
+
+function visualizeExpression(expression, group) {
+    // d3.selectAll("svg > *").remove();
 
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
@@ -102,24 +108,23 @@ function visualizeExpression(expression) {
                                 'sibCount': nodes[u.parent].siteCount,
                                }))
 
-    // force directed graph
-    /*console.log(nodes)
-    const simulation = d3.forceSimulation(nodes)
-      .force("bonds", d3.forceLink(bonds).strength(0.1).distance(100))
-      .force("site", d3.forceLink(parents).strength(0.9).distance(20))
-      .force("charge", d3.forceManyBody())
-      .force("center", d3.forceRadial(100, w / 2, h / 2));*/
-
     // CoLa graph - using constraint based optimization
     const simulation = cola.d3adaptor(d3)
-        .size([600,400])
+        .size([w/2,h])
         .nodes(nodes)
         .links([...bonds, ...parents])
-        .linkDistance(d => !d.isParent ? 100 :
-                            d.sibCount > 4 ? 50 : 20)
+        .linkDistance(d => !d.isParent ? 100 : d.sibCount > 4 ? 50 : 20)
+        // .symmetricDiffLinkLengths(20)
         .avoidOverlaps(true);
+    
+    /* // force directed graph
+    const simulation = d3.forceSimulation(nodes)
+        .force("bonds", d3.forceLink(bonds).strength(0.1).distance(100))
+        .force("site", d3.forceLink(parents).strength(0.9).distance(20))
+        .force("charge", d3.forceManyBody())
+        .force("center", d3.forceRadial(100, w / 2, h / 2));*/
 
-    const link = svg.append("g")
+    const link = group.append("g")
                     .selectAll("line")
                     .data([...bonds, ...parents])
                     .enter()
@@ -128,7 +133,7 @@ function visualizeExpression(expression) {
                         .attr("stroke", d => d.isParent ? "darkgray" : "black")
                         .attr("stroke-opacity", 0.4)
 
-    const node = svg.append("g")
+    const node = group.append("g")
                     .selectAll("circle")
                     .data(nodes)
                     .enter()
@@ -141,7 +146,7 @@ function visualizeExpression(expression) {
                         .attr("stroke-width", 3)
                         .call(simulation.drag);
 
-    const freeNode = svg.append("g")
+    const freeNode = group.append("g")
                     .selectAll("circle")
                     .data(nodes)
                     .enter()
@@ -150,7 +155,7 @@ function visualizeExpression(expression) {
                         .attr("r", 4)
                         .attr("fill", "black");
 
-    const name = svg.append("g")
+    const name = group.append("g")
                     .selectAll("text")
                     .data(nodes)
                     .enter()
