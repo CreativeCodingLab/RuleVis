@@ -7,6 +7,8 @@ function Agent(idx) {
 function Site(par, idx) {
     this.id = [par, idx]
     this.parent = par
+
+    this.state = undefined
 }
 
 let pattern = new tinynlp.Grammar([
@@ -120,8 +122,8 @@ let simplify = (chart) => {
         '[': () => {ret.interfacing = true},
         ']': () => {ret.interfacing = false},
 
+        '{': () => {ret.subscripting = true},
         '}': () => {ret.subscripting = false},
-        '{': () => {ret.subscripting = false},
 
         }[node.root]
         if (rule) rule()
@@ -134,6 +136,7 @@ let simplify = (chart) => {
         return ret
     }
     let ret = simplify(res[0])
-    delete ret.interfacing, ret.subscripting // remove internal parse state
+    delete ret.interfacing
+    delete ret.subscripting // remove internal parse state
     return ret
 }

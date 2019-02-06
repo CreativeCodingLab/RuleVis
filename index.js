@@ -4,8 +4,8 @@ body.append("h1").text("Kappa Visualization");
 body.append("h2").text("Rule-based modeling for complex biological systems");
 
 // Set up the SVG attributes
-var w = 600;
-var h = 300;
+var w = 800;
+var h = 400;
 
 // Create container div for styling purposes
 var main = d3.select('body').append('div')
@@ -69,16 +69,17 @@ inputBox.on("input", function() {
         rhs = input.length > 1 ? tokenize(input[1]) : undefined
           // [...inputBox.property('value')]
 
-    chart = tinynlp.parse(lhs, pattern, 'start')
-    expression = simplify(chart)
+    chart = [lhs, rhs].map( u =>
+                u ? tinynlp.parse(u, pattern, 'start') : u
+            )
+    expression = chart.map( c => c ? simplify(c) : c )
     // paragraph.text( () => JSON.stringify(expression, null, 2));
 
     clearExpressions()
-    visualizeExpression(expression,
+    visualizeExpression(expression[0],
         svg.append('g').attr('transform', `translate(0,0)`))
     if (rhs)
-        visualizeExpression(
-            simplify(tinynlp.parse(rhs, pattern, 'start')),
+        visualizeExpression(expression[1],
             svg.append('g').attr('transform', `translate(${w/2},0)`))
 
     /*var inputBoxId = document.getElementById("inputBox");
@@ -137,7 +138,7 @@ function visualizeExpression(expression, group) {
         .size([w/2,h])
         .nodes(nodes)
         .links([...bonds, ...parents])
-        .linkDistance(d => !d.isParent ? 50 : d.sibCount > 8 ? 50 : d.sibCount > 4 ? 35 : 20)
+        .linkDistance(d => !d.isParent ? 80 : d.sibCount > 6 ? 65 : d.sibCount > 3 ? 50 : 35)
         // .avoidOverlaps(true);
 
     /* // force directed graph
@@ -172,8 +173,8 @@ function visualizeExpression(expression, group) {
                     .selectAll("circle")
                     .data(nodes)
                     .enter()
-                        .append("circle")
                         .filter(d => d.parent !== undefined && d.bond == undefined)
+                        .append("circle")
                         .attr("r", 4)
                         .attr("fill", "black");
 
@@ -183,10 +184,20 @@ function visualizeExpression(expression, group) {
                     .enter()
                         .append("text")
                         .text(d => d.name)
+                        .attr("class", d => d.parent == undefined ? "agent" : "site")
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
                         .attr("font-size", d => d.parent === undefined ? 16 : 12)
                         .attr("font-family", "Helvetica Neue");
+
+    const state = group.append("g")
+                    .selectAll("text")
+                    .data(expression.sites)
+                    .enter()
+                        .append("text")
+                        .text(d => d.state)
+                        .attr("fill", "black")
+                        .attr("font-size", 12)
 
 
      simulation.start(30,30,30);
@@ -203,9 +214,13 @@ function visualizeExpression(expression, group) {
                      freeNode
                          .attr("cx", d => d.x - 10)
                          .attr("cy", d => d.y + 10);
+
                      name
-                         .attr("x", d => d.parent === undefined ? (d.x) : (d.x))
-                         .attr("y", d => d.parent === undefined ? (d.y+4) : (d.y+3));
+                         .attr("x", d => d.x)
+                         .attr("y", d => d.parent === undefined ? d.y+4 : d.y+3);
+                     state
+                         .attr("x", d => d.x)
+                          .attr("y", d => d.y+14);
                      });
 };
 

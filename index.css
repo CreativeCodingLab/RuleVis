@@ -42,7 +42,7 @@ textarea {
     background-color: whitesmoke;
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 2px;
     line-height: 1.2;
 }
@@ -56,6 +56,11 @@ textarea:focus {
 /* prevent labels from intercepting mouse events (todo: disable being highlighted at all) */
 svg text {
     pointer-events: none;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 400;
+}
+svg text .agent {
+    font-weight: 700;
 }
 
 button {
