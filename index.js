@@ -5,18 +5,13 @@ body.append("h2").text("Rule-based modeling for complex biological systems");
 
 // Set up the SVG attributes
 var w = 600;
-var h = 400;
+var h = 300;
 
 // Create container div for styling purposes
 var main = d3.select('body').append('div')
                 .attr('id', 'main')
                 .style('text-align', 'center');
 
-// DEBUG TOOL: Prints expression JSON from text box
-// var paragraph = main.append('svg').attr('height', 0);
-
-//var expression = main.append('svg')
-//                    .attr('height', 0);
 /* main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
                 .style('width', w + "px")
@@ -41,7 +36,31 @@ let svgDiv = d3.select('#main').append('div')
                 .style('width', w + "px")
                 .style('height', h + "px")
                 .style('display', 'inline-block');
+
 var svg = undefined
+
+var exportDiv = main.append('div')
+                    .attr('id', 'buttonDiv');
+
+// Button for downloading/exporting svg
+var exportButton = exportDiv.append('button')
+                            .attr('id', 'download')
+                            .text('Export SVG')
+                            .style('font-size', '20px')
+                            .style('font-weight', 'medium')
+                            .style('font', 'Helvetica Neue')
+                            .style('border-radius', '10px')
+                            .style('background-color', 'whitesmoke')
+                            .on('click', function() {
+                                downloadSVG();
+                            });
+
+function downloadSVG() {
+    var config = {
+        filename: 'kappa_rulevis.svg',
+    }
+    d3_save_svg.save(d3.select('svg').node(), config);
+}
 
 var chart, expression;
 inputBox.on("input", function() {
@@ -61,10 +80,10 @@ inputBox.on("input", function() {
         visualizeExpression(
             simplify(tinynlp.parse(rhs, pattern, 'start')),
             svg.append('g').attr('transform', `translate(${w/2},0)`))
-    
+
     /*var inputBoxId = document.getElementById("inputBox");
     inputBoxId.setAttribute = ("border-color", "red");*/
-    
+
     // If code reaches this line, then expression contains a valid expression
 
     // if valid input, then visualize() without requiring 'enter' key to be pressed
@@ -120,7 +139,7 @@ function visualizeExpression(expression, group) {
         .links([...bonds, ...parents])
         .linkDistance(d => !d.isParent ? 50 : d.sibCount > 8 ? 50 : d.sibCount > 4 ? 35 : 20)
         // .avoidOverlaps(true);
-    
+
     /* // force directed graph
     const simulation = d3.forceSimulation(nodes)
         .force("bonds", d3.forceLink(bonds).strength(0.1).distance(100))
@@ -167,7 +186,7 @@ function visualizeExpression(expression, group) {
                         .attr("fill", "black")
                         .attr("font-size", d => d.parent === undefined ? 16 : 12)
                         .attr("font-family", "Helvetica Neue");
-                        
+
 
      simulation.start(30,30,30);
 

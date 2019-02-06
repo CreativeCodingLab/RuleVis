@@ -7,11 +7,18 @@
       <script type="text/javascript" src="d3.js"></script>
       <script type="text/javascript" src="earley-oop.js"></script>
       <script type="text/javascript" src="cola.min.js"></script>
+      <script type="text/javascript" src="d3-save-svg.min.js"></script>
     </head>
 
     <body>
       <div id="work"></div>
       <script type="text/javascript" src="parse.js"></script>
       <script type="text/javascript" src="index.js"></script>
+
+      <form id="svgform" method="post" action="download.pl">
+          <input type="hidden" id="output_format" name="output_format" value="">
+          <input type="hidden" id="data" name="data" value="">
+      </form>
+
     </body>
 </html>

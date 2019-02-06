@@ -57,3 +57,11 @@ textarea:focus {
 svg text {
     pointer-events: none;
 }
+
+button {
+    border: 1px solid rgb(141, 134, 134);
+}
+
+button:focus {
+    outline:none;
+}
