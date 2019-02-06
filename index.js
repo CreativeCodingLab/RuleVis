@@ -57,9 +57,9 @@ var exportButton = exportDiv.append('button')
 
 function downloadSVG() {
     var config = {
-        filename: 'kappa_rulevis.svg',
+        filename: 'kappa_rulevis',
     }
-    d3_save_svg.save(d3.select('svg').node(), config);
+    d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
 var chart, expression;
@@ -184,6 +184,7 @@ function visualizeExpression(expression, group) {
                         .append("text")
                         .text(d => d.name)
                         .attr("fill", "black")
+                        .attr("text-anchor", "middle")
                         .attr("font-size", d => d.parent === undefined ? 16 : 12)
                         .attr("font-family", "Helvetica Neue");
 
@@ -203,7 +204,7 @@ function visualizeExpression(expression, group) {
                          .attr("cx", d => d.x - 10)
                          .attr("cy", d => d.y + 10);
                      name
-                         .attr("x", d => d.parent === undefined ? (d.x-5) : (d.x-3))
+                         .attr("x", d => d.parent === undefined ? (d.x) : (d.x))
                          .attr("y", d => d.parent === undefined ? (d.y+4) : (d.y+3));
                      });
 };
