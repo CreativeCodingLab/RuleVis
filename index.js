@@ -220,7 +220,7 @@ function visualizeExpression(expression, group) {
                          .attr("y", d => d.parent === undefined ? d.y+4 : d.y+3);
                      state
                          .attr("x", d => d.x)
-                          .attr("y", d => d.y+14);
+                         .attr("y", d => d.y+14);
                      });
 };
 
