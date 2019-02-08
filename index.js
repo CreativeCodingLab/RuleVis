@@ -1,11 +1,10 @@
 // Titles & headers
 var body = d3.select("body");
-body.append("h1").text("Kappa Visualization");
-body.append("h2").text("Rule-based modeling for complex biological systems");
+body.append("h1").text("Kappa: Rule-based modeling for biological processes");
 
 // Set up the SVG attributes
-var w = 800;
-var h = 400;
+var w = 1000;
+var h = 450;
 
 // Create container div for styling purposes
 var main = d3.select('body').append('div')

@@ -66,7 +66,7 @@
 %var: 'UDG_excision' 16
 //%var: 'NEIL_excision' $NEIL_excision
 
-//// DG agent's actions 
+//// DG agent's actions
 
 //// DG binding is unconstrained if catalytic pocket is unbound, however
 //// if the cat site is bound, DG is not allowed to rebind to a nucleobase
@@ -146,7 +146,7 @@
 //     DG(dbd[.], cat[1], type{OGG}[.]), DNA(e5{PUA}[0]), DNA(e3{NA}[0],  dg[1], base_state{gapped}[.],  base{AP}[#],   e5{NA}[2] ),   DNA(e3{P}[2])
 //     @ 'OGG_excision'
 
-////[Hegde et al '12] [Khanna et al '09] 
+////[Hegde et al '12] [Khanna et al '09]
 //'NEIL mismatch excision'
 //     DG(dbd[1], cat[.], type{NEIL}[.]), DNA(e5{lig}[0]), DNA(e3{lig}[0], dg[1], base_state{damaged}[.], base{oxoG}[#], e5{lig}[2]), DNA(e3{lig}[2]) ->
 //     DG(dbd[.], cat[1], type{NEIL}[.]), DNA(e5{P}[0]),   DNA(e3{NA}[0],  dg[1], base_state{gapped}[.],  base{AP}[#],   e5{NA}[2]),  DNA(e3{P}[2])
@@ -167,7 +167,7 @@
 %var: 'APE1_DNA_bind_unary' 10000.0
 
 %var: 'APE1_DNA_unbind_ns' 14.8120642774
-%var: 'APE1_DNA_unbind_AP' 0.148120642774 
+%var: 'APE1_DNA_unbind_AP' 0.148120642774
 %var: 'APE1_DNA_unbind_gapped' 0.740603213872
 
 %var: 'APE1_incision' 3
@@ -211,13 +211,13 @@
 'APE1 AP site unbinding'
       APE1(dbd[1]), DNA(ape[1], base_state{excised}[.]) ->
       APE1(dbd[.]), DNA(ape[.], base_state{excised}[.])
-      @ 'APE1_DNA_unbind_AP' 
+      @ 'APE1_DNA_unbind_AP'
 
-//// gapped DNA unbinding for APE1 (less specific binding) 
+//// gapped DNA unbinding for APE1 (less specific binding)
 'APE1 gapped DNA unbinding'
       APE1(dbd[1]), DNA(ape[1], base_state{gapped}[.]) ->
       APE1(dbd[.]), DNA(ape[.], base_state{gapped}[.])
-      @ 'APE1_DNA_unbind_gapped' 
+      @ 'APE1_DNA_unbind_gapped'
 
 
 //// APE1 catalytic activities
@@ -252,7 +252,7 @@
 %var: 'POLb_LP_polymerase' 0.45
 
 
-//// POLb agent's actions 
+//// POLb agent's actions
 
 //// POLb binds (gapped or nicked) DNA (in the absence or presence of XRCC1)
 'POLb DNA AP or gapped binding 1'
@@ -466,7 +466,7 @@
 //       XRCC1(pnk), PNKP(xrc) -> XRCC1(pnk[1]), PNKP(xrc[1]) @ 'XRCC1_PNKP_bind' ('XRCC1_PNKP_bind_unary':3) ////via DNA or PARP1 or NEIL
 //'XRCC1 unbinds PNKP'
 //       XRCC1(pnk[1]),PNKP(xrc[1]) -> XRCC1(pnk),PNKP(xrc) @ 'XRCC1_PNKP_unbind'
-       
+
 
 //// XRCC1 interactions with DNA (binds gapped or nicked DNA, also through APE1, POLb or LIG3)
 
@@ -499,38 +499,38 @@
 //// XRCC1 has non specific affinity with ligated DNA in general [HYPOTHESIS]
 'XRCC1 unbinds ns DNA'
        XRCC1(dbd[1]), DNA(e5{lig}[_], xrc[1], e3{lig}[_]) ->
-       XRCC1(dbd[.]), DNA(e5{lig}[_], xrc[.], e3{lig}[_]) @ 'XRCC1_DNA_unbind_ns' 
+       XRCC1(dbd[.]), DNA(e5{lig}[_], xrc[.], e3{lig}[_]) @ 'XRCC1_DNA_unbind_ns'
 
 
 //// XRCC1 has specific affinity 1 nt gapped DNA
 'XRCC1 unbinds 1nt gapped DNA'
        XRCC1(dbd[1]), DNA(base_state{OK}[.] e3[0]), DNA(e5{NA}[0] base_state{gapped}[.] xrc[1] e3{NA}[2]), DNA(e5[2] base_state{OK}[.]) ->
-       XRCC1(dbd[.]), DNA(base_state{OK}[.] e3[0]), DNA(e5{NA}[0] base_state{gapped}[.] xrc[.] e3{NA}[2]), DNA(e5[2] base_state{OK}[.]) @ 'XRCC1_DNA_unbind_gapped' 
+       XRCC1(dbd[.]), DNA(base_state{OK}[.] e3[0]), DNA(e5{NA}[0] base_state{gapped}[.] xrc[.] e3{NA}[2]), DNA(e5[2] base_state{OK}[.]) @ 'XRCC1_DNA_unbind_gapped'
 
 //// XRCC1 has no specific affinity >1 nt gapped DNA
 'XRCC1 unbinds 5prime 2nt gapped DNA'
        XRCC1(dbd[1]), DNA(e3{NA}[0]),DNA(e5{NA}[0], xrc[1], e3{NA}[#]) ->
-       XRCC1(dbd[.]), DNA(e3{NA}[0]),DNA(e5{NA}[0], xrc[.], e3{NA}[#]) @ 'XRCC1_DNA_unbind_ns' 
+       XRCC1(dbd[.]), DNA(e3{NA}[0]),DNA(e5{NA}[0], xrc[.], e3{NA}[#]) @ 'XRCC1_DNA_unbind_ns'
 'XRCC1 unbinds 3prime 2nt gapped DNA'
        XRCC1(dbd[1]), DNA(e5{NA}[#], xrc[1], e3{NA}[0]),DNA(e5{NA}[0]) ->
-       XRCC1(dbd[.]), DNA(e5{NA}[#], xrc[.], e3{NA}[0]),DNA(e5{NA}[0]) @ 'XRCC1_DNA_unbind_ns' 
+       XRCC1(dbd[.]), DNA(e5{NA}[#], xrc[.], e3{NA}[0]),DNA(e5{NA}[0]) @ 'XRCC1_DNA_unbind_ns'
 
 //// XRCC1 has specific affinity for nicked DNA
 'XRCC1 unbinds 3 prime OH nicked DNA'
        XRCC1(dbd[1]), DNA(e5{lig}[_], base_state{OK}[.], xrc[1], e3{OH}[_]) ->
-       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{OH}[_]) @ 'XRCC1_DNA_unbind_nicked' 
+       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{OH}[_]) @ 'XRCC1_DNA_unbind_nicked'
 
 'XRCC1 unbinds 3 prime P nicked DNA'
        XRCC1(dbd[1]), DNA(e5{lig}[_], base_state{OK}[.], xrc[1], e3{P}[_]) ->
-       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{P}[_]) @ 'XRCC1_DNA_unbind_nicked' 
+       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{P}[_]) @ 'XRCC1_DNA_unbind_nicked'
 
 'XRCC1 unbinds 3 prime dRP nicked DNA'
        XRCC1(dbd[1]), DNA(e5{lig}[_], base_state{OK}[.], xrc[1], e3{dRP}[_]) ->
-       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{dRP}[_]) @ 'XRCC1_DNA_unbind_nicked' 
+       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{dRP}[_]) @ 'XRCC1_DNA_unbind_nicked'
 
 'XRCC1 unbinds 3 prime PUA nicked DNA'
        XRCC1(dbd[1]), DNA(e5{lig}[_], base_state{OK}[.], xrc[1], e3{PUA}[_]) ->
-       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{PUA}[_]) @ 'XRCC1_DNA_unbind_nicked' 
+       XRCC1(dbd[.]), DNA(e5{lig}[_], base_state{OK}[.], xrc[.], e3{PUA}[_]) @ 'XRCC1_DNA_unbind_nicked'
 
 %obs: 'Cpu' [Tsim]
 %obs: 'free XRCC1 w APE1' |XRCC1(dbd[.],ape[_])|
@@ -562,7 +562,7 @@
 
 //// For computing causality analysis only
 //%mod: [T]>50 do $TRACK 'LIG3 ligase action' [true]
-//%mod: [T]>100 do $TRACK 'LIG3 ligase action' [false]  
+//%mod: [T]>100 do $TRACK 'LIG3 ligase action' [false]
 //%def: "displayCompression" "weak"
 
 %obs: 'bp_tot' |DNA(base[1]), DNA(base[1])|
@@ -580,7 +580,7 @@
 %obs: 'free_excised'  |DNA(ape[.], pol[.], xrc[.], base_state{excised}[.])|
 %obs: 'free_gapped'  |DNA(ape[.], pol[.], xrc[.], base_state{gapped}[.])|
 %obs: 'free_nicked_P' |DNA(e3{OH}[2], base_state{OK}[.], xrc, ape, pol), DNA(e5{P}[2])|
-%obs: 'full_cytotoxic' 'free_excised' + 'free_gapped' + 'free_nicked_P'  
+%obs: 'full_cytotoxic' 'free_excised' + 'free_gapped' + 'free_nicked_P'
 
 %obs: 'damage (total)' 'true_damaged' + 'free_AP'
 
