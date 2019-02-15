@@ -1,7 +1,7 @@
 // Titles & headers
 var body = d3.select("body");
 body.append("h1").text("Kappa Visualization");
-body.append("h2").text("Rule-based modeling for complex biological systems");
+var subheading = body.append("h2").text("Rule-based modeling for complex biological systems");
 
 // Set up the SVG attributes
 var w = 800;
@@ -62,26 +62,60 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-var chart, expression;
+var expression;
 inputBox.on("input", function() {
     let input = inputBox.property('value').split('->'),
         lhs = tokenize(input[0]),
         rhs = input.length > 1 ? tokenize(input[1]) : undefined
           // [...inputBox.property('value')]
 
-    chart = [lhs, rhs].map( u =>
-                u ? tinynlp.parse(u, pattern, 'start') : u
-            )
-    expression = chart.map( c => c ? simplify(c) : c )
+    lhs = simplify(tinynlp.parse(lhs, pattern, 'start'))
+    rhs = simplify(tinynlp.parse(rhs, pattern, 'start'))
+
+    let merge = (lhs, rhs, what) => {
+        if (lhs.length != rhs.length)
+            throw new Error(what + ' lists don\'t match')
+
+        let ret = lhs.map((u,i) => {
+            let v = rhs[i]
+            if (what == 'agent') {
+                console.log(u,v)
+
+                if (u.name == v.name) {
+                    // FIXME: update site count
+                    return u
+                }
+                else if (!u.name) // added agent
+                    return {...v, added: true}
+                else if (!v.name) // removed agent
+                    return {...u, removed: true}
+                else
+                    throw new Error(`${u.name} @ ${u.id} doesn't match ${v.name} @ ${v.id}`)
+            }
+            else if (what == 'site') {
+                // if (u.parent != v.parent)
+                return u
+            }
+            else
+                throw new Error(what + ' isn\'t mergable')
+        })
+        return ret
+    }
+    expression = {agents: merge(lhs.agents, rhs.agents, 'agent'),
+                  sites: merge(lhs.sites, rhs.sites, 'site'),
+                  bonds: [...lhs.bonds, ...rhs.bonds],
+                  namedBonds: [...lhs.namedBonds, ...rhs.namedBonds]}
     // paragraph.text( () => JSON.stringify(expression, null, 2));
 
     clearExpressions()
-    visualizeExpression(expression[0],
-        svg.append('g').attr('transform', `translate(0,0)`))
-    if (rhs)
-        visualizeExpression(expression[1],
-            svg.append('g').attr('transform', `translate(${w/2},0)`))
-
+    visualizeExpression(expression,
+        [svg.append('g').attr('transform', `translate(0,0)`),
+         svg.append('g').attr('transform', `translate(${w/2},0)`)])
+    /* if (rhs)
+        visualizeExpression(
+            simplify(tinynlp.parse(rhs, pattern, 'start')),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)) */
+    
     /*var inputBoxId = document.getElementById("inputBox");
     inputBoxId.setAttribute = ("border-color", "red");*/
 
@@ -99,10 +133,10 @@ function clearExpressions() {
                 .attr('width', w+'px')
                 .attr('height', h+'px')
                 .attr('id', 'svg')
-}
-
+} 
 function visualizeExpression(expression, group) {
     // d3.selectAll("svg > *").remove();
+    subheading.text(JSON.stringify(expression)) // DEBUG
 
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
@@ -131,9 +165,8 @@ function visualizeExpression(expression, group) {
     // CoLa graph - using constraint based optimization
     let rs = nodes.map(d => d.siteCount === undefined ? 13 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
-    // nodes = nodes.map((d,i) => ({...d, 'width': rs[i]*2, 'height': rs[i]*2}))
-        // annotate nodes for cola's avoidOverlaps
 
+    // TODO: annotate agent nodes with cola's relative x/y constraints
     const simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
@@ -148,80 +181,82 @@ function visualizeExpression(expression, group) {
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceRadial(100, w / 2, h / 2));*/
 
-    const link = group.append("g")
-                    .selectAll("line")
-                    .data([...bonds, ...parents])
-                    .enter()
-                        .append("line")
-                        .attr("stroke-width", d => d.isParent ? 1 : 5)
-                        .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                        .attr("stroke-opacity", 0.4)
+    let link = [], node = [], freeNode = [], name = [], state = []
+    d3.range(2).forEach(i => {
+        link[i] = group[i].append("g")
+            .selectAll("line")
+            .data([...bonds, ...parents])
+            .enter()
+                .append("line")
+                .attr("stroke-width", d => d.isParent ? 1 : 5)
+                .attr("stroke", d => d.isParent ? "darkgray" : "black")
+                .attr("stroke-opacity", 0.4)
+    
+        node[i] = group[i].append("g")
+            .selectAll("circle")
+            .data(nodes)
+            .enter()
+                .append("circle")
+                .attr("r", (d,i) => rs[i])
+                .attr("fill", d => d.parent === undefined ? coloragent :
+                                    d.bond == undefined ? "#fff" : colorsite)
+                .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
+                .attr("stroke-width", 3)
+                .call(simulation.drag);
+    
+        freeNode[i] = group[i].append("g")
+            .selectAll("circle")
+            .data(nodes)
+            .enter()
+                .filter(d => d.parent !== undefined && d.bond == undefined)
+                .append("circle")
+                .attr("r", 4)
+                .attr("fill", "black");
+    
+        name[i] = group[i].append("g")
+            .selectAll("text")
+            .data(nodes)
+            .enter()
+                .append("text")
+                .text(d => d.name)
+                .attr("class", d => d.parent == undefined ? "agent" : "site")
+                .attr("fill", "black")
+                .attr("text-anchor", "middle")
+                .attr("font-size", d => d.parent === undefined ? 16 : 12)
+                .attr("font-family", "Helvetica Neue");
 
-    const node = group.append("g")
-                    .selectAll("circle")
-                    .data(nodes)
-                    .enter()
-                        .append("circle")
-                        .attr("r", (d,i) => rs[i])
-                        .attr("fill", d => d.parent === undefined ? coloragent :
-                                           d.bond == undefined ? "#fff" : colorsite)
-                        .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
-                        .attr("stroke-width", 3)
-                        .call(simulation.drag);
-
-    const freeNode = group.append("g")
-                    .selectAll("circle")
-                    .data(nodes)
-                    .enter()
-                        .filter(d => d.parent !== undefined && d.bond == undefined)
-                        .append("circle")
-                        .attr("r", 4)
-                        .attr("fill", "black");
-
-    const name = group.append("g")
-                    .selectAll("text")
-                    .data(nodes)
-                    .enter()
-                        .append("text")
-                        .text(d => d.name)
-                        .attr("class", d => d.parent == undefined ? "agent" : "site")
-                        .attr("fill", "black")
-                        .attr("text-anchor", "middle")
-                        .attr("font-size", d => d.parent === undefined ? 16 : 12)
-                        .attr("font-family", "Helvetica Neue");
-
-    const state = group.append("g")
-                    .selectAll("text")
-                    .data(expression.sites)
-                    .enter()
-                        .append("text")
-                        .text(d => d.state)
-                        .attr("fill", "black")
-                        .attr("font-size", 12)
-
-
-     simulation.start(30,30,30);
-
-     simulation.on("tick", () => {
-                     link
-                         .attr("x1", d => d.source.x)
-                         .attr("y1", d => d.source.y)
-                         .attr("x2", d => d.target.x)
-                         .attr("y2", d => d.target.y);
-                     node
-                         .attr("cx", d => d.x)
-                         .attr("cy", d => d.y);
-                     freeNode
-                         .attr("cx", d => d.x - 10)
-                         .attr("cy", d => d.y + 10);
-
-                     name
-                         .attr("x", d => d.x)
-                         .attr("y", d => d.parent === undefined ? d.y+4 : d.y+3);
-                     state
-                         .attr("x", d => d.x)
-                          .attr("y", d => d.y+14);
-                     });
+        state[i] = group[i].append("g")
+            .selectAll("text")
+            .data(expression.sites)
+            .enter()
+                .append("text")
+                .text(d => d.state)
+                .attr("fill", "black")
+                .attr("font-size", 12)
+    })
+    simulation.start(30,30,30);
+    simulation.on("tick", () => {
+        // one simulation drives both charts!
+        // note the different translate() assigned to each group.
+        
+        link.forEach(sel => sel
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y))
+        node.forEach(sel => sel
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y))
+        freeNode.forEach(sel => sel
+            .attr("cx", d => d.x - 10)
+            .attr("cy", d => d.y + 10))
+        name.forEach(sel => sel
+            .attr("x", d => d.x)
+            .attr("y", d => d.parent === undefined ? d.y+4 : d.y+3))
+        state.forEach(sel => sel
+            .attr("x", d => d.x)
+            .attr("y", d => d.y+14))
+        });
 };
 
 // Prints expression to expression
