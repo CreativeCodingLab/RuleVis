@@ -1,7 +1,7 @@
 // Titles & headers
 var body = d3.select("body");
 body.append("h1").text("Kappa: Rule-based modeling for biological processes");
-var subheading = body.append("h2").text("Debug expression placeholder");
+var subheading = body.append("h2").text("A(x[1]),B(y[1]) ->A(x[B.y]),B(y[_])");
 
 // Set up the SVG attributes
 var w = 1000;
@@ -73,38 +73,38 @@ inputBox.on("input", function() {
     rhs = simplify(tinynlp.parse(rhs, pattern, 'start'))
 
     let merge = (lhs, rhs, what) => {
-        if (lhs.length != rhs.length)
+        // mostly a validator
+        if (what != 'bond' && lhs.length != rhs.length)
             throw new Error(what + ' lists don\'t match')
 
         let ret = lhs.map((u,i) => {
             let v = rhs[i]
-            if (what == 'agent') {
-                console.log(u,v)
+            console.log(u, v)
 
-                if (u.name == v.name) {
-                    // FIXME: update site count
-                    return u
-                }
-                else if (!u.name) // added agent
-                    return {...v, added: true}
-                else if (!v.name) // removed agent
-                    return {...u, removed: true}
-                else
+            if (what == 'agent') {
+                if (u.id != v.id)
                     throw new Error(`${u.name} @ ${u.id} doesn't match ${v.name} @ ${v.id}`)
             }
             else if (what == 'site') {
-                // if (u.parent != v.parent)
-                return u
+                if (u.id[0] != v.id[0] || u.id[1] != v.id[1])
+                    throw new Error(`${u.name} @ ${u.id} doesn't match ${v.name} @ ${v.id}`)
             }
-            else
-                throw new Error(what + ' isn\'t mergable')
-        })
+            else if (what == 'bond') {
+                // implicit id - these must be aligned.
+                
+            }
+            return new Map(
+                [['id', u.id ? u.id : i],
+                 ['parent', u.parent],
+                 ['siteCount', u.siteCount],
+                 [0, u], [1, v]]) // be careful with shallow copy
+            })
         return ret
     }
     expression = {agents: merge(lhs.agents, rhs.agents, 'agent'),
                   sites: merge(lhs.sites, rhs.sites, 'site'),
-                  bonds: [...lhs.bonds, ...rhs.bonds],
-                  namedBonds: [...lhs.namedBonds, ...rhs.namedBonds]}
+                  bonds: [...lhs.bonds, ...rhs.bonds], // anonymous bonds don't have stable id
+                  namedBonds: merge(lhs.namedBonds, rhs.namedBonds, 'bond')}
     // paragraph.text( () => JSON.stringify(expression, null, 2));
 
     clearExpressions()
@@ -146,26 +146,34 @@ function visualizeExpression(expression, group) {
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
 
-    let nodes = [...expression.agents,
-                 ...expression.sites]
-
     let getIndex = (siteId) => {
       if (!siteId) return
+      
       let [a,b] = siteId
       return expression.agents.length +
-             expression.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+             expression.sites.findIndex((u) => u.get('id')[0] == a && u.get('id')[1] == b)
     }
-    let bonds = expression.namedBonds.slice(1)
-                  .filter(bnd => bnd && bnd[1])
-                  .map(([src,tar]) => ({'source': getIndex(src),
-                                       'target': getIndex(tar)
-                                       })),
+    
+    let nodes = [...expression.agents,
+                 ...expression.sites] 
+                 
+    let bonds = expression.namedBonds.slice(1) // TODO: handle anonymous bonds too
+                    .filter(diff => diff.has(1))
+                    .map(diff => new Map([
+                        [0, {'source': getIndex(diff.get(0)[0]),
+                             'target': getIndex(diff.get(0)[1])}],
+                        [1, {'source': getIndex(diff.get(1)[0]),
+                             'target': getIndex(diff.get(1)[1])}],
+                            ])),
         parents = expression.sites
-                    .map(u => ({'source': u.parent, // agentId is already a valid index
-                                'target': getIndex(u.id),
+                    .map(diff => ({'source': diff.get('parent'), // agentId is already a valid index
+                                'target': getIndex(diff.get('id')),
                                 'isParent': true,
-                                'sibCount': nodes[u.parent].siteCount,
-                               }))
+                                'sibCount': nodes[diff.get('parent')].get('siteCount'),
+                                }))
+
+    let union = bonds.map(uv => uv.get(0))
+                     .filter(u => u.length > 0) // TODO: take actual union of bonds seen
 
     // CoLa graph - using constraint based optimization
     let rs = nodes.map(d => d.siteCount === undefined ? 13 /*:
@@ -174,23 +182,22 @@ function visualizeExpression(expression, group) {
     // TODO: annotate agent nodes with cola's relative x/y constraints
     const simulation = cola.d3adaptor(d3)
         .size([w/2,h])
-        .nodes(nodes)
-        .links([...bonds, ...parents])
+        .nodes(nodes.map(uv => uv.get(0)))
+        .links([...union, 
+                ...parents])
         .linkDistance(d => !d.isParent ? 80 : d.sibCount > 6 ? 65 : d.sibCount > 3 ? 50 : 35)
         // .avoidOverlaps(true);
 
-    /* // force directed graph
-    const simulation = d3.forceSimulation(nodes)
-        .force("bonds", d3.forceLink(bonds).strength(0.1).distance(100))
-        .force("site", d3.forceLink(parents).strength(0.9).distance(20))
-        .force("charge", d3.forceManyBody())
-        .force("center", d3.forceRadial(100, w / 2, h / 2));*/
+    console.log(simulation)
 
     let link = [], node = [], freeNode = [], name = [], state = []
     d3.range(2).forEach(i => {
+        // .map(uv => uv[i])
+
         link[i] = group[i].append("g")
             .selectAll("line")
-            .data([...bonds, ...parents])
+            .data([...bonds.map(uv => uv.get(i)),
+                   ...parents])
             .enter()
                 .append("line")
                 .attr("stroke-width", d => d.isParent ? 1 : 5)
@@ -199,7 +206,7 @@ function visualizeExpression(expression, group) {
     
         node[i] = group[i].append("g")
             .selectAll("circle")
-            .data(nodes)
+            .data(nodes.map(uv => uv.get(i)))
             .enter()
                 .append("circle")
                 .attr("r", (d,i) => rs[i])
@@ -211,7 +218,7 @@ function visualizeExpression(expression, group) {
     
         freeNode[i] = group[i].append("g")
             .selectAll("circle")
-            .data(nodes)
+            .data(nodes.map(uv => uv.get(i)))
             .enter()
                 .filter(d => d.parent !== undefined && d.bond == undefined)
                 .append("circle")
@@ -220,7 +227,7 @@ function visualizeExpression(expression, group) {
     
         name[i] = group[i].append("g")
             .selectAll("text")
-            .data(nodes)
+            .data(nodes.map(uv => uv.get(i)))
             .enter()
                 .append("text")
                 .text(d => d.name)
@@ -232,7 +239,7 @@ function visualizeExpression(expression, group) {
 
         state[i] = group[i].append("g")
             .selectAll("text")
-            .data(expression.sites)
+            .data(expression.sites.map(uv => uv.get(i)))
             .enter()
                 .append("text")
                 .text(d => d.state)
