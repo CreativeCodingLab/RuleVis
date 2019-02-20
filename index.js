@@ -98,6 +98,10 @@ function clearExpressions() {
                 .attr('width', w+'px')
                 .attr('height', h+'px')
                 .attr('id', 'svg')
+                .call(d3.zoom().on("zoom", function () {
+                    svg.attr("transform", d3.event.transform)
+                }))
+                .append("g")
 }
 
 function visualizeExpression(expression, group) {
@@ -108,6 +112,10 @@ function visualizeExpression(expression, group) {
 
     let nodes = [...expression.agents,
                  ...expression.sites]
+
+    nodes.forEach(function(d) {
+        d.label = false;
+    })
 
     let getIndex = (siteId) => {
       if (!siteId) return
@@ -156,17 +164,19 @@ function visualizeExpression(expression, group) {
                         .attr("stroke", d => d.isParent ? "darkgray" : "black")
                         .attr("stroke-opacity", 0.4)
 
-    const node = group.append("g")
-                    .selectAll("circle")
-                    .data(nodes)
-                    .enter()
-                        .append("circle")
+    const nodegroup = group.selectAll('.node')
+                        .data(nodes)
+                        .enter()
+                        .append('g')
+                        .attr('class', 'node')
+                        .call(simulation.drag);
+
+    const node = nodegroup.append('circle')
                         .attr("r", (d,i) => rs[i])
                         .attr("fill", d => d.parent === undefined ? coloragent :
-                                           d.bond == undefined ? "#fff" : colorsite)
+                                d.bond == undefined ? "#fff" : colorsite)
                         .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
-                        .attr("stroke-width", 3)
-                        .call(simulation.drag);
+                        .attr("stroke-width", 3);
 
     const freeNode = group.append("g")
                     .selectAll("circle")
@@ -177,26 +187,40 @@ function visualizeExpression(expression, group) {
                         .attr("r", 4)
                         .attr("fill", "black");
 
-    const name = group.append("g")
-                    .selectAll("text")
-                    .data(nodes)
-                    .enter()
-                        .append("text")
-                        .text(d => d.name)
-                        .attr("class", d => d.parent == undefined ? "agent" : "site")
-                        .attr("fill", "black")
-                        .attr("text-anchor", "middle")
-                        .attr("font-size", d => d.parent === undefined ? 16 : 12)
-                        .attr("font-family", "Helvetica Neue");
+    const name = nodegroup.append("text")
+                    .text(d => d.name)
+                    .attr("class", d => d.parent == undefined ? "agent" : "site")
+                    .attr("fill", "black")
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", d => d.parent === undefined ? 16 : 12)
+                    .attr("font-family", "Helvetica Neue")
+                    .style('opacity', 0);
 
-    const state = group.append("g")
-                    .selectAll("text")
-                    .data(expression.sites)
-                    .enter()
-                        .append("text")
-                        .text(d => d.state)
-                        .attr("fill", "black")
-                        .attr("font-size", 12)
+    const state = nodegroup.append("text")
+                    .text(d => d.state)
+                    .attr("fill", "black")
+                    .attr("font-size", 12)
+                    .style('opacity', 0);
+
+    nodegroup.on("mouseover", function(d,i) {
+        if (d.label === false) {
+            d3.select(this).selectAll('text').style('opacity', 1);
+        }
+    });
+    nodegroup.on("mouseout", function(d,i) {
+        if (d.label === false) {
+            d3.select(this).selectAll('text').style('opacity', 0);
+        }
+    });
+    nodegroup.on("click", function(d,i) {
+        if (d.label === false) {
+            d.label = true;
+            d3.select(this).selectAll('text').style('opacity', 1);
+        } else {
+            d.label = false;
+            d3.select(this).selectAll('text').style('opacity', 0);
+        }
+    });
 
 
      simulation.start(30,30,30);
