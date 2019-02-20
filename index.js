@@ -109,6 +109,10 @@ function visualizeExpression(expression, group) {
     let nodes = [...expression.agents,
                  ...expression.sites]
 
+    nodes.forEach(function(d) {
+        d.label = false;
+    })
+
     let getIndex = (siteId) => {
       if (!siteId) return
       let [a,b] = siteId
@@ -188,21 +192,31 @@ function visualizeExpression(expression, group) {
                     .attr("font-family", "Helvetica Neue")
                     .style('opacity', 0);
 
+    const state = nodegroup.append("text")
+                    .text(d => d.state)
+                    .attr("fill", "black")
+                    .attr("font-size", 12)
+                    .style('opacity', 0);
+
     nodegroup.on("mouseover", function(d,i) {
-        d3.select(this).select('text').style('opacity', 1);
+        if (d.label === false) {
+            d3.select(this).selectAll('text').style('opacity', 1);
+        }
     });
     nodegroup.on("mouseout", function(d,i) {
-        d3.select(this).select('text').style('opacity', 0);
+        if (d.label === false) {
+            d3.select(this).selectAll('text').style('opacity', 0);
+        }
     });
-
-    const state = group.append("g")
-                    .selectAll("text")
-                    .data(expression.sites)
-                    .enter()
-                        .append("text")
-                        .text(d => d.state)
-                        .attr("fill", "black")
-                        .attr("font-size", 12);
+    nodegroup.on("click", function(d,i) {
+        if (d.label === false) {
+            d.label = true;
+            d3.select(this).selectAll('text').style('opacity', 1);
+        } else {
+            d.label = false;
+            d3.select(this).selectAll('text').style('opacity', 0);
+        }
+    });
 
 
      simulation.start(30,30,30);
