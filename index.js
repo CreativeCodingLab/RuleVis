@@ -114,7 +114,11 @@ function visualizeExpression(expression, group) {
                  ...expression.sites]
 
     nodes.forEach(function(d) {
-        d.label = false;
+        if (d.parent === undefined) {
+            d.label = true;
+        } else {
+            d.label = false;
+        }
     })
 
     let getIndex = (siteId) => {
@@ -194,7 +198,7 @@ function visualizeExpression(expression, group) {
                     .attr("text-anchor", "middle")
                     .attr("font-size", d => d.parent === undefined ? 16 : 12)
                     .attr("font-family", "Helvetica Neue")
-                    .style('opacity', 0);
+                    .style('opacity', d => d.parent === undefined ? 1 : 0);
 
     const state = nodegroup.append("text")
                     .text(d => d.state)
