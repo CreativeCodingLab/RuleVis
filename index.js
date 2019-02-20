@@ -146,6 +146,12 @@ function visualizeExpression(expression, group) {
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
 
+    let nodes = [...expression.agents,
+                 ...expression.sites] 
+    nodes.forEach(function(d) {
+        d.label = true;
+    })
+
     let getIndex = (siteId) => {
       if (!siteId) return
       
@@ -154,9 +160,6 @@ function visualizeExpression(expression, group) {
              expression.sites.findIndex((u) => u.get('id')[0] == a && u.get('id')[1] == b)
     }
     
-    let nodes = [...expression.agents,
-                 ...expression.sites] 
-                 
     let bonds = expression.namedBonds.slice(1) // TODO: handle anonymous bonds too
                     .filter(diff => diff.has(1))
                     .map(diff => new Map([
@@ -190,53 +193,11 @@ function visualizeExpression(expression, group) {
 
     console.log(simulation)
 
-    let link = [], node = [], freeNode = [], name = [], state = []
-    d3.range(2).forEach(i => {
-        // .map(uv => uv[i])
+    let link = [], nodegroup = [], node = [], freeNode = [],
+        name = [], state = []
+    d3.range(2).forEach((i) => {
 
-        link[i] = group[i].append("g")
-            .selectAll("line")
-            .data([...bonds.map(uv => uv.get(i)),
-                   ...parents])
-            .enter()
-                .append("line")
-                .attr("stroke-width", d => d.isParent ? 1 : 5)
-                .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                .attr("stroke-opacity", 0.4)
-    
-        node[i] = group[i].append("g")
-            .selectAll("circle")
-            .data(nodes.map(uv => uv.get(i)))
-            .enter()
-                .append("circle")
-                .attr("r", (d,i) => rs[i])
-                .attr("fill", d => d.parent === undefined ? coloragent :
-                                    d.bond == undefined ? "#fff" : colorsite)
-                .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
-                .attr("stroke-width", 3)
-                .call(simulation.drag);
-    
-        freeNode[i] = group[i].append("g")
-            .selectAll("circle")
-            .data(nodes.map(uv => uv.get(i)))
-            .enter()
-                .filter(d => d.parent !== undefined && d.bond == undefined)
-                .append("circle")
-                .attr("r", 4)
-                .attr("fill", "black");
-    
-        name[i] = group[i].append("g")
-            .selectAll("text")
-            .data(nodes.map(uv => uv.get(i)))
-            .enter()
-                .append("text")
-                .text(d => d.name)
-                .attr("class", d => d.parent == undefined ? "agent" : "site")
-                .attr("fill", "black")
-                .attr("text-anchor", "middle")
-                .attr("font-size", d => d.parent === undefined ? 16 : 12)
-                .attr("font-family", "Helvetica Neue");
-
+        // annotations
         state[i] = group[i].append("g")
             .selectAll("text")
             .data(expression.sites.map(uv => uv.get(i)))
@@ -245,6 +206,80 @@ function visualizeExpression(expression, group) {
                 .text(d => d.state)
                 .attr("fill", "black")
                 .attr("font-size", 12)
+
+        link[i] = group[i].append("g")
+            .selectAll("line")
+            .data([...bonds.map(uv => uv.get(i)),
+                    ...parents])
+            .enter()
+                .append("line")
+                .attr("stroke-width", d => d.isParent ? 1 : 5)
+                .attr("stroke", d => d.isParent ? "darkgray" : "black")
+                .attr("stroke-opacity", 0.4)
+
+        freeNode[i] = group[i].append("g")
+            .selectAll("circle")
+            .data(nodes.map(uv => uv.get(i)))
+            .enter()
+                .filter(d => d.parent !== undefined && d.bond == undefined)
+                .append("circle")
+                .attr("r", 4)
+                .attr("fill", "black");
+
+        //nodes
+        nodegroup[i] = group[i]
+            .selectAll('.node')
+            .data(nodes.map(uv => uv.get(i)))
+            .enter()
+                .append('g')
+                .attr('class', 'node')
+                .call(simulation.drag)
+                
+        node[i] = nodegroup[i]
+            .append('circle')
+            .attr("r", (d,i) => rs[i])
+            .attr("fill", d => d.parent === undefined ? coloragent :
+                    d.bond == undefined ? "#fff" : colorsite)
+            .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
+            .attr("stroke-width", 3);
+
+        name[i] = nodegroup[i]
+            .append("text")
+            .text(d => d.name)
+            .attr("class", d => d.parent == undefined ? "agent" : "site")
+            .attr("fill", "black")
+            .attr("text-anchor", "middle")
+            .attr("font-size", d => d.parent === undefined ? 16 : 12)
+            .attr("font-family", "Helvetica Neue")
+            .style('opacity', 0);
+
+        state[i] = nodegroup[i]
+            .append("text")
+            .text(d => d.state)
+            .attr("fill", "black")
+            .attr("font-size", 12)
+            .style('opacity', 0);
+
+        // FIXME: d not getting passed in
+        /* nodegroup[i].on("mouseover", function(d,i) {
+            if (d.label === false) {
+                d3.select(this).selectAll('text').style('opacity', 1);
+            }
+        });
+        nodegroup[i].on("mouseout", function(d,i) {
+            if (d.label === false) {
+                d3.select(this).selectAll('text').style('opacity', 0);
+            }
+        });
+        nodegroup[i].on("click", function(d,i) {
+            if (d.label === false) {
+                d.label = true;
+                d3.select(this).selectAll('text').style('opacity', 1);
+            } else {
+                d.label = false;
+                d3.select(this).selectAll('text').style('opacity', 0);
+            }
+        }); */
     })
     simulation.start(30,30,30);
     simulation.on("tick", () => {
