@@ -98,6 +98,10 @@ function clearExpressions() {
                 .attr('width', w+'px')
                 .attr('height', h+'px')
                 .attr('id', 'svg')
+                .call(d3.zoom().on("zoom", function () {
+                    svg.attr("transform", d3.event.transform)
+                }))
+                .append("g")
 }
 
 function visualizeExpression(expression, group) {
