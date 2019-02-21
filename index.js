@@ -1,15 +1,29 @@
 // Titles & headers
 var body = d3.select("body");
-body.append("h1").text("Kappa: Rule-based modeling for biological processes");
+var header = body.append('div').attr('id', 'header');
+var headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
 
 // Set up the SVG attributes
 var w = 1000;
 var h = 450;
 
+// Height of header + 15px of padding on top and bottom
+var headerH = document.getElementById('header').clientHeight + 30;
+
+// Dimensions of entire page EXCLUDING header, in order to calculate other element sizes
+var bodyH = window.document.documentElement.clientHeight - headerH;
+var bodyW = window.document.documentElement.clientWidth;
+
+// Dimensions for sidebar: takes up remaining height of page after header
+var sidebarW = 300;
+
+// Dimensions of svg div
+var svgDivW = bodyW - sidebarW;
+
 // Create container div for styling purposes
 var main = d3.select('body').append('div')
-                .attr('id', 'main')
-                .style('text-align', 'center');
+                .attr('id', 'main');
+                //.style('text-align', 'center');
 
 /* main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
@@ -19,7 +33,12 @@ var main = d3.select('body').append('div')
 
 // Input text box for expression
 var inputDiv = main.append('div')
-                    .attr('id', 'inputDiv');
+                    .attr('id', 'inputDiv')
+                    //.style('width', sidebarW + 'px')
+                    .style('width', (bodyW > 600 ? 30 : 100) + '%')
+                    .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
+                    .style('float', 'left')
+                    .style('background-color', 'darkgray');
 
 var inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
@@ -32,13 +51,16 @@ var inputBox = inputDiv.append('textarea')
 // Create parent div for svg
 let svgDiv = d3.select('#main').append('div')
                 .attr('id', 'svgDiv')
-                .style('width', w + "px")
-                .style('height', h + "px")
-                .style('display', 'inline-block');
+                //.style('width', (svgDivW - 20)+ "px")
+                .style('width', (bodyW > 600 ? 70 : 100) + '%')
+                .style('height', bodyH + "px")
+                .style('background-color', 'lightgray')
+                .style('float', 'left')
+                //.style('margin-left', (sidebarW+10) + 'px');
 
 var svg = undefined
 
-var exportDiv = main.append('div')
+var exportDiv = inputDiv.append('div')
                     .attr('id', 'buttonDiv');
 
 // Button for downloading/exporting svg
