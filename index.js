@@ -1,21 +1,21 @@
 // Titles & headers
-var body = d3.select("body");
-var header = body.append('div').attr('id', 'header');
-var headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
+let body = d3.select("body");
+let header = body.append('div').attr('id', 'header');
+let headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
 
 // Height of header + 15px of margin on top and bottom
-var headerH = document.getElementById('header').clientHeight;
+let headerH = document.getElementById('header').clientHeight;
 
 // Dimensions of entire page EXCLUDING header, in order to calculate other element sizes
-var bodyH = window.document.documentElement.clientHeight - headerH;
-var bodyW = window.document.documentElement.clientWidth;
+let bodyH = window.document.documentElement.clientHeight - headerH;
+let bodyW = window.document.documentElement.clientWidth;
 
 // Set up the SVG attributes
-var h = bodyH;
-var w = bodyW * 0.7;
+let h = bodyH;
+let w = bodyW * 0.7;
 
 // Create container div for styling purposes
-var main = d3.select('body').append('div')
+let main = d3.select('body').append('div')
                 .attr('id', 'main');
                 //.style('text-align', 'center');
 
@@ -25,22 +25,76 @@ var main = d3.select('body').append('div')
                 .style('height', 10 + "px")
                 .style('display', 'inline-block'); */
 
-// Input text box for expression
-var inputDiv = main.append('div')
-                    .attr('id', 'inputDiv')
+// Sidebar for different options
+let sidebar = main.append('div')
+                    .attr('id', 'sidebar')
                     .style('width', (bodyW > 600 ? 30 : 100) + '%')
                     .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
                     .style('float', 'left')
                     .style('background-color', 'rgb(230, 233, 239)')
                     .style('text-align', 'center');
 
-var inputBox = inputDiv.append('textarea')
+let menuOptions = ["inputText", "export", "settings"];
+
+let sidebarMenu = sidebar.append('div')
+                    .attr('id', 'sidebarMenu')
+                    .style('width', '100%')
+                    .style('height', '40px')
+                    .style('background-color', 'rgb(188, 192, 198)');
+
+// Menu buttons
+let menu = sidebarMenu.selectAll('input')
+                    .data(menuOptions)
+                    .enter()
+                    .append('input')
+                    .attr('type', 'button')
+                    .attr('value', function (d) { return d })
+                    .attr('class', 'menuOption')
+                    .attr('id', function (d) { return d });
+
+//var menuText = menu.selectAll('text')
+                    
+menu.on("click", function (d) {
+    console.log(d);
+    if (d === "inputText") {
+        d3.select('#inputDiv').style('display', 'inline-block');
+        d3.select('#exportDiv').style('display', 'none');
+    } 
+    else if (d === "export") {
+        d3.select('#inputDiv').style('display', 'none');
+        d3.select('#exportDiv').style('display', 'inline-block');
+    }
+});
+
+// Text Input tab
+let inputDiv = sidebar.append('div')
+                    .attr('id', 'inputDiv');
+
+let inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
                     .attr('rows', 10)
                     //.style('text-align', 'center')
                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
+
+// Download SVG tab
+var exportDiv = sidebar.append('div')
+                    .attr('id', 'exportDiv')
+                    .style('display', 'none');
+
+// Button for downloading/exporting svg
+var exportButton = exportDiv.append('button')
+                            .attr('id', 'download')
+                            .text('Export SVG')
+                            .style('font-size', '20px')
+                            .style('font-weight', 'medium')
+                            .style('font', 'Helvetica Neue')
+                            .style('border-radius', '10px')
+                            .style('background-color', 'whitesmoke')
+                            .on('click', function() {
+                                downloadSVG();
+                            });
 
 // Create parent div for svg
 let svgDiv = d3.select('#main').append('div')
@@ -59,21 +113,9 @@ let svgDiv = d3.select('#main').append('div')
 
 var svg = undefined
 
-var exportDiv = inputDiv.append('div')
-                    .attr('id', 'buttonDiv');
 
-// Button for downloading/exporting svg
-var exportButton = exportDiv.append('button')
-                            .attr('id', 'download')
-                            .text('Export SVG')
-                            .style('font-size', '20px')
-                            .style('font-weight', 'medium')
-                            .style('font', 'Helvetica Neue')
-                            .style('border-radius', '10px')
-                            .style('background-color', 'whitesmoke')
-                            .on('click', function() {
-                                downloadSVG();
-                            });
+
+
 
 function downloadSVG() {
     var config = {
