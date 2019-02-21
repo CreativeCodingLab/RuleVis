@@ -3,8 +3,8 @@ var body = d3.select("body");
 var header = body.append('div').attr('id', 'header');
 var headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
 
-// Height of header + 15px of padding on top and bottom
-var headerH = document.getElementById('header').clientHeight + 30;
+// Height of header + 15px of margin on top and bottom
+var headerH = document.getElementById('header').clientHeight;
 
 // Dimensions of entire page EXCLUDING header, in order to calculate other element sizes
 var bodyH = window.document.documentElement.clientHeight - headerH;
@@ -13,8 +13,6 @@ var bodyW = window.document.documentElement.clientWidth;
 // Set up the SVG attributes
 var h = bodyH;
 var w = bodyW * 0.7;
-
-console.log("h = " + h + ", w = " + w);
 
 // Create container div for styling purposes
 var main = d3.select('body').append('div')
@@ -33,13 +31,14 @@ var inputDiv = main.append('div')
                     .style('width', (bodyW > 600 ? 30 : 100) + '%')
                     .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
                     .style('float', 'left')
-                    .style('background-color', 'darkgray');
+                    .style('background-color', 'rgb(230, 233, 239)')
+                    .style('text-align', 'center');
 
 var inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
-                    .attr('rows', 4)
-                    // .style('text-align', 'center')
+                    .attr('rows', 10)
+                    //.style('text-align', 'center')
                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
 
@@ -47,6 +46,7 @@ var inputBox = inputDiv.append('textarea')
 let svgDiv = d3.select('#main').append('div')
                 .attr('id', 'svgDiv')
                 .style('width', function () {
+                    // If window size < 600, svg should reflect size of parent div
                     if (bodyW > 600) {
                         return 70 + '%';
                     } else {
