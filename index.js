@@ -3,10 +3,6 @@ var body = d3.select("body");
 var header = body.append('div').attr('id', 'header');
 var headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
 
-// Set up the SVG attributes
-var w = 1000;
-var h = 450;
-
 // Height of header + 15px of padding on top and bottom
 var headerH = document.getElementById('header').clientHeight + 30;
 
@@ -14,11 +10,11 @@ var headerH = document.getElementById('header').clientHeight + 30;
 var bodyH = window.document.documentElement.clientHeight - headerH;
 var bodyW = window.document.documentElement.clientWidth;
 
-// Dimensions for sidebar: takes up remaining height of page after header
-var sidebarW = 300;
+// Set up the SVG attributes
+var h = bodyH;
+var w = bodyW * 0.7;
 
-// Dimensions of svg div
-var svgDivW = bodyW - sidebarW;
+console.log("h = " + h + ", w = " + w);
 
 // Create container div for styling purposes
 var main = d3.select('body').append('div')
@@ -34,7 +30,6 @@ var main = d3.select('body').append('div')
 // Input text box for expression
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv')
-                    //.style('width', sidebarW + 'px')
                     .style('width', (bodyW > 600 ? 30 : 100) + '%')
                     .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
                     .style('float', 'left')
@@ -51,12 +46,16 @@ var inputBox = inputDiv.append('textarea')
 // Create parent div for svg
 let svgDiv = d3.select('#main').append('div')
                 .attr('id', 'svgDiv')
-                //.style('width', (svgDivW - 20)+ "px")
-                .style('width', (bodyW > 600 ? 70 : 100) + '%')
+                .style('width', function () {
+                    if (bodyW > 600) {
+                        return 70 + '%';
+                    } else {
+                        w = bodyW - 10;
+                        return 100 + '%';
+                    }
+                })
                 .style('height', bodyH + "px")
-                .style('background-color', 'lightgray')
-                .style('float', 'left')
-                //.style('margin-left', (sidebarW+10) + 'px');
+                .style('float', 'left');
 
 var svg = undefined
 
