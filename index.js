@@ -40,8 +40,8 @@ let sidebarMenu = sidebar.append('div')
                     .attr('id', 'sidebarMenu')
                     .style('width', '100%')
                     .style('background-color', 'rgb(188, 192, 198)')
-                    .style('padding', '10px 0px')
-                    .style('margin-bottom', '10px');
+                    .style('margin-bottom', '10px')
+                    .style('text-align', 'left');
 
 // Menu buttons
 let menu = sidebarMenu.selectAll('input')
@@ -53,13 +53,39 @@ let menu = sidebarMenu.selectAll('input')
                     .attr('class', 'menuOption')
                     .attr('id', function (d) { return d });
 
+// var menuGroups = sidebarMenu.selectAll('div')
+//                     .data(menuOptions)
+//                     .enter()
+//                     .append('div')
+//                     .attr('width', '20px')
+//                     .attr('transform', function (i) {
+//                         return ('translateX(' + i*20 + ')');
+//                     })
+//                     .attr('class', 'menuOption')
+//                     .attr('id', function (d) { return d });
+
+// let menuLabels = sidebarMenu.selectAll('text')
+//                     .data(menuOptions)
+//                     .enter()
+//                     .append('text')
+//                     .attr('x', function (i) {
+//                         return (10 + i*20);
+//                     })
+//                     .attr('y', 0)
+//                     .style('padding', '0px, 5px')
+//                     .text(function (d) { return d });
+
 //var menuText = menu.selectAll('text')
+
                     
 menu.on("click", function (d) {
     console.log(d);
     if (d === "inputText") {
-        d3.select('#inputDiv').style('display', 'inline-block').style('width', '100%');
-        d3.select('#exportDiv').style('display', 'none');
+        d3.select('#inputDiv')
+            .style('display', 'inline-block')
+            .style('width', '100%');
+        d3.select('#exportDiv')
+            .style('display', 'none');
     } 
     else if (d === "export") {
         d3.select('#inputDiv').style('display', 'none');

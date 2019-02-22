@@ -77,3 +77,19 @@ button {
 button:focus {
     outline:none;
 }
+
+.menuOption {
+    padding: 10px 10px;
+    background-color:rgb(188, 192, 198);
+    border: none;
+    height: 40px;
+    font-size: 14px;
+}
+
+.activeMenuOption {
+    background-color: rgb(155, 162, 173)
+}
+
+.menuOption:hover {
+    cursor: pointer;
+}
