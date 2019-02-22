@@ -34,13 +34,14 @@ let sidebar = main.append('div')
                     .style('background-color', 'rgb(230, 233, 239)')
                     .style('text-align', 'center');
 
-let menuOptions = ["inputText", "export", "settings"];
+let menuOptions = ["inputText", "export"];
 
 let sidebarMenu = sidebar.append('div')
                     .attr('id', 'sidebarMenu')
                     .style('width', '100%')
-                    .style('height', '40px')
-                    .style('background-color', 'rgb(188, 192, 198)');
+                    .style('background-color', 'rgb(188, 192, 198)')
+                    .style('padding', '10px 0px')
+                    .style('margin-bottom', '10px');
 
 // Menu buttons
 let menu = sidebarMenu.selectAll('input')
@@ -57,7 +58,7 @@ let menu = sidebarMenu.selectAll('input')
 menu.on("click", function (d) {
     console.log(d);
     if (d === "inputText") {
-        d3.select('#inputDiv').style('display', 'inline-block');
+        d3.select('#inputDiv').style('display', 'inline-block').style('width', '100%');
         d3.select('#exportDiv').style('display', 'none');
     } 
     else if (d === "export") {
@@ -74,6 +75,8 @@ let inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
                     .attr('rows', 10)
+                    .style('width', '100%')
+                    .style('padding', '10px')
                     //.style('text-align', 'center')
                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
