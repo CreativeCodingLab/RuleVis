@@ -11,6 +11,12 @@ var main = d3.select('body').append('div')
                 .attr('id', 'main')
                 .style('text-align', 'center');
 
+/* main.append('p')
+    .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
+                .style('width', w + "px")
+                .style('height', 10 + "px")
+                .style('display', 'inline-block'); */
+
 // Input text box for expression
 var inputDiv = main.append('div')
                     .attr('id', 'inputDiv');
@@ -19,7 +25,9 @@ var inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
                     .attr('rows', 4)
+                    // .style('text-align', 'center')
                     .attr('id', 'inputBox');
+                    //.attr('placeholder', 'expression');
 
 // Create parent div for svg
 let svgDiv = d3.select('#main').append('div')
@@ -28,38 +36,12 @@ let svgDiv = d3.select('#main').append('div')
                 .style('height', h + "px")
                 .style('display', 'inline-block');
 
-var svg = undefined;
+var svg = undefined
 
-// Button for downloading the JSON (with xy coordinates of all nodes)
-var downloadDiv = main.append('div').attr('id', 'downloadDiv');
-var downloadButton = downloadDiv.append('button')
-                          .attr('id', 'downloadJSON')
-                          .text('Download JSON')
-                          .style('font-size', '20px')
-                          .style('font-weight', 'medium')
-                          .style('font', 'Helvetica Neue')
-                          .style('border-radius', '10px')
-                          .style('background-color', 'whitesmoke')
-                          .on('click', function() {
-                              downloadJSON();
-                          });
-
-var uploadDiv = main.append('div').attr('id', 'uploadDiv');
-var uploadButton = downloadDiv.append('input')
-                          .attr('type', 'file')
-                          .attr('id', 'uploadJSON')
-                          .style('font-size', '20px')
-                          .style('font-weight', 'medium')
-                          .style('font', 'Helvetica Neue')
-                          .style('border-radius', '10px')
-                          .style('background-color', 'whitesmoke')
-                          .on('change', function() {
-                              uploadJSON();
-                            });
-
+var exportDiv = main.append('div')
+                    .attr('id', 'buttonDiv');
 
 // Button for downloading/exporting svg
-var exportDiv = main.append('div').attr('id', 'buttonDiv');
 var exportButton = exportDiv.append('button')
                             .attr('id', 'download')
                             .text('Export SVG')
@@ -132,11 +114,7 @@ function visualizeExpression(expression, group) {
                  ...expression.sites]
 
     nodes.forEach(function(d) {
-        if (d.parent === undefined) {
-            d.label = true;
-        } else {
-            d.label = false;
-        }
+        d.label = false;
     })
 
     let getIndex = (siteId) => {
@@ -216,7 +194,7 @@ function visualizeExpression(expression, group) {
                     .attr("text-anchor", "middle")
                     .attr("font-size", d => d.parent === undefined ? 16 : 12)
                     .attr("font-family", "Helvetica Neue")
-                    .style('opacity', d => d.parent === undefined ? 1 : 0);
+                    .style('opacity', 0);
 
     const state = nodegroup.append("text")
                     .text(d => d.state)
@@ -268,25 +246,6 @@ function visualizeExpression(expression, group) {
                          .attr("y", d => d.y+14);
                      });
 };
-
-function downloadJSON(expression) {
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expression));
-  var dlAnchorElem = document.getElementById('downloadAnchorElem');
-  dlAnchorElem.setAttribute("href",dataStr);
-  dlAnchorElem.setAttribute("download", "expression.json");
-  dlAnchorElem.click();
-};
-
-function uploadJSON() {
-  var file = d3.event.target.files[0];
-  console.log(file);
-  if (file) {
-    var reader = new FileReader();
-    reader.readAsText(file);
-    console.log(reader.result); // currently blank
-  }
-};
-
 
 // Prints expression to expression
 function getJSON(input) {
