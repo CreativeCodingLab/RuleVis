@@ -1,16 +1,23 @@
 // Titles & headers
-var body = d3.select("body");
-body.append("h1").text("Kappa: Rule-based modeling for biological processes");
-// var subheading = body.append("h2")
+let body = d3.select("body");
+let header = body.append('div').attr('id', 'header');
+let headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
+
+// Height of header + 15px of margin on top and bottom
+let headerH = document.getElementById('header').clientHeight;
+
+// Dimensions of entire page EXCLUDING header, in order to calculate other element sizes
+let bodyH = window.document.documentElement.clientHeight - headerH;
+let bodyW = window.document.documentElement.clientWidth;
 
 // Set up the SVG attributes
-var w = 1000;
-var h = 450;
+let h = bodyH;
+let w = bodyW * 0.7;
 
 // Create container div for styling purposes
-var main = d3.select('body').append('div')
-                .attr('id', 'main')
-                .style('text-align', 'center');
+let main = d3.select('body').append('div')
+                .attr('id', 'main');
+                //.style('text-align', 'center');
 
 /* main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
@@ -18,29 +25,92 @@ var main = d3.select('body').append('div')
                 .style('height', 10 + "px")
                 .style('display', 'inline-block'); */
 
-// Input text box for expression
-var inputDiv = main.append('div')
+// Sidebar for different options
+let sidebar = main.append('div')
+                    .attr('id', 'sidebar')
+                    .style('width', (bodyW > 600 ? 30 : 100) + '%')
+                    .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
+                    .style('float', 'left')
+                    .style('background-color', 'rgb(230, 233, 239)')
+                    .style('text-align', 'center');
+
+let menuOptions = ["inputText", "export"];
+
+let sidebarMenu = sidebar.append('div')
+                    .attr('id', 'sidebarMenu')
+                    .style('width', '100%')
+                    .style('background-color', 'rgb(188, 192, 198)')
+                    .style('margin-bottom', '10px')
+                    .style('text-align', 'left');
+
+// Menu buttons
+let menu = sidebarMenu.selectAll('input')
+                    .data(menuOptions)
+                    .enter()
+                    .append('input')
+                    .attr('type', 'button')
+                    .attr('value', function (d) { return d })
+                    .attr('class', 'menuOption')
+                    .attr('id', function (d) { return d });
+
+// var menuGroups = sidebarMenu.selectAll('div')
+//                     .data(menuOptions)
+//                     .enter()
+//                     .append('div')
+//                     .attr('width', '20px')
+//                     .attr('transform', function (i) {
+//                         return ('translateX(' + i*20 + ')');
+//                     })
+//                     .attr('class', 'menuOption')
+//                     .attr('id', function (d) { return d });
+
+// let menuLabels = sidebarMenu.selectAll('text')
+//                     .data(menuOptions)
+//                     .enter()
+//                     .append('text')
+//                     .attr('x', function (i) {
+//                         return (10 + i*20);
+//                     })
+//                     .attr('y', 0)
+//                     .style('padding', '0px, 5px')
+//                     .text(function (d) { return d });
+
+//var menuText = menu.selectAll('text')
+
+                    
+menu.on("click", function (d) {
+    console.log(d);
+    if (d === "inputText") {
+        d3.select('#inputDiv')
+            .style('display', 'inline-block')
+            .style('width', '100%');
+        d3.select('#exportDiv')
+            .style('display', 'none');
+    } 
+    else if (d === "export") {
+        d3.select('#inputDiv').style('display', 'none');
+        d3.select('#exportDiv').style('display', 'inline-block');
+    }
+});
+
+// Text Input tab
+let inputDiv = sidebar.append('div')
                     .attr('id', 'inputDiv');
 
-var inputBox = inputDiv.append('textarea')
+let inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
-                    .attr('rows', 4)
-                    // .style('text-align', 'center')
+                    .attr('rows', 10)
+                    .style('width', '100%')
+                    .style('padding', '10px')
+                    //.style('text-align', 'center')
                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
 
-// Create parent div for svg
-let svgDiv = d3.select('#main').append('div')
-                .attr('id', 'svgDiv')
-                .style('width', w + "px")
-                .style('height', h + "px")
-                .style('display', 'inline-block');
-
-var svg = undefined
-
-var exportDiv = main.append('div')
-                    .attr('id', 'buttonDiv');
+// Download SVG tab
+var exportDiv = sidebar.append('div')
+                    .attr('id', 'exportDiv')
+                    .style('display', 'none');
 
 // Button for downloading/exporting svg
 var exportButton = exportDiv.append('button')
@@ -54,6 +124,27 @@ var exportButton = exportDiv.append('button')
                             .on('click', function() {
                                 downloadSVG();
                             });
+
+// Create parent div for svg
+let svgDiv = d3.select('#main').append('div')
+                .attr('id', 'svgDiv')
+                .style('width', function () {
+                    // If window size < 600, svg should reflect size of parent div
+                    if (bodyW > 600) {
+                        return 70 + '%';
+                    } else {
+                        w = bodyW - 10;
+                        return 100 + '%';
+                    }
+                })
+                .style('height', bodyH + "px")
+                .style('float', 'left');
+
+var svg = undefined
+
+
+
+
 
 function downloadSVG() {
     var config = {
@@ -156,6 +247,7 @@ function visualizeExpression(expression, group) {
 
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
+    nodes.forEach((d) => { d.parent === undefined ? d.label = true : d.label = false })
 
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
@@ -165,7 +257,7 @@ function visualizeExpression(expression, group) {
         // .avoidOverlaps(true);
 
     let link = [], node = [], freeNode = [],
-        name = [], state = []
+        name = [], state = [], nodeGroup = []
     group.forEach((root, i) => {
         link[i] = root.append("g")
                         .selectAll("line")
@@ -176,14 +268,14 @@ function visualizeExpression(expression, group) {
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
                             .attr("stroke-opacity", 0.4)
 
-        let nodegroup = root.selectAll('.node')
+        nodeGroup[i] = root.selectAll('.node')
                             .data(nodes)
                             .enter()
                             .append('g')
                             .attr('class', 'node')
                             .call(simulation.drag);
 
-        node[i] = nodegroup.append('circle')
+        node[i] = nodeGroup[i].append('circle')
                             .attr("r", (d,i) => rs[i])
                             .attr("fill", d => d[side[i]].parent === undefined ?
                                                     d[side[i]].name ? coloragent : "#fff" :
@@ -200,7 +292,7 @@ function visualizeExpression(expression, group) {
                             .attr("r", 4)
                             .attr("fill", "black");
 
-        name[i] = nodegroup.append("text")
+        name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].name)
                         .attr("class", d => d[side[i]].parent == undefined ? "agent" : "site")
                         .attr("fill", "black")
@@ -209,23 +301,24 @@ function visualizeExpression(expression, group) {
                         .attr("font-family", "Helvetica Neue")
                         .style('opacity', d => d[side[i]].parent === undefined ? 1 : 0);
 
-        state[i] = nodegroup.append("text")
+        state[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].state)
                         .attr("fill", "black")
                         .attr("font-size", 12)
                         .style('opacity', 0);
 
-        nodegroup.on("mouseover", function(d,i) {
+        // FIXME: find the counterpart of (this) on the rule's other side.
+        nodeGroup[i].on("mouseover", function(d,i) {
             if (d.label === false) {
                 d3.select(this).selectAll('text').style('opacity', 1);
             }
         });
-        nodegroup.on("mouseout", function(d,i) {
+        nodeGroup[i].on("mouseout", function(d,i) {
             if (d.label === false) {
                 d3.select(this).selectAll('text').style('opacity', 0);
             }
         });
-        nodegroup.on("click", function(d,i) {
+        nodeGroup[i].on("click", function(d,i) {
             if (d.label === false) {
                 d.label = true;
                 d3.select(this).selectAll('text').style('opacity', 1);
