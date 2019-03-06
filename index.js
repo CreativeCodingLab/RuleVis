@@ -108,11 +108,19 @@ function visualizeExpression(expression, group) {
                      ({id: e[0].agents[i].id, siteCount: e[0].agents[i].siteCount,
                        lhs: e[0].agents[i],
                        rhs: e[1].agents[i]}))
-    sites = d3.range(e[0].sites.length).map( (i) => 
-                    ({id: e[0].sites[i].id, parent: e[0].sites[i].parent,
-                      lhs: e[0].sites[i],
-                      rhs: e[1].sites[i]}))
-                    // TODO: handle empty agents w/o their sites
+
+    sites = e[0].sites.map( (u) => 
+        ({id: u.id, parent: u.parent,
+          lhs: u, rhs: new Site(u.parent, u.id[1]) })
+    )
+    e[1].sites.forEach( (v) => {
+        let u = sites.find((u) => u.id[0] == v.id[0] && u.id[1] == v.id[1])
+        if (u === undefined)
+            sites.push({id: v.id, parent: v.parent,
+                        lhs: new Site(v.parent, v.id[1]), rhs: v })
+        else
+            u.rhs = v
+    })
 
     let getIndex = (siteId) => {
         if (!siteId) return
