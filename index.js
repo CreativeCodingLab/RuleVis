@@ -1,7 +1,7 @@
 // Titles & headers
 var body = d3.select("body");
 body.append("h1").text("Kappa: Rule-based modeling for biological processes");
-var subheading = body.append("h2").text("A(x[1]),B(y[1]) ->A(x[B.y]),B(y[_])");
+// var subheading = body.append("h2")
 
 // Set up the SVG attributes
 var w = 1000;
@@ -67,62 +67,17 @@ inputBox.on("input", function() {
     let input = inputBox.property('value').split('->'),
         lhs = tokenize(input[0]),
         rhs = input.length > 1 ? tokenize(input[1]) : undefined
-          // [...inputBox.property('value')]
 
-    lhs = simplify(tinynlp.parse(lhs, pattern, 'start'))
-    rhs = simplify(tinynlp.parse(rhs, pattern, 'start'))
-
-    let merge = (lhs, rhs, what) => {
-        // mostly a validator
-        if (what != 'bond' && lhs.length != rhs.length)
-            throw new Error(what + ' lists don\'t match')
-
-        let ret = lhs.map((u,i) => {
-            let v = rhs[i]
-            console.log(u, v)
-
-            if (what == 'agent') {
-                if (u.id != v.id)
-                    throw new Error(`${u.name} @ ${u.id} doesn't match ${v.name} @ ${v.id}`)
-            }
-            else if (what == 'site') {
-                if (u.id[0] != v.id[0] || u.id[1] != v.id[1])
-                    throw new Error(`${u.name} @ ${u.id} doesn't match ${v.name} @ ${v.id}`)
-            }
-            else if (what == 'bond') {
-                // implicit id - these must be aligned.
-                
-            }
-            return new Map(
-                [['id', u.id ? u.id : i],
-                 ['parent', u.parent],
-                 ['siteCount', u.siteCount],
-                 [0, u], [1, v]]) // be careful with shallow copy
-            })
-        return ret
-    }
-    expression = {agents: merge(lhs.agents, rhs.agents, 'agent'),
-                  sites: merge(lhs.sites, rhs.sites, 'site'),
-                  bonds: [...lhs.bonds, ...rhs.bonds], // anonymous bonds don't have stable id
-                  namedBonds: merge(lhs.namedBonds, rhs.namedBonds, 'bond')}
-    // paragraph.text( () => JSON.stringify(expression, null, 2));
+    chart = [lhs, rhs].map( u =>
+                u ? tinynlp.parse(u, pattern, 'start') : u
+            )
+    expression = chart.map( c => c ? simplify(c) : c )
 
     clearExpressions()
     visualizeExpression(expression,
         [svg.append('g').attr('transform', `translate(0,0)`),
-         svg.append('g').attr('transform', `translate(${w/2},0)`)])
-    /* if (rhs)
-        visualizeExpression(
-            simplify(tinynlp.parse(rhs, pattern, 'start')),
-            svg.append('g').attr('transform', `translate(${w/2},0)`)) */
-    
-    /*var inputBoxId = document.getElementById("inputBox");
-    inputBoxId.setAttribute = ("border-color", "red");*/
-
-    // If code reaches this line, then expression contains a valid expression
-
-    // if valid input, then visualize() without requiring 'enter' key to be pressed
-    // NOTE: How to implement 'onSubmit' in this format?
+         svg.append('g').attr('transform', `translate(${w/2},0)`)]
+        ) // TODO: pass if either side of rule is malformed
 
 });
 
@@ -139,139 +94,130 @@ function clearExpressions() {
                 .append("g")
 }
 
+var agents, sites, bonds, parents,
+    simulation // debug
 function visualizeExpression(expression, group) {
     // d3.selectAll("svg > *").remove();
-    subheading.text(JSON.stringify(expression)) // DEBUG
+    // subheading.text(JSON.stringify(expression)) // DEBUG
 
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
 
-    let nodes = [...expression.agents,
-                 ...expression.sites] 
-    nodes.forEach(function(d) {
-        d.label = true;
-    })
+    let e = expression
+    agents = d3.range(e[0].agents.length).map( (i) => 
+                     ({id: e[0].agents[i].id, siteCount: e[0].agents[i].siteCount,
+                       lhs: e[0].agents[i],
+                       rhs: e[1].agents[i]}))
+    sites = d3.range(e[0].sites.length).map( (i) => 
+                    ({id: e[0].sites[i].id, parent: e[0].sites[i].parent,
+                      lhs: e[0].sites[i],
+                      rhs: e[1].sites[i]}))
+                    // TODO: handle empty agents w/o their sites
 
     let getIndex = (siteId) => {
-      if (!siteId) return
-      
-      let [a,b] = siteId
-      return expression.agents.length +
-             expression.sites.findIndex((u) => u.get('id')[0] == a && u.get('id')[1] == b)
-    }
-    
-    let bonds = expression.namedBonds.slice(1) // TODO: handle anonymous bonds too
-                    .filter(diff => diff.has(1))
-                    .map(diff => new Map([
-                        [0, {'source': getIndex(diff.get(0)[0]),
-                             'target': getIndex(diff.get(0)[1])}],
-                        [1, {'source': getIndex(diff.get(1)[0]),
-                             'target': getIndex(diff.get(1)[1])}],
-                            ])),
-        parents = expression.sites
-                    .map(diff => ({'source': diff.get('parent'), // agentId is already a valid index
-                                'target': getIndex(diff.get('id')),
+        if (!siteId) return
+        let [a,b] = siteId
+        return agents.length +
+               sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+      },
+        side = ['lhs', 'rhs']
+
+    sites.forEach(function(d) {
+        if (d.parent === undefined) {
+            d.label = true;
+        } else {
+            d.label = false;
+        }
+    })
+    let nodes = [...agents,
+                 ...sites]
+
+    bonds = d3.range(2).map((i) => 
+                expression[i].namedBonds.slice(1)
+                  .filter(bnd => bnd && bnd[1])
+                  .map(([src,tar]) => ({'source': getIndex(src),
+                                       'target': getIndex(tar)
+                                       })))
+    bonds = {lhs: bonds[0], rhs: bonds[1]}
+
+    parents = sites.map(u => ({'source': u.parent, // agentId is already a valid index
+                                'target': getIndex(u.id),
                                 'isParent': true,
-                                'sibCount': nodes[diff.get('parent')].get('siteCount'),
-                                }))
+                                'sibCount': agents[u.parent].siteCount,
+                               }))
 
-    let union = bonds.map(uv => uv.get(0))
-                     .filter(u => u.length > 0) // TODO: take actual union of bonds seen
-
-    // CoLa graph - using constraint based optimization
-    let rs = nodes.map(d => d.siteCount === undefined ? 13 /*:
+    let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
 
-    // TODO: annotate agent nodes with cola's relative x/y constraints
-    const simulation = cola.d3adaptor(d3)
+    simulation = cola.d3adaptor(d3)
         .size([w/2,h])
-        .nodes(nodes.map(uv => uv.get(0)))
-        .links([...union, 
-                ...parents])
+        .nodes(nodes)
+        .links([...new Set([...bonds.lhs, ...bonds.rhs, ...parents])])
         .linkDistance(d => !d.isParent ? 80 : d.sibCount > 6 ? 65 : d.sibCount > 3 ? 50 : 35)
         // .avoidOverlaps(true);
 
-    console.log(simulation)
-
-    let link = [], nodegroup = [], node = [], freeNode = [],
+    let link = [], node = [], freeNode = [],
         name = [], state = []
-    d3.range(2).forEach((i) => {
+    group.forEach((root, i) => {
+        link[i] = root.append("g")
+                        .selectAll("line")
+                        .data([...bonds[side[i]], ...parents])
+                        .enter()
+                            .append("line")
+                            .attr("stroke-width", d => d.isParent ? 1 : 5)
+                            .attr("stroke", d => d.isParent ? "darkgray" : "black")
+                            .attr("stroke-opacity", 0.4)
 
-        // annotations
-        state[i] = group[i].append("g")
-            .selectAll("text")
-            .data(expression.sites.map(uv => uv.get(i)))
-            .enter()
-                .append("text")
-                .text(d => d.state)
-                .attr("fill", "black")
-                .attr("font-size", 12)
+        let nodegroup = root.selectAll('.node')
+                            .data(nodes)
+                            .enter()
+                            .append('g')
+                            .attr('class', 'node')
+                            .call(simulation.drag);
 
-        link[i] = group[i].append("g")
-            .selectAll("line")
-            .data([...bonds.map(uv => uv.get(i)),
-                    ...parents])
-            .enter()
-                .append("line")
-                .attr("stroke-width", d => d.isParent ? 1 : 5)
-                .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                .attr("stroke-opacity", 0.4)
+        node[i] = nodegroup.append('circle')
+                            .attr("r", (d,i) => rs[i])
+                            .attr("fill", d => d[side[i]].parent === undefined ?
+                                                    d[side[i]].name ? coloragent : "#fff" :
+                                               d[side[i]].bond ? colorsite : "#fff")
+                            .attr("stroke", d => d[side[i]].parent === undefined ? coloragent : colorsite)
+                            .attr("stroke-width", 3);
 
-        freeNode[i] = group[i].append("g")
-            .selectAll("circle")
-            .data(nodes.map(uv => uv.get(i)))
-            .enter()
-                .filter(d => d.parent !== undefined && d.bond == undefined)
-                .append("circle")
-                .attr("r", 4)
-                .attr("fill", "black");
+        freeNode[i] = root.append("g")
+                        .selectAll("circle")
+                        .data(nodes)
+                        .enter()
+                            .filter(d => d[side[i]].parent !== undefined && d.bond == undefined)
+                            .append("circle")
+                            .attr("r", 4)
+                            .attr("fill", "black");
 
-        //nodes
-        nodegroup[i] = group[i]
-            .selectAll('.node')
-            .data(nodes.map(uv => uv.get(i)))
-            .enter()
-                .append('g')
-                .attr('class', 'node')
-                .call(simulation.drag)
-                
-        node[i] = nodegroup[i]
-            .append('circle')
-            .attr("r", (d,i) => rs[i])
-            .attr("fill", d => d.parent === undefined ? coloragent :
-                    d.bond == undefined ? "#fff" : colorsite)
-            .attr("stroke", d => d.parent === undefined ? coloragent : colorsite)
-            .attr("stroke-width", 3);
+        name[i] = nodegroup.append("text")
+                        .text(d => d[side[i]].name)
+                        .attr("class", d => d[side[i]].parent == undefined ? "agent" : "site")
+                        .attr("fill", "black")
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", d => d[side[i]].parent === undefined ? 16 : 12)
+                        .attr("font-family", "Helvetica Neue")
+                        .style('opacity', d => d[side[i]].parent === undefined ? 1 : 0);
 
-        name[i] = nodegroup[i]
-            .append("text")
-            .text(d => d.name)
-            .attr("class", d => d.parent == undefined ? "agent" : "site")
-            .attr("fill", "black")
-            .attr("text-anchor", "middle")
-            .attr("font-size", d => d.parent === undefined ? 16 : 12)
-            .attr("font-family", "Helvetica Neue")
-            .style('opacity', 0);
+        state[i] = nodegroup.append("text")
+                        .text(d => d[side[i]].state)
+                        .attr("fill", "black")
+                        .attr("font-size", 12)
+                        .style('opacity', 0);
 
-        state[i] = nodegroup[i]
-            .append("text")
-            .text(d => d.state)
-            .attr("fill", "black")
-            .attr("font-size", 12)
-            .style('opacity', 0);
-
-        // FIXME: d not getting passed in
-        /* nodegroup[i].on("mouseover", function(d,i) {
+        nodegroup.on("mouseover", function(d,i) {
             if (d.label === false) {
                 d3.select(this).selectAll('text').style('opacity', 1);
             }
         });
-        nodegroup[i].on("mouseout", function(d,i) {
+        nodegroup.on("mouseout", function(d,i) {
             if (d.label === false) {
                 d3.select(this).selectAll('text').style('opacity', 0);
             }
         });
-        nodegroup[i].on("click", function(d,i) {
+        nodegroup.on("click", function(d,i) {
             if (d.label === false) {
                 d.label = true;
                 d3.select(this).selectAll('text').style('opacity', 1);
@@ -279,7 +225,7 @@ function visualizeExpression(expression, group) {
                 d.label = false;
                 d3.select(this).selectAll('text').style('opacity', 0);
             }
-        }); */
+        });
     })
     simulation.start(30,30,30);
     simulation.on("tick", () => {
