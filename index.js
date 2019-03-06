@@ -220,14 +220,6 @@ function visualizeExpression(expression, group) {
                sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
       },
         side = ['lhs', 'rhs']
-
-    sites.forEach(function(d) {
-        if (d.parent === undefined) {
-            d.label = true;
-        } else {
-            d.label = false;
-        }
-    })
     let nodes = [...agents,
                  ...sites]
 
