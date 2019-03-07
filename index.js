@@ -194,12 +194,16 @@ function visualizeExpression(expression, group) {
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
 
-    let e = expression
-    agents = d3.range(e[0].agents.length).map( (i) => 
-                     ({id: e[0].agents[i].id, siteCount: e[0].agents[i].siteCount,
+    let e = expression,
+        agentCount = e[0].agents.length // VERIFY: assume aligned agents
+
+    agents = d3.range(agentCount).map( (i) => 
+                     ({id: e[0].agents[i].id,
+                       siteCount: e[0].agents[i].siteCount,
                        lhs: e[0].agents[i],
                        rhs: e[1].agents[i]}))
 
+    // do not assume aligned sites
     sites = e[0].sites.map( (u) => 
         ({id: u.id, parent: u.parent,
           lhs: u, rhs: new Site(u.parent, u.id[1]) })
@@ -223,6 +227,7 @@ function visualizeExpression(expression, group) {
     let nodes = [...agents,
                  ...sites]
 
+    // treat bonds (site-site links) separately
     bonds = d3.range(2).map((i) => 
                 expression[i].namedBonds.slice(1)
                   .filter(bnd => bnd && bnd[1])
@@ -231,21 +236,28 @@ function visualizeExpression(expression, group) {
                                        })))
     bonds = {lhs: bonds[0], rhs: bonds[1]}
 
+    // treat parents (site-agent links) once
     parents = sites.map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
                                 'sibCount': agents[u.parent].siteCount,
                                }))
 
-    let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 /*:
-                            d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
-    nodes.forEach((d) => { d.parent === undefined ? d.label = true : d.label = false })
+    let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
+                            d.siteCount > 5 ? 7+4*d.siteCount*/)
+    nodes.forEach((d) => {
+        d.label = d.parent === undefined ? true : 
+                  d.lhs.state != d.rhs.state ? true :
+                  false
+    })
 
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
         .links([...new Set([...bonds.lhs, ...bonds.rhs, ...parents])])
-        .linkDistance(d => !d.isParent ? 80 : d.sibCount > 6 ? 65 : d.sibCount > 3 ? 50 : 35)
+        .linkDistance(d => !d.isParent ? 80 :
+                            d.sibCount > 6 ? 45 :
+                            d.sibCount > 3 ? 35 : 30)
         // .avoidOverlaps(true);
 
     let link = [], node = [], freeNode = [],
@@ -279,7 +291,7 @@ function visualizeExpression(expression, group) {
                         .selectAll("circle")
                         .data(nodes)
                         .enter()
-                            .filter(d => d[side[i]].parent !== undefined && d.bond == undefined)
+                            .filter(d => d[side[i]].parent !== undefined && d[side[i]].bond == undefined)
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black");
@@ -291,13 +303,13 @@ function visualizeExpression(expression, group) {
                         .attr("text-anchor", "middle")
                         .attr("font-size", d => d[side[i]].parent === undefined ? 16 : 12)
                         .attr("font-family", "Helvetica Neue")
-                        .style('opacity', d => d[side[i]].parent === undefined ? 1 : 0);
+                        .style('opacity', d => d.label ? 1 : 0);
 
         state[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].state)
                         .attr("fill", "black")
                         .attr("font-size", 12)
-                        .style('opacity', 0);
+                        .style('opacity', d => d.label ? 1 : 0);
 
         // FIXME: find the counterpart of (this) on the rule's other side.
         nodeGroup[i].on("mouseover", function(d,i) {
