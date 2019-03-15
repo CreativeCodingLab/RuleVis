@@ -14,6 +14,8 @@ let bodyW = window.document.documentElement.clientWidth;
 let h = bodyH;
 let w = bodyW * 0.7;
 
+var expression;
+
 // Create container div for styling purposes
 let main = d3.select('body').append('div')
                 .attr('id', 'main');
@@ -121,6 +123,7 @@ let inputBox = inputDiv.append('textarea')
                     .style('padding', '10px')
                     //.style('text-align', 'center')
                     .attr('id', 'inputBox');
+                    //.attr('placeholder', 'expression');
 
 // Download SVG tab
 var exportDiv = sidebar.append('div')
@@ -128,7 +131,6 @@ var exportDiv = sidebar.append('div')
                     .style('display', 'none');
 
 // Button for downloading/exporting svg
-var exportDiv = main.append('div').attr('id', 'buttonDiv');
 var exportButton = exportDiv.append('button')
                             .attr('id', 'download')
                             .text('Export SVG')
@@ -140,6 +142,42 @@ var exportButton = exportDiv.append('button')
                             .on('click', function() {
                                 downloadSVG();
                             });
+
+var downloadButton = exportDiv.append('button')
+                            .attr('id', 'downloadJSON')
+                            .text('Download JSON')
+                            .style('font-size', '20px')
+                            .style('font-weight', 'medium')
+                            .style('font', 'Helvetica Neue')
+                            .style('border-radius', '10px')
+                            .style('background-color', 'whitesmoke')
+                            .on('click', function() {
+                                downloadJSON();
+                            });
+
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
+});
 
 // Create parent div for svg
 let svgDiv = d3.select('#main').append('div')
@@ -165,33 +203,21 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-var chart, expression;
 inputBox.on("input", function() {
     let input = inputBox.property('value').split('->'),
         lhs = tokenize(input[0]),
         rhs = input.length > 1 ? tokenize(input[1]) : undefined
-          // [...inputBox.property('value')]
 
     chart = [lhs, rhs].map( u =>
                 u ? tinynlp.parse(u, pattern, 'start') : u
             )
     expression = chart.map( c => c ? simplify(c) : c )
-    // paragraph.text( () => JSON.stringify(expression, null, 2));
 
     clearExpressions()
-    visualizeExpression(expression[0],
-        svg.append('g').attr('transform', `translate(0,0)`))
-    if (rhs)
-        visualizeExpression(expression[1],
-            svg.append('g').attr('transform', `translate(${w/2},0)`))
-
-    /*var inputBoxId = document.getElementById("inputBox");
-    inputBoxId.setAttribute = ("border-color", "red");*/
-
-    // If code reaches this line, then expression contains a valid expression
-
-    // if valid input, then visualize() without requiring 'enter' key to be pressed
-    // NOTE: How to implement 'onSubmit' in this format?
+    visualizeExpression(expression,
+        [svg.append('g').attr('transform', `translate(0,0)`),
+         svg.append('g').attr('transform', `translate(${w/2},0)`)]
+        ) // TODO: pass if either side of rule is malformed
 
 });
 
@@ -208,8 +234,11 @@ function clearExpressions() {
                 .append("g")
 }
 
+var agents, sites, bonds, parents,
+    simulation // debug
 function visualizeExpression(expression, group) {
     // d3.selectAll("svg > *").remove();
+    // subheading.text(JSON.stringify(expression)) // DEBUG
 
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
@@ -245,11 +274,10 @@ function visualizeExpression(expression, group) {
                sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
       },
         side = ['lhs', 'rhs']
-    let nodes = [...agents,
-                 ...sites]
+    let nodes = [...agents,...sites]
 
     // treat bonds (site-site links) separately
-    bonds = expression.map((i) => {
+    var bonds = expression.map((i) => {
         if (!e[i]) return []
         return e[i].namedBonds.slice(1)
             .filter(bnd => bnd && bnd[1])
@@ -263,7 +291,7 @@ function visualizeExpression(expression, group) {
     parents = sites.map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
-                                'sibCount': nodes[u.parent].siteCount,
+                                'sibCount': agents[u.parent].siteCount,
                                }))
 
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
@@ -274,10 +302,11 @@ function visualizeExpression(expression, group) {
                   false
     })
 
-    const simulation = cola.d3adaptor(d3)
+    var linkSet = [...new Set([...bonds.lhs, ...bonds.rhs, ...parents])];
+    simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
-        .links([...new Set([...bonds.lhs, ...bonds.rhs, ...parents])])
+        .links(linkSet)
         .linkDistance(d => !d.isParent ? 80 :
                             d.sibCount > 6 ? 45 :
                             d.sibCount > 3 ? 35 : 30)
@@ -378,16 +407,14 @@ function visualizeExpression(expression, group) {
             .attr("x", d => d.x)
             .attr("y", d => d.y+14))
         });
-};
 
-function downloadJSON(expression) {
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expression));
-  var dlAnchorElem = document.getElementById('downloadAnchorElem');
-  dlAnchorElem.setAttribute("href",dataStr);
-  dlAnchorElem.setAttribute("download", "expression.json");
-  dlAnchorElem.click();
-};
+    jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
 
+    downloadButton.on('click', function() {
+      downloadJSON(jsonBlob);
+    })
+
+};
 
 // Prints expression to expression
 function getJSON(input) {
