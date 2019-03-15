@@ -74,7 +74,7 @@ let menu = sidebarMenu.selectAll('input')
 
 //var menuText = menu.selectAll('text')
 
-                    
+
 menu.on("click", function (d) {
     console.log(d);
     if (d === "inputText") {
@@ -86,24 +86,24 @@ menu.on("click", function (d) {
 
         d3.select("#inputText")
             .classed('active', true);
-        
+
         d3.select("#export")
             .classed('active', false);
 
         console.log(document.getElementById("inputText").classList);
 
-    } 
+    }
     else if (d === "export") {
         d3.select('#inputDiv').style('display', 'none');
         d3.select('#exportDiv').style('display', 'inline-block');
-        
+
         d3.select("#export")
             .classed('active', true);
-        
+
         d3.select("#inputText")
             .classed('active', false);
-        
-        
+
+
     }
 });
 
@@ -121,7 +121,6 @@ let inputBox = inputDiv.append('textarea')
                     .style('padding', '10px')
                     //.style('text-align', 'center')
                     .attr('id', 'inputBox');
-                    //.attr('placeholder', 'expression');
 
 // Download SVG tab
 var exportDiv = sidebar.append('div')
@@ -129,6 +128,7 @@ var exportDiv = sidebar.append('div')
                     .style('display', 'none');
 
 // Button for downloading/exporting svg
+var exportDiv = main.append('div').attr('id', 'buttonDiv');
 var exportButton = exportDiv.append('button')
                             .attr('id', 'download')
                             .text('Export SVG')
@@ -165,22 +165,33 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-var expression;
+var chart, expression;
 inputBox.on("input", function() {
     let input = inputBox.property('value').split('->'),
         lhs = tokenize(input[0]),
         rhs = input.length > 1 ? tokenize(input[1]) : undefined
+          // [...inputBox.property('value')]
 
     chart = [lhs, rhs].map( u =>
                 u ? tinynlp.parse(u, pattern, 'start') : u
             )
     expression = chart.map( c => c ? simplify(c) : c )
+    // paragraph.text( () => JSON.stringify(expression, null, 2));
 
     clearExpressions()
-    visualizeExpression(expression,
-        [svg.append('g').attr('transform', `translate(0,0)`),
-         svg.append('g').attr('transform', `translate(${w/2},0)`)]
-        ) // TODO: pass if either side of rule is malformed
+    visualizeExpression(expression[0],
+        svg.append('g').attr('transform', `translate(0,0)`))
+    if (rhs)
+        visualizeExpression(expression[1],
+            svg.append('g').attr('transform', `translate(${w/2},0)`))
+
+    /*var inputBoxId = document.getElementById("inputBox");
+    inputBoxId.setAttribute = ("border-color", "red");*/
+
+    // If code reaches this line, then expression contains a valid expression
+
+    // if valid input, then visualize() without requiring 'enter' key to be pressed
+    // NOTE: How to implement 'onSubmit' in this format?
 
 });
 
@@ -197,11 +208,8 @@ function clearExpressions() {
                 .append("g")
 }
 
-var agents, sites, bonds, parents,
-    simulation // debug
 function visualizeExpression(expression, group) {
     // d3.selectAll("svg > *").remove();
-    // subheading.text(JSON.stringify(expression)) // DEBUG
 
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
@@ -209,14 +217,14 @@ function visualizeExpression(expression, group) {
     let e = expression,
         agentCount = e[0].agents.length // VERIFY: assume aligned agents
 
-    agents = d3.range(agentCount).map( (i) => 
+    agents = d3.range(agentCount).map( (i) =>
                      ({id: e[0].agents[i].id,
                        siteCount: e[0].agents[i].siteCount,
                        lhs: e[0].agents[i],
                        rhs: e[1] ? e[1].agents[i] : new Agent(i)}))
 
     // cannot assume aligned sites
-    sites = e[0].sites.map( (u) => 
+    sites = e[0].sites.map( (u) =>
         ({id: u.id, parent: u.parent,
           lhs: u, rhs: new Site(u.parent, u.id[1]) })
     )
@@ -255,18 +263,18 @@ function visualizeExpression(expression, group) {
     parents = sites.map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
-                                'sibCount': agents[u.parent].siteCount,
+                                'sibCount': nodes[u.parent].siteCount,
                                }))
 
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/)
     nodes.forEach((d) => {
-        d.label = d.parent === undefined ? true : 
+        d.label = d.parent === undefined ? true :
                   d.lhs.state != d.rhs.state ? true :
                   false
     })
 
-    simulation = cola.d3adaptor(d3)
+    const simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
         .links([...new Set([...bonds.lhs, ...bonds.rhs, ...parents])])
@@ -351,7 +359,7 @@ function visualizeExpression(expression, group) {
     simulation.on("tick", () => {
         // one simulation drives both charts!
         // note the different translate() assigned to each group.
-        
+
         link.forEach(sel => sel
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
@@ -371,6 +379,15 @@ function visualizeExpression(expression, group) {
             .attr("y", d => d.y+14))
         });
 };
+
+function downloadJSON(expression) {
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expression));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href",dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+};
+
 
 // Prints expression to expression
 function getJSON(input) {
