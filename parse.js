@@ -59,8 +59,9 @@ let simplify = (chart) => {
                          'subscripting': false,
                         'agents': [],
                         'sites': [],
+                        'virtualSites': [],
                         'bonds': [],
-                        'namedBonds': []}
+                        'virtualBonds': []}
 
         let curr = ret.agents ? ret.agents.slice(-1)[0] : null,
             loc = ret.sites ? ret.sites.slice(-1)[0] : null
@@ -70,8 +71,11 @@ let simplify = (chart) => {
         'agent': () => {ret.agents.push(new Agent(ret.agents.length))},
         'agent-name': () => {
             if (ret.interfacing) {
-                loc.boundTo = new Agent() // TODO: propagate stub to top
-                loc.boundTo.name = node.subtrees[0].root[0]
+                // TODO: collect virtual agents, too
+                // loc.boundTo = new Agent()
+                // loc.boundTo.name = node.subtrees[0].root[0]
+                ret.virtualSites.slice(-1)[0]
+                   .boundTo = node.subtrees[0].root[0]
             }
             else curr.name = node.subtrees[0].root[0]
         },
@@ -83,8 +87,14 @@ let simplify = (chart) => {
         },
         'site-name': () => {
             if (ret.interfacing) {
-                loc.boundAt = new Site() // TODO: propagate stub to top
-                loc.boundAt.name = node.subtrees[0].root[0]
+                // loc.boundAt = new Site() // TODO: propagate stub to top
+                // loc.boundAt.name = node.subtrees[0].root[0]
+                let res = new Site([-1,0])
+                res.boundAt = node.subtrees[0].root[0]
+
+                ret.virtualBonds.push([loc.id, [-1,0]]) // VERIFY
+                ret.virtualSites.push(res)
+                // TODO: attach to virtual agent
             }
             else loc.name = node.subtrees[0].root[0]
         },
@@ -93,9 +103,9 @@ let simplify = (chart) => {
                 let k = node.subtrees[0].root[0]
                 loc.bond = [parseInt(k), true]
                 
-                let v = ret.namedBonds[k]
-            if (v) ret.namedBonds[k].push(loc.id)
-            else ret.namedBonds[k] = [loc.id]
+                let v = ret.bonds[k]
+            if (v) ret.bonds[k].push(loc.id)
+            else ret.bonds[k] = [loc.id]
             }},
         'state-name': () => {
             if (ret.subscripting) {
@@ -105,8 +115,10 @@ let simplify = (chart) => {
         
         '_': () => {
             if (ret.interfacing) {
-                let k = ret.bonds.push([loc.id])
-                loc.bond = [k-1, false]
+                let n = ret.virtualSites.length,
+                    k = ret.virtualBonds.push([loc.id, [-1,0]])
+                loc.bond = [k-1, false] // VERIFY
+                ret.virtualSites.push(new Site([-1,0]))
             }},
         '.': () => {
             if (ret.interfacing) {

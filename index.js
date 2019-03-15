@@ -1,6 +1,5 @@
 // Titles & headers
-let body = d3.select("body");
-let header = body.append('div').attr('id', 'header');
+let header = d3.select("#header");
 let headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
 
 // Height of header + 15px of margin on top and bottom
@@ -197,8 +196,10 @@ function clearExpressions() {
                 .append("g")
 }
 
-var agents, sites, bonds, parents,
-    simulation // debug
+// visual properties
+var agents, parents, // unified
+    sites, bonds, // bifurcated into {lhs, rhs}
+    simulation
 function visualizeExpression(expression, group) {
     // d3.selectAll("svg > *").remove();
     // subheading.text(JSON.stringify(expression)) // DEBUG
@@ -216,9 +217,11 @@ function visualizeExpression(expression, group) {
                        rhs: e[1] ? e[1].agents[i] : new Agent(i)}))
 
     // cannot assume aligned sites
+    let side = ['lhs', 'rhs']
+
     sites = e[0].sites.map( (u) => 
         ({id: u.id, parent: u.parent,
-          lhs: u, rhs: new Site(u.parent, u.id[1]) })
+          lhs: u, rhs: new Site(...u.id) })
     )
     if (e[1])
         e[1].sites.forEach( (v) => {
@@ -229,30 +232,51 @@ function visualizeExpression(expression, group) {
             else
                 u.rhs = v
         })
+    // TODO: generate anonymous agents as needed for bonds, too
+    e.forEach((expr,i) =>
+        expr.virtualSites.forEach((v,j) => {
+            let par = agents.length + j,
+                tar = new Site([par, 0])
+            sites.push({
+                id: [par, 0], parent: par,
+                lhs: tar, rhs: {...tar},
+            })
+            let res = sites.slice(-1)[0][side[i]]
+            res.state = `of-${v.boundTo}`
+            res.name = v.boundAt ? v.boundAt : '_'
+        })
+    )
 
     let getIndex = (siteId) => {
-        if (!siteId) return
+        if (!siteId) throw new Error("getIndex cannot look up a site without its index")
+
         let [a,b] = siteId
         return agents.length +
                sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
-      },
-        side = ['lhs', 'rhs']
+      }    
     let nodes = [...agents,
                  ...sites]
 
     // treat bonds (site-site links) separately
-    bonds = expression.map((i) => {
-        if (!e[i]) return []
-        return e[i].namedBonds.slice(1)
+    bonds = expression.map((u,i) => {
+        if (!u) return []
+        let named = u.bonds
             .filter(bnd => bnd && bnd[1])
             .map(([src,tar]) => ({'source': getIndex(src),
                                 'target': getIndex(tar)
                                 }))
+        let anon = u.virtualBonds
+            .map(([src,_],i) => ({'source': getIndex(src),
+                                 'target': getIndex([agents.length+i, 0]),
+                                 // BRITTLE: look up anonymous index
+                                 'isAnonymous': true}))
+        return [...named, ...anon]
         })
     bonds = {lhs: bonds[0], rhs: bonds[1]}
 
     // treat parents (site-agent links) once
-    parents = sites.map(u => ({'source': u.parent, // agentId is already a valid index
+    parents = sites.filter(u => u.parent < agentCount) // ignore virtual sites
+                    .map(u => ({'source': u.parent, // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
                                 'sibCount': agents[u.parent].siteCount,
@@ -286,6 +310,7 @@ function visualizeExpression(expression, group) {
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
                             .attr("stroke-opacity", 0.4)
+                            .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
         nodeGroup[i] = root.selectAll('.node')
                             .data(nodes)
@@ -300,16 +325,19 @@ function visualizeExpression(expression, group) {
                                                     d[side[i]].name ? coloragent : "#fff" :
                                                d[side[i]].bond ? colorsite : "#fff")
                             .attr("stroke", d => d[side[i]].parent === undefined ? coloragent : colorsite)
-                            .attr("stroke-width", 3);
+                            .attr("stroke-width", 3)
+                            .style("opacity", d => d[side[i]].name ? 1 : 0);
 
         freeNode[i] = root.append("g")
                         .selectAll("circle")
                         .data(nodes)
                         .enter()
-                            .filter(d => d[side[i]].parent !== undefined && d[side[i]].bond == undefined)
+                            .filter(d => d[side[i]].parent !== undefined
+                                      && d[side[i]].bond == undefined)
                             .append("circle")
                             .attr("r", 4)
-                            .attr("fill", "black");
+                            .attr("fill", "black")
+                            .style("opacity", d => d[side[i]].name ? 1 : 0);
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].name)
