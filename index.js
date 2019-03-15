@@ -266,6 +266,8 @@ function visualizeExpression(expression, group) {
     if (e[1])
         e[1].sites.forEach( (v) => {
             let u = sites.find((u) => u.id[0] == v.id[0] && u.id[1] == v.id[1])
+            console.log("merge", u, v)
+
             if (u === undefined)
                 sites.push({id: v.id, parent: v.parent,
                             lhs: new Site(v.parent, v.id[1]), rhs: v })
@@ -277,6 +279,8 @@ function visualizeExpression(expression, group) {
         expr.virtualSites.forEach((v,j) => {
             let par = agents.length + j,
                 tar = new Site([par, 0])
+            tar.bond = [-1, false] // VERIFY
+            
             sites.push({
                 id: [par, 0], parent: par,
                 lhs: tar, rhs: {...tar},

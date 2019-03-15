@@ -89,8 +89,12 @@ let simplify = (chart) => {
             if (ret.interfacing) {
                 // loc.boundAt = new Site() // TODO: propagate stub to top
                 // loc.boundAt.name = node.subtrees[0].root[0]
+                loc.bond = [-1, false]
+                console.log(loc)
+
                 let res = new Site([-1,0])
                 res.boundAt = node.subtrees[0].root[0]
+                res.bond = [-1, false]
 
                 ret.virtualBonds.push([loc.id, [-1,0]]) // VERIFY
                 ret.virtualSites.push(res)
@@ -115,15 +119,18 @@ let simplify = (chart) => {
         
         '_': () => {
             if (ret.interfacing) {
-                let n = ret.virtualSites.length,
-                    k = ret.virtualBonds.push([loc.id, [-1,0]])
-                loc.bond = [k-1, false] // VERIFY
-                ret.virtualSites.push(new Site([-1,0]))
+                loc.bond = [-1, false]
+                
+                let res = new Site([-1,0])
+                res.bond = [-1, false]
+
+                ret.virtualBonds.push([loc.id, [-1,0]])
+                ret.virtualSites.push(res)
             }},
         '.': () => {
-            if (ret.interfacing) {
+            /* if (ret.interfacing) {
                 loc.bond = null
-            }},
+            }*/ },
         '#': () => {
             if (ret.interfacing) {
                 loc.bond = undefined // TODO
