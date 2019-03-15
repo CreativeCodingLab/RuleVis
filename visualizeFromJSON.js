@@ -72,8 +72,8 @@ function visualizeFromJSON(jsonBlob, group) {
                                              d[side[i]].bond ? colorsite : "#fff")
                           .attr("stroke", d => d[side[i]].parent === undefined ? coloragent : colorsite)
                           .attr("stroke-width", 3)
-                          .attr("x", d => d.x)
-                          .attr("y", d => d.y);
+                          .attr("cx", d => d.x)
+                          .attr("cy", d => d.y);
 
       freeNode[i] = root.append("g")
                       .selectAll("circle")
