@@ -246,12 +246,15 @@ function visualizeExpression(expression, group) {
 
     let e = expression,
         agentCount = e[0].agents.length // VERIFY: assume aligned agents
+    if (!e[1])
+        e[1] = {'agents': [], 'sites': [], 'virtualSites': [],
+                              'bonds': [], 'virtualBonds': []} // BRITTLE
 
     agents = d3.range(agentCount).map( (i) =>
                      ({id: e[0].agents[i].id,
                        siteCount: e[0].agents[i].siteCount,
                        lhs: e[0].agents[i],
-                       rhs: e[1] ? e[1].agents[i] : new Agent(i)}))
+                       rhs: e[1].agents[i] ? e[1].agents[i] : new Agent(i)}))
 
     // cannot assume aligned sites
     let side = ['lhs', 'rhs']
