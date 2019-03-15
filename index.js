@@ -13,6 +13,8 @@ let bodyW = window.document.documentElement.clientWidth;
 let h = bodyH;
 let w = bodyW * 0.7;
 
+var expression;
+
 // Create container div for styling purposes
 let main = d3.select('body').append('div')
                 .attr('id', 'main');
@@ -73,7 +75,7 @@ let menu = sidebarMenu.selectAll('input')
 
 //var menuText = menu.selectAll('text')
 
-                    
+
 menu.on("click", function (d) {
     console.log(d);
     if (d === "inputText") {
@@ -85,24 +87,24 @@ menu.on("click", function (d) {
 
         d3.select("#inputText")
             .classed('active', true);
-        
+
         d3.select("#export")
             .classed('active', false);
 
         console.log(document.getElementById("inputText").classList);
 
-    } 
+    }
     else if (d === "export") {
         d3.select('#inputDiv').style('display', 'none');
         d3.select('#exportDiv').style('display', 'inline-block');
-        
+
         d3.select("#export")
             .classed('active', true);
-        
+
         d3.select("#inputText")
             .classed('active', false);
-        
-        
+
+
     }
 });
 
@@ -140,6 +142,42 @@ var exportButton = exportDiv.append('button')
                                 downloadSVG();
                             });
 
+var downloadButton = exportDiv.append('button')
+                            .attr('id', 'downloadJSON')
+                            .text('Download JSON')
+                            .style('font-size', '20px')
+                            .style('font-weight', 'medium')
+                            .style('font', 'Helvetica Neue')
+                            .style('border-radius', '10px')
+                            .style('background-color', 'whitesmoke')
+                            .on('click', function() {
+                                downloadJSON();
+                            });
+
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
+});
+
 // Create parent div for svg
 let svgDiv = d3.select('#main').append('div')
                 .attr('id', 'svgDiv')
@@ -164,7 +202,6 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-var expression;
 inputBox.on("input", function() {
     let input = inputBox.property('value').split('->'),
         lhs = tokenize(input[0]),
@@ -210,7 +247,7 @@ function visualizeExpression(expression, group) {
     let e = expression,
         agentCount = e[0].agents.length // VERIFY: assume aligned agents
 
-    agents = d3.range(agentCount).map( (i) => 
+    agents = d3.range(agentCount).map( (i) =>
                      ({id: e[0].agents[i].id,
                        siteCount: e[0].agents[i].siteCount,
                        lhs: e[0].agents[i],
@@ -285,15 +322,16 @@ function visualizeExpression(expression, group) {
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/)
     nodes.forEach((d) => {
-        d.label = d.parent === undefined ? true : 
+        d.label = d.parent === undefined ? true :
                   d.lhs.state != d.rhs.state ? true :
                   false
     })
 
+    var linkSet = [...new Set([...bonds.lhs, ...bonds.rhs, ...parents])];
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
-        .links([...new Set([...bonds.lhs, ...bonds.rhs, ...parents])])
+        .links(linkSet)
         .linkDistance(d => !d.isParent ? 80 :
                             d.sibCount > 6 ? 45 :
                             d.sibCount > 3 ? 35 : 30)
@@ -379,7 +417,7 @@ function visualizeExpression(expression, group) {
     simulation.on("tick", () => {
         // one simulation drives both charts!
         // note the different translate() assigned to each group.
-        
+
         link.forEach(sel => sel
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
@@ -398,6 +436,13 @@ function visualizeExpression(expression, group) {
             .attr("x", d => d.x)
             .attr("y", d => d.y+14))
         });
+
+    jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
+
+    downloadButton.on('click', function() {
+      downloadJSON(jsonBlob);
+    })
+
 };
 
 // Prints expression to expression
