@@ -24,17 +24,20 @@
           </div>
 
           <div id="inputDiv">
-            <textarea id="inputBox" rows="30" size="50" name="expression" placeholder="Begin typing an expression to visualize it."></textarea>
+            <textarea id="inputBox" rows="30" size="90" name="expression" placeholder="Begin typing an expression to visualize it."></textarea>
           </div>
 
           <div id="exportDiv" style="display: none">
             <button id="download" onclick="downloadSVG()">Export SVG</button>
+            <button id="downloadJSON" onclick="downloadJSON()">Download JSON</button>
           </div>
         </div>
       </div>
         
 
       <script type="text/javascript" src="index.js"></script>
+
+      <a id="downloadAnchorElem" style="display:none"></a>
 
       <form id="svgform" method="post" action="download.pl">
           <input type="hidden" id="output_format" name="output_format" value="">

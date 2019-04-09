@@ -49,8 +49,8 @@ let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv']];
 let menuMap = new Map(menuMapArray);
 
 let handleMenuClick = function(e) {
+    // Id of newly clicked element
     let itemID = e.id;
-    console.log(itemID);
 
     for (let option = 0; option < menuOptions.length; option++) {
         // id of the menu option clicked
@@ -58,7 +58,6 @@ let handleMenuClick = function(e) {
         // div associated with the id        
         let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
         //let currOptionDiv = menuMap.get(currOption.id);
-        console.log(currOptionDiv);
 
         // If we find the current element, add active class and display associated div
         if (currOption.id === itemID) {
@@ -185,17 +184,17 @@ for (let i = 0; i < menuOptions.length; i++) {
 //                                 downloadSVG();
 //                             });
 
-var downloadButton = exportDiv.append('button')
-                            .attr('id', 'downloadJSON')
-                            .text('Download JSON')
-                            .style('font-size', '20px')
-                            .style('font-weight', 'medium')
-                            .style('font', 'Helvetica Neue')
-                            .style('border-radius', '10px')
-                            .style('background-color', 'whitesmoke')
-                            .on('click', function() {
-                                downloadJSON();
-                            });
+// var downloadButton = exportDiv.append('button')
+//                             .attr('id', 'downloadJSON')
+//                             .text('Download JSON')
+//                             .style('font-size', '20px')
+//                             .style('font-weight', 'medium')
+//                             .style('font', 'Helvetica Neue')
+//                             .style('border-radius', '10px')
+//                             .style('background-color', 'whitesmoke')
+//                             .on('click', function() {
+//                                 downloadJSON();
+//                             });
 
 function downloadJSON(data) {
 

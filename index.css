@@ -91,7 +91,6 @@ button:focus {
     width: 30%;
     min-width: 300px;
     height: calc(100vh - 77px);
-    background-color: red;
 }
 
 .menuOption {
@@ -113,3 +112,6 @@ button:focus {
     background-color: rgb(158, 165, 179);
 }
 
+#inputDiv {
+    width: 100%;
+}
