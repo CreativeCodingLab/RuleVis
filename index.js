@@ -26,30 +26,72 @@ let main = d3.select('body').append('div')
                 .style('height', 10 + "px")
                 .style('display', 'inline-block'); */
 
-// Sidebar for different options
-let sidebar = main.append('div')
-                    .attr('id', 'sidebar')
-                    .style('width', (bodyW > 600 ? 30 : 100) + '%')
-                    .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
-                    .style('float', 'left')
-                    .style('background-color', 'rgb(230, 233, 239)')
-                    .style('text-align', 'center');
+// // Sidebar for different options
+// let sidebar = main.append('div')
+//                     .attr('id', 'sidebar')
+//                     .style('width', (bodyW > 600 ? 30 : 100) + '%')
+//                     .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
+//                     .style('float', 'left')
+//                     .style('background-color', 'rgb(230, 233, 239)')
+//                     .style('text-align', 'center');
 
-let menuOptions = ["inputText", "export"];
+//let menuOptions = ["inputText", "export"];
 
-let sidebarMenu = sidebar.append('div')
-                    .attr('id', 'sidebarMenu')
-                    .style('width', '100%');
+let sidebar = document.getElementById('sidebar');
+let sidebarMenu = document.getElementById('sidebarMenu');
+let menuOptions = document.getElementsByClassName('menuOption');
+let inputDiv = d3.select('div#inputDiv');
+let exportDiv = d3.select('div#exportDiv');
+let inputBox = d3.select('textarea#inputBox');
+
+// Map of menuOption ids to their associated divs
+let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv']];
+let menuMap = new Map(menuMapArray);
+
+let handleMenuClick = function(e) {
+    let itemID = e.id;
+    console.log(itemID);
+
+    for (let option = 0; option < menuOptions.length; option++) {
+        // id of the menu option clicked
+        let currOption = menuOptions[option];
+        // div associated with the id        
+        let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
+        //let currOptionDiv = menuMap.get(currOption.id);
+        console.log(currOptionDiv);
+
+        // If we find the current element, add active class and display associated div
+        if (currOption.id === itemID) {
+            currOption.classList.add('active');
+            currOptionDiv.style.display = 'inline-block';
+        } else {
+            if (currOption.classList.contains('active')) {
+                currOption.classList.remove('active');
+            }
+            currOptionDiv.style.display = 'none';
+        }
+    }
+}
+
+for (let i = 0; i < menuOptions.length; i++) {
+    menuOptions[i].addEventListener('click', 
+        function() { handleMenuClick(menuOptions[i]) } 
+    );
+}
+
+// let sidebarMenu = sidebar.append('div')
+//                     .attr('id', 'sidebarMenu')
+//                     .style('width', '100%');
 
 // Menu buttons
-let menu = sidebarMenu.selectAll('input')
-                    .data(menuOptions)
-                    .enter()
-                    .append('input')
-                    .attr('type', 'button')
-                    .attr('value', function (d) { return d })
-                    .attr('class', 'menuOption')
-                    .attr('id', function (d) { return d });
+// let menu = sidebarMenu.selectAll('input')
+//                     .data(menuOptions)
+//                     .enter()
+//                     .append('input')
+//                     .attr('type', 'button')
+//                     .attr('value', function (d) { return d })
+//                     .attr('class', 'menuOption')
+//                     .attr('id', function (d) { return d });
 
 // var menuGroups = sidebarMenu.selectAll('div')
 //                     .data(menuOptions)
@@ -76,71 +118,72 @@ let menu = sidebarMenu.selectAll('input')
 //var menuText = menu.selectAll('text')
 
 
-menu.on("click", function (d) {
-    console.log(d);
-    if (d === "inputText") {
-        d3.select('#inputDiv')
-            .style('display', 'inline-block')
-            .style('width', '100%');
-        d3.select('#exportDiv')
-            .style('display', 'none');
+// menu.on("click", function (d) {
+//     console.log(d);
+//     if (d === "inputText") {
+//         d3.select('#inputDiv')
+//             .style('display', 'inline-block')
+//             .style('width', '100%');
+//         d3.select('#exportDiv')
+//             .style('display', 'none');
 
-        d3.select("#inputText")
-            .classed('active', true);
+//         d3.select("#inputText")
+//             .classed('active', true);
 
-        d3.select("#export")
-            .classed('active', false);
+//         d3.select("#export")
+//             .classed('active', false);
 
-        console.log(document.getElementById("inputText").classList);
+//         console.log(document.getElementById("inputText").classList);
 
-    }
-    else if (d === "export") {
-        d3.select('#inputDiv').style('display', 'none');
-        d3.select('#exportDiv').style('display', 'inline-block');
+//     }
+//     else if (d === "export") {
+//         d3.select('#inputDiv').style('display', 'none');
+//         d3.select('#exportDiv').style('display', 'inline-block');
 
-        d3.select("#export")
-            .classed('active', true);
+//         d3.select("#export")
+//             .classed('active', true);
 
-        d3.select("#inputText")
-            .classed('active', false);
+//         d3.select("#inputText")
+//             .classed('active', false);
 
 
-    }
-});
+//     }
+// });
 
 
 // Text Input tab
-let inputDiv = sidebar.append('div')
-                    .attr('id', 'inputDiv');
+// let inputDiv = sidebar.append('div')
+//                     .attr('id', 'inputDiv');
 
-let inputBox = inputDiv.append('textarea')
-                    .attr('name', 'expression')
-                    .attr('size', 50)
-                    .attr('rows', 30)
+
+// let inputBox = inputDiv.append('textarea')
+//                     .attr('name', 'expression')
+//                     .attr('size', 50)
+//                     .attr('rows', 30)
                     
-                    .style('padding', '10px')
-                    .attr('placeholder', 'Begin typing an expression to visualize it.')
-                    //.style('text-align', 'center')
-                    .attr('id', 'inputBox');
+//                     .style('padding', '10px')
+//                     .attr('placeholder', 'Begin typing an expression to visualize it.')
+//                     //.style('text-align', 'center')
+//                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
 
 // Download SVG tab
-var exportDiv = sidebar.append('div')
-                    .attr('id', 'exportDiv')
-                    .style('display', 'none');
+// var exportDiv = sidebar.append('div')
+//                     .attr('id', 'exportDiv')
+//                     .style('display', 'none');
 
 // Button for downloading/exporting svg
-var exportButton = exportDiv.append('button')
-                            .attr('id', 'download')
-                            .text('Export SVG')
-                            .style('font-size', '20px')
-                            .style('font-weight', 'medium')
-                            .style('font', 'Helvetica Neue')
-                            .style('border-radius', '10px')
-                            .style('background-color', 'whitesmoke')
-                            .on('click', function() {
-                                downloadSVG();
-                            });
+// var exportButton = exportDiv.append('button')
+//                             .attr('id', 'download')
+//                             .text('Export SVG')
+//                             .style('font-size', '20px')
+//                             .style('font-weight', 'medium')
+//                             .style('font', 'Helvetica Neue')
+//                             .style('border-radius', '10px')
+//                             .style('background-color', 'whitesmoke')
+//                             .on('click', function() {
+//                                 downloadSVG();
+//                             });
 
 var downloadButton = exportDiv.append('button')
                             .attr('id', 'downloadJSON')

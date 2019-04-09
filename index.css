@@ -40,7 +40,7 @@ p {
 }
 
 /* Some style formatting for text box [VERIFY] */
-textarea {
+textarea#inputBox {
     width: 100%;
     padding: 10px;
     height: calc(100vh - 116px);
@@ -81,11 +81,17 @@ button:focus {
 #sidebarMenu {
     background-color: rgb(219, 219, 219);
     text-align: left;
+    width: 100%;
 }
+
 
 #sidebar {
     border-right: 1px solid rgb(189, 189, 189);
     border-radius: 2px;
+    width: 30%;
+    min-width: 300px;
+    height: calc(100vh - 77px);
+    background-color: red;
 }
 
 .menuOption {
