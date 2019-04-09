@@ -116,10 +116,10 @@ let inputDiv = sidebar.append('div')
 let inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
-                    .attr('rows', 40)
-                    .style('width', '100%')
-                    .style('height', bodyH - 40)
+                    .attr('rows', 30)
+                    
                     .style('padding', '10px')
+                    .attr('placeholder', 'Begin typing an expression to visualize it.')
                     //.style('text-align', 'center')
                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
