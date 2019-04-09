@@ -3,7 +3,7 @@ body {
 }
 /* Header div styling */
 #header {
-    background-color: rgb(53, 59, 68);
+    background-color: #a3b1c7;
     padding: 15px;
     margin: 0;
 }
@@ -43,14 +43,14 @@ p {
 textarea {
     width: 100%;
     padding: 10px;
-    
+    height: calc(100vh - 116px);
     box-sizing: border-box;
     border: 0px solid rgb(189, 189, 189);
     border-radius: 2px;
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 15px;
-    background-color: rgb(230, 233, 239);
-    letter-spacing: 1.5px;
+    background-color: white;
+    letter-spacing: 0.05em;
     line-height: 1.5;
 }
 
@@ -79,18 +79,23 @@ button:focus {
 }
 
 #sidebarMenu {
-    background-color: rgb(200, 209, 226);
-    margin-bottom: 10px;
+    background-color: rgb(219, 219, 219);
     text-align: left;
+}
+
+#sidebar {
+    border-right: 1px solid rgb(189, 189, 189);
+    border-radius: 2px;
 }
 
 .menuOption {
     padding: 10px 10px;
-    background-color:rgb(200, 209, 226);
+    background-color: rgb(219, 219, 219);
     border: none;
     height: 40px;
     font-size: 14px;
     transition: 0.3s;
+    letter-spacing: 0.05em;
 }
 
 .active {
