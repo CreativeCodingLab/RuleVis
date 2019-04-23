@@ -1,24 +1,3 @@
-// Titles & headers
-let header = d3.select("#header");
-let headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
-
-// Height of header + 15px of margin on top and bottom
-let headerH = document.getElementById('header').clientHeight;
-
-// Dimensions of entire page EXCLUDING header, in order to calculate other element sizes
-let bodyH = window.document.documentElement.clientHeight - headerH;
-let bodyW = window.document.documentElement.clientWidth;
-
-// Set up the SVG attributes
-let h = bodyH;
-let w = bodyW * 0.7;
-
-var expression;
-
-// Create container div for styling purposes
-let main = d3.select('body').append('div')
-                .attr('id', 'main');
-                //.style('text-align', 'center');
 
 /* main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
@@ -26,23 +5,27 @@ let main = d3.select('body').append('div')
                 .style('height', 10 + "px")
                 .style('display', 'inline-block'); */
 
-// // Sidebar for different options
-// let sidebar = main.append('div')
-//                     .attr('id', 'sidebar')
-//                     .style('width', (bodyW > 600 ? 30 : 100) + '%')
-//                     .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
-//                     .style('float', 'left')
-//                     .style('background-color', 'rgb(230, 233, 239)')
-//                     .style('text-align', 'center');
 
 //let menuOptions = ["inputText", "export"];
-
+let header = d3.select("div#header");
+let main = d3.select('div#main');
 let sidebar = document.getElementById('sidebar');
 let sidebarMenu = document.getElementById('sidebarMenu');
 let menuOptions = document.getElementsByClassName('menuOption');
 let inputDiv = d3.select('div#inputDiv');
 let exportDiv = d3.select('div#exportDiv');
 let inputBox = d3.select('textarea#inputBox');
+let svgDiv = d3.select('div#svgDiv');
+
+let headerH = header.clientHeight;
+
+// Set up the SVG attributes
+let h = window.document.documentElement.clientHeight - headerH;
+
+var expression;
+
+// Create container div for styling purposes
+
 
 // Map of menuOption ids to their associated divs
 let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv']];
@@ -78,124 +61,6 @@ for (let i = 0; i < menuOptions.length; i++) {
     );
 }
 
-// let sidebarMenu = sidebar.append('div')
-//                     .attr('id', 'sidebarMenu')
-//                     .style('width', '100%');
-
-// Menu buttons
-// let menu = sidebarMenu.selectAll('input')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('input')
-//                     .attr('type', 'button')
-//                     .attr('value', function (d) { return d })
-//                     .attr('class', 'menuOption')
-//                     .attr('id', function (d) { return d });
-
-// var menuGroups = sidebarMenu.selectAll('div')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('div')
-//                     .attr('width', '20px')
-//                     .attr('transform', function (i) {
-//                         return ('translateX(' + i*20 + ')');
-//                     })
-//                     .attr('class', 'menuOption')
-//                     .attr('id', function (d) { return d });
-
-// let menuLabels = sidebarMenu.selectAll('text')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('text')
-//                     .attr('x', function (i) {
-//                         return (10 + i*20);
-//                     })
-//                     .attr('y', 0)
-//                     .style('padding', '0px, 5px')
-//                     .text(function (d) { return d });
-
-//var menuText = menu.selectAll('text')
-
-
-// menu.on("click", function (d) {
-//     console.log(d);
-//     if (d === "inputText") {
-//         d3.select('#inputDiv')
-//             .style('display', 'inline-block')
-//             .style('width', '100%');
-//         d3.select('#exportDiv')
-//             .style('display', 'none');
-
-//         d3.select("#inputText")
-//             .classed('active', true);
-
-//         d3.select("#export")
-//             .classed('active', false);
-
-//         console.log(document.getElementById("inputText").classList);
-
-//     }
-//     else if (d === "export") {
-//         d3.select('#inputDiv').style('display', 'none');
-//         d3.select('#exportDiv').style('display', 'inline-block');
-
-//         d3.select("#export")
-//             .classed('active', true);
-
-//         d3.select("#inputText")
-//             .classed('active', false);
-
-
-//     }
-// });
-
-
-// Text Input tab
-// let inputDiv = sidebar.append('div')
-//                     .attr('id', 'inputDiv');
-
-
-// let inputBox = inputDiv.append('textarea')
-//                     .attr('name', 'expression')
-//                     .attr('size', 50)
-//                     .attr('rows', 30)
-                    
-//                     .style('padding', '10px')
-//                     .attr('placeholder', 'Begin typing an expression to visualize it.')
-//                     //.style('text-align', 'center')
-//                     .attr('id', 'inputBox');
-                    //.attr('placeholder', 'expression');
-
-// Download SVG tab
-// var exportDiv = sidebar.append('div')
-//                     .attr('id', 'exportDiv')
-//                     .style('display', 'none');
-
-// Button for downloading/exporting svg
-// var exportButton = exportDiv.append('button')
-//                             .attr('id', 'download')
-//                             .text('Export SVG')
-//                             .style('font-size', '20px')
-//                             .style('font-weight', 'medium')
-//                             .style('font', 'Helvetica Neue')
-//                             .style('border-radius', '10px')
-//                             .style('background-color', 'whitesmoke')
-//                             .on('click', function() {
-//                                 downloadSVG();
-//                             });
-
-// var downloadButton = exportDiv.append('button')
-//                             .attr('id', 'downloadJSON')
-//                             .text('Download JSON')
-//                             .style('font-size', '20px')
-//                             .style('font-weight', 'medium')
-//                             .style('font', 'Helvetica Neue')
-//                             .style('border-radius', '10px')
-//                             .style('background-color', 'whitesmoke')
-//                             .on('click', function() {
-//                                 downloadJSON();
-//                             });
-
 function downloadJSON(data) {
 
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
@@ -219,21 +84,6 @@ uploadBox.on('input', function() {
             svg.append('g').attr('transform', `translate(${w/2},0)`)])
 
 });
-
-// Create parent div for svg
-let svgDiv = d3.select('#main').append('div')
-                .attr('id', 'svgDiv')
-                .style('width', function () {
-                    // If window size < 600, svg should reflect size of parent div
-                    if (bodyW > 600) {
-                        return 70 + '%';
-                    } else {
-                        w = bodyW - 10;
-                        return 100 + '%';
-                    }
-                })
-                .style('height', bodyH + "px")
-                .style('float', 'left');
 
 var svg = undefined
 
@@ -266,7 +116,7 @@ function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
     svgDiv.selectAll('svg').remove()
     svg = svgDiv.append('svg') // FIXME: dupe code
-                .attr('width', w+'px')
+                .attr('width', '100%')
                 .attr('height', h+'px')
                 .attr('id', 'svg')
                 .call(d3.zoom().on("zoom", function () {

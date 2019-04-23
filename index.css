@@ -39,26 +39,7 @@ p {
     text-align: center;
 }
 
-/* Some style formatting for text box [VERIFY] */
-textarea#inputBox {
-    width: 100%;
-    padding: 10px;
-    height: calc(100vh - 116px);
-    box-sizing: border-box;
-    border: 0px solid rgb(189, 189, 189);
-    border-radius: 2px;
-    font-family: 'Helvetica Neue', sans-serif;
-    font-size: 15px;
-    background-color: white;
-    letter-spacing: 0.05em;
-    line-height: 1.5;
-}
 
-/* Removes blue highlighting around text box*/
-/*  Note - May create an accessibilty issue on different platforms*/
-textarea:focus {
-    outline:none;
-}
 
 /* prevent labels from intercepting mouse events (todo: disable being highlighted at all) */
 svg text {
@@ -78,19 +59,18 @@ button:focus {
     outline:none;
 }
 
+/*-------SIDEBAR MENU STYLING-------------*/
+
+#sidebar {
+    border-right: 1px solid rgb(189, 189, 189);
+    width: 30%;
+    height: calc(100vh - 77px);
+}
+
 #sidebarMenu {
     background-color: rgb(219, 219, 219);
     text-align: left;
     width: 100%;
-}
-
-
-#sidebar {
-    border-right: 1px solid rgb(189, 189, 189);
-    border-radius: 2px;
-    width: 30%;
-    min-width: 300px;
-    height: calc(100vh - 77px);
 }
 
 .menuOption {
@@ -112,6 +92,38 @@ button:focus {
     background-color: rgb(158, 165, 179);
 }
 
+/* Container for textarea input */
 #inputDiv {
     width: 100%;
+}
+
+/* Some style formatting for text box [VERIFY] */
+textarea#inputBox {
+    width: 100%;
+    padding: 10px;
+    height: calc(100vh - 116px);
+    box-sizing: border-box;
+    border: 0px solid rgb(189, 189, 189);
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 15px;
+    background-color: white;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+}
+
+/* Removes blue highlighting around text box*/
+/*  Note - May create an accessibilty issue on different platforms*/
+textarea:focus {
+    outline:none;
+}
+
+/* ------- SVG STYLING -------- */
+
+#svgDiv {
+    width: calc(70% - 2px);
+    height: calc(100vh - 77px);
+}
+
+.column {
+    float: left;
 }

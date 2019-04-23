@@ -11,13 +11,15 @@
     </head>
 
     <body>
-      <div id="header"></div>
+      <div id="header">
+        <h1>Kappa: Rule-based modeling for biological processes</h1>
+      </div>
       <div id="work"></div>
       <script type="text/javascript" src="parse.js"></script>
       <!--<script type="text/javascript" src="interface.js"></script>-->
       
       <div id="main">
-        <div id="sidebar">
+        <div id="sidebar" class="column">
           <div id="sidebarMenu">
             <button id="inputText" class="menuOption active">Text Input</button>
             <button id="export" class="menuOption">Export</button>
@@ -32,6 +34,8 @@
             <button id="downloadJSON" onclick="downloadJSON()">Download JSON</button>
           </div>
         </div>
+
+        <div id="svgDiv" class="column"></div>
       </div>
         
 
