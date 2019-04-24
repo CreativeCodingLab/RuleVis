@@ -38,10 +38,7 @@ let menuOptions = ["inputText", "export"];
 
 let sidebarMenu = sidebar.append('div')
                     .attr('id', 'sidebarMenu')
-                    .style('width', '100%')
-                    .style('background-color', 'rgb(188, 192, 198)')
-                    .style('margin-bottom', '10px')
-                    .style('text-align', 'left');
+                    .style('width', '100%');
 
 // Menu buttons
 let menu = sidebarMenu.selectAll('input')
@@ -86,12 +83,30 @@ menu.on("click", function (d) {
             .style('width', '100%');
         d3.select('#exportDiv')
             .style('display', 'none');
+
+        d3.select("#inputText")
+            .classed('active', true);
+        
+        d3.select("#export")
+            .classed('active', false);
+
+        console.log(document.getElementById("inputText").classList);
+
     } 
     else if (d === "export") {
         d3.select('#inputDiv').style('display', 'none');
         d3.select('#exportDiv').style('display', 'inline-block');
+        
+        d3.select("#export")
+            .classed('active', true);
+        
+        d3.select("#inputText")
+            .classed('active', false);
+        
+        
     }
 });
+
 
 // Text Input tab
 let inputDiv = sidebar.append('div')
@@ -100,8 +115,9 @@ let inputDiv = sidebar.append('div')
 let inputBox = inputDiv.append('textarea')
                     .attr('name', 'expression')
                     .attr('size', 50)
-                    .attr('rows', 10)
+                    .attr('rows', 40)
                     .style('width', '100%')
+                    .style('height', bodyH - 40)
                     .style('padding', '10px')
                     //.style('text-align', 'center')
                     .attr('id', 'inputBox');
