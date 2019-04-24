@@ -153,23 +153,16 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-var expression;
-inputBox.on("input", function() {
-    let input = inputBox.property('value').split('->'),
-        lhs = tokenize(input[0]),
-        rhs = input.length > 1 ? tokenize(input[1]) : undefined
+let rule = new KappaRule('A(x[.])') // TODO: handle empty string gracefully
 
-    chart = [lhs, rhs].map( u =>
-                u ? tinynlp.parse(u, pattern, 'start') : u
-            )
-    expression = chart.map( c => c ? simplify(c) : c )
+inputBox.on("input", () => {
+    rule = new KappaRule(...inputBox.property('value').split('->'))
 
     clearExpressions()
-    visualizeExpression(expression,
+    visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
-         svg.append('g').attr('transform', `translate(${w/2},0)`)]
+            svg.append('g').attr('transform', `translate(${w/2},0)`)]
         ) // TODO: pass if either side of rule is malformed
-
 });
 
 function clearExpressions() {
@@ -185,88 +178,54 @@ function clearExpressions() {
                 .append("g")
 }
 
-var agents, sites, bonds, parents,
-    simulation // debug
-function visualizeExpression(expression, group) {
+// visual properties
+var agents, parents, // unified
+    sites, bonds, // bifurcated into {lhs, rhs}
+    simulation
+function visualizeExpression(rule, group) {
     // d3.selectAll("svg > *").remove();
     // subheading.text(JSON.stringify(expression)) // DEBUG
 
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
+  
+    let nodes = [...rule.agents,
+                 ...rule.sites]
 
-    let e = expression
-    agents = d3.range(e[0].agents.length).map( (i) => 
-                     ({id: e[0].agents[i].id, siteCount: e[0].agents[i].siteCount,
-                       lhs: e[0].agents[i],
-                       rhs: e[1].agents[i]}))
+    let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
+                            d.siteCount > 5 ? 7+4*d.siteCount*/)
+    nodes.forEach((d) => {
+        d.label = d.parent === undefined ? true :
+                  d.lhs.state != d.rhs.state ? true :
+                  false
+    }) // FIXME: don't mutate the KappaRule
 
-    sites = e[0].sites.map( (u) => 
-        ({id: u.id, parent: u.parent,
-          lhs: u, rhs: new Site(u.parent, u.id[1]) })
-    )
-    e[1].sites.forEach( (v) => {
-        let u = sites.find((u) => u.id[0] == v.id[0] && u.id[1] == v.id[1])
-        if (u === undefined)
-            sites.push({id: v.id, parent: v.parent,
-                        lhs: new Site(v.parent, v.id[1]), rhs: v })
-        else
-            u.rhs = v
-    })
-
-    let getIndex = (siteId) => {
-        if (!siteId) return
-        let [a,b] = siteId
-        return agents.length +
-               sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
-      },
-        side = ['lhs', 'rhs']
-
-    sites.forEach(function(d) {
-        if (d.parent === undefined) {
-            d.label = true;
-        } else {
-            d.label = false;
-        }
-    })
-    let nodes = [...agents,
-                 ...sites]
-
-    bonds = d3.range(2).map((i) => 
-                expression[i].namedBonds.slice(1)
-                  .filter(bnd => bnd && bnd[1])
-                  .map(([src,tar]) => ({'source': getIndex(src),
-                                       'target': getIndex(tar)
-                                       })))
-    bonds = {lhs: bonds[0], rhs: bonds[1]}
-
-    parents = sites.map(u => ({'source': u.parent, // agentId is already a valid index
-                                'target': getIndex(u.id),
-                                'isParent': true,
-                                'sibCount': agents[u.parent].siteCount,
-                               }))
-
-    let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 /*:
-                            d.siteCount > 5 ? 7+4*d.siteCount*/ : 27)
-    nodes.forEach((d) => { d.parent === undefined ? d.label = true : d.label = false })
+    let linkSet = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
+    // [...new Set()];
 
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
-        .links([...new Set([...bonds.lhs, ...bonds.rhs, ...parents])])
+        .links(linkSet)
         .linkDistance(d => !d.isParent ? 80 : d.sibCount > 6 ? 65 : d.sibCount > 3 ? 50 : 35)
         // .avoidOverlaps(true);
+
+    const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
 
     let link = [], node = [], freeNode = [],
         name = [], state = [], nodeGroup = []
     group.forEach((root, i) => {
         link[i] = root.append("g")
                         .selectAll("line")
-                        .data([...bonds[side[i]], ...parents])
+                        .data([...rule.bonds[side[i]], ...rule.parents])
                         .enter()
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", 0.4)
+                            .attr("stroke-opacity", d => 0.4 )
+                            // .attr("stroke-opacity", d => {console.log(d); return 0.4} )
+                            // TODO: identify empty agents!
+                            .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
         nodeGroup[i] = root.selectAll('.node')
                             .data(nodes)
