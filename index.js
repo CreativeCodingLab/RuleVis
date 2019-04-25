@@ -202,22 +202,16 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-inputBox.on("input", function() {
-    let input = inputBox.property('value').split('->'),
-        lhs = tokenize(input[0]),
-        rhs = input.length > 1 ? tokenize(input[1]) : undefined
+let rule = new KappaRule('A(x[.])') // TODO: handle empty string gracefully
 
-    chart = [lhs, rhs].map( u =>
-                u ? tinynlp.parse(u, pattern, 'start') : u
-            )
-    expression = chart.map( c => c ? simplify(c) : c )
+inputBox.on("input", () => {
+    rule = new KappaRule(...inputBox.property('value').split('->'))
 
     clearExpressions()
-    visualizeExpression(expression,
+    visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
-         svg.append('g').attr('transform', `translate(${w/2},0)`)]
+            svg.append('g').attr('transform', `translate(${w/2},0)`)]
         ) // TODO: pass if either side of rule is malformed
-
 });
 
 function clearExpressions() {
@@ -237,94 +231,15 @@ function clearExpressions() {
 var agents, parents, // unified
     sites, bonds, // bifurcated into {lhs, rhs}
     simulation
-function visualizeExpression(expression, group) {
+function visualizeExpression(rule, group) {
     // d3.selectAll("svg > *").remove();
     // subheading.text(JSON.stringify(expression)) // DEBUG
 
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
-
-    let e = expression,
-        agentCount = e[0].agents.length // VERIFY: assume aligned agents
-    if (!e[1])
-        e[1] = {'agents': [], 'sites': [], 'virtualSites': [],
-                              'bonds': [], 'virtualBonds': []} // BRITTLE
-
-    agents = d3.range(agentCount).map( (i) =>
-                     ({id: e[0].agents[i].id,
-                       siteCount: e[0].agents[i].siteCount,
-                       lhs: e[0].agents[i],
-                       rhs: e[1].agents[i] ? e[1].agents[i] : new Agent(i)}))
-
-    // cannot assume aligned sites
-    let side = ['lhs', 'rhs']
-
-    sites = e[0].sites.map( (u) => 
-        ({id: u.id, parent: u.parent,
-          lhs: u, rhs: new Site(...u.id) })
-    )
-    if (e[1])
-        e[1].sites.forEach( (v) => {
-            let u = sites.find((u) => u.id[0] == v.id[0] && u.id[1] == v.id[1])
-            console.log("merge", u, v)
-
-            if (u === undefined)
-                sites.push({id: v.id, parent: v.parent,
-                            lhs: new Site(v.parent, v.id[1]), rhs: v })
-            else
-                u.rhs = v
-        })
-    // TODO: generate anonymous agents as needed for bonds, too
-    e.forEach((expr,i) =>
-        expr.virtualSites.forEach((v,j) => {
-            let par = agents.length + j,
-                tar = new Site([par, 0])
-            tar.bond = [-1, false] // VERIFY
-            
-            sites.push({
-                id: [par, 0], parent: par,
-                lhs: tar, rhs: {...tar},
-            })
-            let res = sites.slice(-1)[0][side[i]]
-            res.state = `of-${v.boundTo}`
-            res.name = v.boundAt ? v.boundAt : '_'
-        })
-    )
-
-    let getIndex = (siteId) => {
-        if (!siteId) throw new Error("getIndex cannot look up a site without its index")
-
-        let [a,b] = siteId
-        return agents.length +
-               sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
-      }    
-    let nodes = [...agents,
-                 ...sites]
-
-    // treat bonds (site-site links) separately
-    bonds = expression.map((u,i) => {
-        if (!u) return []
-        let named = u.bonds
-            .filter(bnd => bnd && bnd[1])
-            .map(([src,tar]) => ({'source': getIndex(src),
-                                'target': getIndex(tar)
-                                }))
-        let anon = u.virtualBonds
-            .map(([src,_],i) => ({'source': getIndex(src),
-                                 'target': getIndex([agents.length+i, 0]),
-                                 // BRITTLE: look up anonymous index
-                                 'isAnonymous': true}))
-        return [...named, ...anon]
-        })
-    bonds = {lhs: bonds[0], rhs: bonds[1]}
-
-    // treat parents (site-agent links) once
-    parents = sites.filter(u => u.parent < agentCount) // ignore virtual sites
-                    .map(u => ({'source': u.parent, // agentId is already a valid index
-                                'target': getIndex(u.id),
-                                'isParent': true,
-                                'sibCount': agents[u.parent].siteCount,
-                               }))
+  
+    let nodes = [...rule.agents,
+                 ...rule.sites]
 
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/)
@@ -332,9 +247,10 @@ function visualizeExpression(expression, group) {
         d.label = d.parent === undefined ? true :
                   d.lhs.state != d.rhs.state ? true :
                   false
-    })
+    }) // FIXME: don't mutate the KappaRule
 
-    var linkSet = [...new Set([...bonds.lhs, ...bonds.rhs, ...parents])];
+    let linkSet = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
+    // var linkSet = [...new Set([...bonds.lhs, ...bonds.rhs, ...parents])];
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
@@ -344,12 +260,14 @@ function visualizeExpression(expression, group) {
                             d.sibCount > 3 ? 35 : 30)
         // .avoidOverlaps(true);
 
+    const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
+
     let link = [], node = [], freeNode = [],
         name = [], state = [], nodeGroup = []
     group.forEach((root, i) => {
         link[i] = root.append("g")
                         .selectAll("line")
-                        .data([...bonds[side[i]], ...parents])
+                        .data([...rule.bonds[side[i]], ...rule.parents])
                         .enter()
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
