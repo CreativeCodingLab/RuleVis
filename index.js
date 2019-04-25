@@ -5,9 +5,8 @@
                 .style('height', 10 + "px")
                 .style('display', 'inline-block'); */
 
-
-//let menuOptions = ["inputText", "export"];
-let header = d3.select("div#header");
+// Create references to static html elements
+let header = d3.select('div#header');
 let main = d3.select('div#main');
 let sidebar = document.getElementById('sidebar');
 let sidebarMenu = document.getElementById('sidebarMenu');
@@ -17,20 +16,17 @@ let exportDiv = d3.select('div#exportDiv');
 let inputBox = d3.select('textarea#inputBox');
 let svgDiv = d3.select('div#svgDiv');
 
+// Calculate the height of available space for canvas and sidebar
 let headerH = header.clientHeight;
-
-// Set up the SVG attributes
 let h = window.document.documentElement.clientHeight - headerH;
 
 var expression;
 
-// Create container div for styling purposes
-
-
 // Map of menuOption ids to their associated divs
-let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv']];
+let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']]; ;
 let menuMap = new Map(menuMapArray);
 
+// Menu Option Handlers
 let handleMenuClick = function(e) {
     // Id of newly clicked element
     let itemID = e.id;
@@ -61,6 +57,20 @@ for (let i = 0; i < menuOptions.length; i++) {
     );
 }
 
+
+// GUI action handlers
+function handleGUIAction() {
+    alert('clicked!');
+}
+
+let guiButtons = document.getElementsByClassName('gui-button');
+console.log(guiButtons);
+for (let i = 0; i < guiButtons.length; i++) {
+    guiButtons[i].addEventListener( 'click', 
+        function() { handleGUIAction() })
+}
+
+// Export div action handlers
 function downloadJSON(data) {
 
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));

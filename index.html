@@ -21,7 +21,8 @@
       <div id="main">
         <div id="sidebar" class="column">
           <div id="sidebarMenu">
-            <button id="inputText" class="menuOption active">Text Input</button>
+            <button id="gui" class="menuOption active">GUI Editor</button>
+            <button id="inputText" class="menuOption">Text Input</button>
             <button id="export" class="menuOption">Export</button>
           </div>
 
@@ -29,9 +30,16 @@
             <textarea id="inputBox" rows="30" size="90" name="expression" placeholder="Begin typing an expression to visualize it."></textarea>
           </div>
 
-          <div id="exportDiv" style="display: none">
-            <button id="download" onclick="downloadSVG()">Export SVG</button>
-            <button id="downloadJSON" onclick="downloadJSON()">Download JSON</button>
+          <div id="exportDiv">
+            <button id="download" class="main-button" onclick="downloadSVG()">Export SVG</button>
+            <button id="downloadJSON" class="main-button" onclick="downloadJSON()">Download JSON</button>
+          </div>
+
+          <div id="guiDiv">
+            <button id="addAgent" class="gui-button">Add Agent</button>
+            <button id="addSite" class="gui-button">Add Site</button>
+            <button id="addLink" class="gui-button">Add Link</button>
+            <button id="editAgent" class="gui-button">Edit Agent</button>
           </div>
         </div>
 

@@ -39,7 +39,9 @@ p {
     text-align: center;
 }
 
-
+button:hover {
+    cursor: pointer;
+}
 
 /* prevent labels from intercepting mouse events (todo: disable being highlighted at all) */
 svg text {
@@ -51,13 +53,33 @@ svg text .agent {
     font-weight: 700;
 }
 
-button {
+/* menu button styling */
+.menuButton {
     border: 2px solid rgb(56,56,56);
 }
 
+.main-button {
+    padding: 10px 15px;
+    font-family: 'Helvetica Neue', sans-serif;
+    width: 100%;
+    display: block;
+
+    background-color: rgb(219, 219, 219);
+    border: none;
+    height: 40px;
+    font-size: 14px;
+    transition: 0.3s;
+    letter-spacing: 0.05em;
+}
+
+.main-buton:hover {
+    cursor: hover;
+    background: #aaaacc;
+}
+/* 
 button:focus {
     outline:none;
-}
+} */
 
 /*-------SIDEBAR MENU STYLING-------------*/
 
@@ -95,6 +117,11 @@ button:focus {
 /* Container for textarea input */
 #inputDiv {
     width: 100%;
+    display: none;
+}
+
+#exportDiv {
+    display: none;
 }
 
 /* Some style formatting for text box [VERIFY] */
@@ -127,3 +154,19 @@ textarea:focus {
 .column {
     float: left;
 }
+
+/* ----------- GUI DIV STYLING ------------ */
+.gui-button {
+    background-color: white;
+    border: none;
+    border-bottom: 1px solid #afb1b6;
+    color: rgb(75, 75, 75);
+    padding: 18px 22px;
+    width: 100%;
+}
+
+.gui-button:hover {
+    background-color: #eeeeee;
+}
+
+
