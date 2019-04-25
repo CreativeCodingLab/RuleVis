@@ -8,3 +8,18 @@ This project is an implementation of dynamically generated pattern site graphs i
 
 [Run in browser](https://creativecodinglab.github.io/RuleVis/)
 
+## API
+
+### KappaRule
+
+KappaRule (lhs, rhs=undefined): **constructor**
+
+
+lhs and (optional) rhs are strings each representing a valid Kappa expression.
+
+**TODO:** Or, lhs (and rhs) are objects each representing a RuleVis expression.
+
+#### TODO:
+KappaRule.addAgent(name, symmetry=BOTH): Adds an agent to the lhs.
+
+etcetera
