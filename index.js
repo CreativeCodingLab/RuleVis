@@ -227,9 +227,8 @@ function clearExpressions() {
                 .append("g")
 }
 
-// visual properties
-var agents, parents, // unified
-    sites, bonds, // bifurcated into {lhs, rhs}
+// simulation stores
+var nodes, links,
     simulation
 function visualizeExpression(rule, group) {
     // d3.selectAll("svg > *").remove();
@@ -238,8 +237,7 @@ function visualizeExpression(rule, group) {
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
   
-    let nodes = [...rule.agents,
-                 ...rule.sites]
+    nodes = [...rule.agents, ...rule.sites]
 
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/)
@@ -249,12 +247,12 @@ function visualizeExpression(rule, group) {
                   false
     }) // FIXME: don't mutate the KappaRule
 
-    let linkSet = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
-    // var linkSet = [...new Set([...bonds.lhs, ...bonds.rhs, ...parents])];
+    links = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
+    // links = [...new Set([...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents])];
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
-        .links(linkSet)
+        .links(links)
         .linkDistance(d => !d.isParent ? 80 :
                             d.sibCount > 6 ? 45 :
                             d.sibCount > 3 ? 35 : 30)
@@ -262,6 +260,7 @@ function visualizeExpression(rule, group) {
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
 
+    // visualization stores
     let link = [], node = [], freeNode = [],
         name = [], state = [], nodeGroup = []
     group.forEach((root, i) => {
@@ -362,8 +361,8 @@ function visualizeExpression(rule, group) {
             .attr("y", d => d.y+14))
         });
 
-    jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
-
+    // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
+    jsonBlob = {...rule, text: inputBox.property('value')}
     downloadButton.on('click', function() {
       downloadJSON(jsonBlob);
     })
