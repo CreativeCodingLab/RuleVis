@@ -1,6 +1,5 @@
 // Titles & headers
 let header = d3.select("#header");
-let headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
 
 // Height of header + 15px of margin on top and bottom
 let headerH = document.getElementById('header').clientHeight;
@@ -16,8 +15,8 @@ let w = bodyW * 0.7;
 var expression;
 
 // Create container div for styling purposes
-let main = d3.select('body').append('div')
-                .attr('id', 'main');
+let main = d3.select('div#main');
+let sidebar = d3.select('div#sidebar');
                 //.style('text-align', 'center');
 
 /* main.append('p')
@@ -27,13 +26,13 @@ let main = d3.select('body').append('div')
                 .style('display', 'inline-block'); */
 
 // Sidebar for different options
-let sidebar = main.append('div')
-                    .attr('id', 'sidebar')
-                    .style('width', (bodyW > 600 ? 30 : 100) + '%')
-                    .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
-                    .style('float', 'left')
-                    .style('background-color', 'rgb(230, 233, 239)')
-                    .style('text-align', 'center');
+// let sidebar = main.append('div')
+//                     .attr('id', 'sidebar')
+//                     .style('width', (bodyW > 600 ? 30 : 100) + '%')
+//                     .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
+//                     .style('float', 'left')
+//                     .style('background-color', 'rgb(230, 233, 239)')
+//                     .style('text-align', 'center');
 
 let menuOptions = ["inputText", "export"];
 

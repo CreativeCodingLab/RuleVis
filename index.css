@@ -1,12 +1,8 @@
+/* --------GLOBAL STYLES----------------------------------------------*/
 body {
     margin: 0;
 }
-/* Header div styling */
-#header {
-    background-color: rgb(53, 59, 68);
-    padding: 15px;
-    margin: 0;
-}
+
 
 /* Page heading */
 h1 {
@@ -39,6 +35,58 @@ p {
     text-align: center;
 }
 
+button {
+    border: 2px solid rgb(56,56,56);
+}
+
+button:focus {
+    outline:none;
+}
+
+/*----------------------STATIC------------------------*/
+
+/* Header div styling */
+#header {
+    background-color: rgb(53, 59, 68);
+    padding: 15px;
+    margin: 0;
+}
+
+/* --------------SIDEBAR MENU--------------------------------*/
+
+#sidebar {
+    width: calc(30% - 2px);
+    height: 100vh;
+    float: left;
+}
+
+#sidebarMenu {
+    background-color: rgb(200, 209, 226);
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+/* styling for each sidebar menu option/button */
+.menuOption {
+    padding: 10px 10px;
+    background-color:rgb(200, 209, 226);
+    border: none;
+    height: 40px;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.active {
+    background-color: rgb(158, 165, 179);
+}
+
+.menuOption:hover {
+    cursor: pointer;
+    background-color: rgb(158, 165, 179);
+}
+
+
+/* ------------------TEXT INPUT DIV--------------------*/
 /* Some style formatting for text box [VERIFY] */
 textarea {
     width: 100%;
@@ -60,6 +108,7 @@ textarea:focus {
     outline:none;
 }
 
+/*-----------------SVG STYLING--------------------------*/
 /* prevent labels from intercepting mouse events (todo: disable being highlighted at all) */
 svg text {
     pointer-events: none;
@@ -69,36 +118,3 @@ svg text {
 svg text .agent {
     font-weight: 700;
 }
-
-button {
-    border: 2px solid rgb(56,56,56);
-}
-
-button:focus {
-    outline:none;
-}
-
-#sidebarMenu {
-    background-color: rgb(200, 209, 226);
-    margin-bottom: 10px;
-    text-align: left;
-}
-
-.menuOption {
-    padding: 10px 10px;
-    background-color:rgb(200, 209, 226);
-    border: none;
-    height: 40px;
-    font-size: 14px;
-    transition: 0.3s;
-}
-
-.active {
-    background-color: rgb(158, 165, 179);
-}
-
-.menuOption:hover {
-    cursor: pointer;
-    background-color: rgb(158, 165, 179);
-}
-
