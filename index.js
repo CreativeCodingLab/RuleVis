@@ -4,13 +4,11 @@ let header = d3.select("#header");
 // Height of header + 15px of margin on top and bottom
 let headerH = document.getElementById('header').clientHeight;
 
-// Dimensions of entire page EXCLUDING header, in order to calculate other element sizes
-let bodyH = window.document.documentElement.clientHeight - headerH;
-let bodyW = window.document.documentElement.clientWidth;
+let h = document.getElementById('svgDiv').clientHeight;
+let w = document.getElementById('svgDiv').clientWidth;
 
-// Set up the SVG attributes
-let h = bodyH;
-let w = bodyW * 0.7;
+console.log(document.getElementById('sidebar').clientWidth);
+console.log(w);
 
 var expression;
 
@@ -24,6 +22,7 @@ let inputBox = d3.select('textarea#inputBox');
 let exportDiv = d3.select('exportDiv');
 let exportButton = d3.select('button#download');
 let downloadButton = d3.select('button#downloadJSON');
+let svgDiv = d3.select('div#svgDiv');
 
 /* main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
@@ -76,7 +75,7 @@ let downloadButton = d3.select('button#downloadJSON');
 //                     .text(function (d) { return d });
 
 
-let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv']];
+let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
 let menuMap = new Map(menuMapArray);
 
 //var menuText = menu.selectAll('text')
@@ -214,19 +213,20 @@ uploadBox.on('input', function() {
 });
 
 // Create parent div for svg
-let svgDiv = d3.select('#main').append('div')
-                .attr('id', 'svgDiv')
-                .style('width', function () {
-                    // If window size < 600, svg should reflect size of parent div
-                    if (bodyW > 600) {
-                        return 70 + '%';
-                    } else {
-                        w = bodyW - 10;
-                        return 100 + '%';
-                    }
-                })
-                .style('height', bodyH + "px")
-                .style('float', 'left');
+// let svgDiv = d3.select('#main').append('div')
+//                 .attr('id', 'svgDiv')
+//                 .style('width', function () {
+//                     // If window size < 600, svg should reflect size of parent div
+//                     if (bodyW > 600) {
+//                         return 70 + '%';
+//                     } else {
+//                         w = bodyW - 10;
+//                         return 100 + '%';
+//                     }
+//                 })
+//                 .style('height', bodyH + "px")
+//                 .style('float', 'left');
+
 
 var svg = undefined
 
@@ -255,6 +255,10 @@ function clearExpressions() {
     svg = svgDiv.append('svg') // FIXME: dupe code
                 .attr('width', w+'px')
                 .attr('height', h+'px')
+                // .attr('margin-left', function () {
+                //     let sidebarW = document.getElementById('sidebar').offsetWidth;
+                //     return sidebarW;
+                // })
                 .attr('id', 'svg')
                 .call(d3.zoom().on("zoom", function () {
                     svg.attr("transform", d3.event.transform)

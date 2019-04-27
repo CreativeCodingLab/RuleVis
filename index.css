@@ -43,7 +43,7 @@ button:focus {
     outline:none;
 }
 
-/*----------------------STATIC------------------------*/
+/*----------------------GENERAL DOM ELEMENTS------------------------*/
 
 /* Header div styling */
 #header {
@@ -56,7 +56,8 @@ button:focus {
 
 #sidebar {
     width: calc(30% - 2px);
-    height: 100vh;
+    border: 1px solid red;
+    height: calc(100vh - 77px);
     float: left;
 }
 
@@ -88,6 +89,10 @@ button:focus {
 
 /* ------------------TEXT INPUT DIV--------------------*/
 /* Some style formatting for text box [VERIFY] */
+#inputDiv {
+    display: none;
+}
+
 textarea {
     width: 100%;
     padding: 10px;
@@ -113,7 +118,23 @@ textarea:focus {
     display: none;
 }
 
+/*----------------GUI EDITOR-----------------------*/
+#guiDiv {
+    display: block;
+}
+
 /*-----------------SVG STYLING--------------------------*/
+#svgDiv {
+    width: 70%;
+    height: calc(100vh - 77px);
+}
+
+svg {
+    position: absolute;
+    top: 77;
+    right: 0;
+}
+
 /* prevent labels from intercepting mouse events (todo: disable being highlighted at all) */
 svg text {
     pointer-events: none;
