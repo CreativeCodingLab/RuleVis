@@ -19,7 +19,20 @@
 
       <div id="main">
         <div id="sidebar">
+          <div id="sidebarMenu">
+            <button id="inputText" class="menuOption active">Text Input</button>
+            <button id="export" class="menuOption">Export</button>
+          </div>  
           
+          <div id="inputDiv">
+            <textarea id="inputBox" rows="30" size="90" name="expression" placeholder="Begin typing an expression to visualize it."></textarea>
+          </div>
+
+          <div id="exportDiv">
+            <button id="download" onclick="downloadSVG()">Export SVG</button>
+            <button id="downloadJSON" onclick="downloadJSON()">Download JSON</button>
+          </div>
+
         </div>
       </div>
 

@@ -17,7 +17,13 @@ var expression;
 // Create container div for styling purposes
 let main = d3.select('div#main');
 let sidebar = d3.select('div#sidebar');
-                //.style('text-align', 'center');
+let sidebarMenu = d3.select('div#sidebarMenu');
+let menuOptions = document.getElementsByClassName('menuOption');
+let inputDiv = document.getElementById('inputDiv');
+let inputBox = d3.select('textarea#inputBox');
+let exportDiv = d3.select('exportDiv');
+let exportButton = d3.select('button#download');
+let downloadButton = d3.select('button#downloadJSON');
 
 /* main.append('p')
     .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
@@ -34,21 +40,18 @@ let sidebar = d3.select('div#sidebar');
 //                     .style('background-color', 'rgb(230, 233, 239)')
 //                     .style('text-align', 'center');
 
-let menuOptions = ["inputText", "export"];
 
-let sidebarMenu = sidebar.append('div')
-                    .attr('id', 'sidebarMenu')
-                    .style('width', '100%');
+
 
 // Menu buttons
-let menu = sidebarMenu.selectAll('input')
-                    .data(menuOptions)
-                    .enter()
-                    .append('input')
-                    .attr('type', 'button')
-                    .attr('value', function (d) { return d })
-                    .attr('class', 'menuOption')
-                    .attr('id', function (d) { return d });
+// let menu = sidebarMenu.selectAll('input')
+//                     .data(menuOptions)
+//                     .enter()
+//                     .append('input')
+//                     .attr('type', 'button')
+//                     .attr('value', function (d) { return d })
+//                     .attr('class', 'menuOption')
+//                     .attr('id', function (d) { return d });
 
 // var menuGroups = sidebarMenu.selectAll('div')
 //                     .data(menuOptions)
@@ -72,86 +75,119 @@ let menu = sidebarMenu.selectAll('input')
 //                     .style('padding', '0px, 5px')
 //                     .text(function (d) { return d });
 
+
+let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv']];
+let menuMap = new Map(menuMapArray);
+
 //var menuText = menu.selectAll('text')
+let handleMenuClick = function(e) {
+    // Id of newly clicked element
+    let itemID = e.id;
 
+    for (let option = 0; option < menuOptions.length; option++) {
+        // id of the menu option clicked
+        let currOption = menuOptions[option];
+        // div associated with the id        
+        let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
+        //let currOptionDiv = menuMap.get(currOption.id);
 
-menu.on("click", function (d) {
-    console.log(d);
-    if (d === "inputText") {
-        d3.select('#inputDiv')
-            .style('display', 'inline-block')
-            .style('width', '100%');
-        d3.select('#exportDiv')
-            .style('display', 'none');
-
-        d3.select("#inputText")
-            .classed('active', true);
-
-        d3.select("#export")
-            .classed('active', false);
-
-        console.log(document.getElementById("inputText").classList);
-
+        // If we find the current element, add active class and display associated div
+        if (currOption.id === itemID) {
+            currOption.classList.add('active');
+            currOptionDiv.style.display = 'inline-block';
+        } else {
+            if (currOption.classList.contains('active')) {
+                currOption.classList.remove('active');
+            }
+            currOptionDiv.style.display = 'none';
+        }
     }
-    else if (d === "export") {
-        d3.select('#inputDiv').style('display', 'none');
-        d3.select('#exportDiv').style('display', 'inline-block');
+}
 
-        d3.select("#export")
-            .classed('active', true);
-
-        d3.select("#inputText")
-            .classed('active', false);
+for (let i = 0; i < menuOptions.length; i++) {
+    menuOptions[i].addEventListener('click', 
+        function() { handleMenuClick(menuOptions[i]) } 
+    );
+}
 
 
-    }
-});
+// menu.on("click", function (d) {
+//     console.log(d);
+//     if (d === "inputText") {
+//         d3.select('#inputDiv')
+//             .style('display', 'inline-block')
+//             .style('width', '100%');
+//         d3.select('#exportDiv')
+//             .style('display', 'none');
+
+//         d3.select("#inputText")
+//             .classed('active', true);
+
+//         d3.select("#export")
+//             .classed('active', false);
+
+//         console.log(document.getElementById("inputText").classList);
+
+//     }
+//     else if (d === "export") {
+//         d3.select('#inputDiv').style('display', 'none');
+//         d3.select('#exportDiv').style('display', 'inline-block');
+
+//         d3.select("#export")
+//             .classed('active', true);
+
+//         d3.select("#inputText")
+//             .classed('active', false);
 
 
-// Text Input tab
-let inputDiv = sidebar.append('div')
-                    .attr('id', 'inputDiv');
+//     }
+// });
 
-let inputBox = inputDiv.append('textarea')
-                    .attr('name', 'expression')
-                    .attr('size', 50)
-                    .attr('rows', 40)
-                    .style('width', '100%')
-                    .style('height', bodyH - 40)
-                    .style('padding', '10px')
-                    //.style('text-align', 'center')
-                    .attr('id', 'inputBox');
+
+// // Text Input tab
+// let inputDiv = sidebar.append('div')
+//                     .attr('id', 'inputDiv');
+
+// let inputBox = inputDiv.append('textarea')
+//                     .attr('name', 'expression')
+//                     .attr('size', 50)
+//                     .attr('rows', 40)
+//                     .style('width', '100%')
+//                     .style('height', bodyH - 40)
+//                     .style('padding', '10px')
+//                     //.style('text-align', 'center')
+//                     .attr('id', 'inputBox');
                     //.attr('placeholder', 'expression');
 
-// Download SVG tab
-var exportDiv = sidebar.append('div')
-                    .attr('id', 'exportDiv')
-                    .style('display', 'none');
+// // Download SVG tab
+// var exportDiv = sidebar.append('div')
+//                     .attr('id', 'exportDiv')
+//                     .style('display', 'none');
 
 // Button for downloading/exporting svg
-var exportButton = exportDiv.append('button')
-                            .attr('id', 'download')
-                            .text('Export SVG')
-                            .style('font-size', '20px')
-                            .style('font-weight', 'medium')
-                            .style('font', 'Helvetica Neue')
-                            .style('border-radius', '10px')
-                            .style('background-color', 'whitesmoke')
-                            .on('click', function() {
-                                downloadSVG();
-                            });
+// var exportButton = exportDiv.append('button')
+//                             .attr('id', 'download')
+//                             .text('Export SVG')
+//                             .style('font-size', '20px')
+//                             .style('font-weight', 'medium')
+//                             .style('font', 'Helvetica Neue')
+//                             .style('border-radius', '10px')
+//                             .style('background-color', 'whitesmoke')
+//                             .on('click', function() {
+//                                 downloadSVG();
+//                             });
 
-var downloadButton = exportDiv.append('button')
-                            .attr('id', 'downloadJSON')
-                            .text('Download JSON')
-                            .style('font-size', '20px')
-                            .style('font-weight', 'medium')
-                            .style('font', 'Helvetica Neue')
-                            .style('border-radius', '10px')
-                            .style('background-color', 'whitesmoke')
-                            .on('click', function() {
-                                downloadJSON();
-                            });
+// var downloadButton = exportDiv.append('button')
+//                             .attr('id', 'downloadJSON')
+//                             .text('Download JSON')
+//                             .style('font-size', '20px')
+//                             .style('font-weight', 'medium')
+//                             .style('font', 'Helvetica Neue')
+//                             .style('border-radius', '10px')
+//                             .style('background-color', 'whitesmoke')
+//                             .on('click', function() {
+//                                 downloadJSON();
+//                             });
 
 function downloadJSON(data) {
 
