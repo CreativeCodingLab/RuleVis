@@ -24,61 +24,10 @@ let exportButton = d3.select('button#download');
 let downloadButton = d3.select('button#downloadJSON');
 let svgDiv = d3.select('div#svgDiv');
 
-/* main.append('p')
-    .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
-                .style('width', w + "px")
-                .style('height', 10 + "px")
-                .style('display', 'inline-block'); */
-
-// Sidebar for different options
-// let sidebar = main.append('div')
-//                     .attr('id', 'sidebar')
-//                     .style('width', (bodyW > 600 ? 30 : 100) + '%')
-//                     .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
-//                     .style('float', 'left')
-//                     .style('background-color', 'rgb(230, 233, 239)')
-//                     .style('text-align', 'center');
-
-
-
-
-// Menu buttons
-// let menu = sidebarMenu.selectAll('input')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('input')
-//                     .attr('type', 'button')
-//                     .attr('value', function (d) { return d })
-//                     .attr('class', 'menuOption')
-//                     .attr('id', function (d) { return d });
-
-// var menuGroups = sidebarMenu.selectAll('div')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('div')
-//                     .attr('width', '20px')
-//                     .attr('transform', function (i) {
-//                         return ('translateX(' + i*20 + ')');
-//                     })
-//                     .attr('class', 'menuOption')
-//                     .attr('id', function (d) { return d });
-
-// let menuLabels = sidebarMenu.selectAll('text')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('text')
-//                     .attr('x', function (i) {
-//                         return (10 + i*20);
-//                     })
-//                     .attr('y', 0)
-//                     .style('padding', '0px, 5px')
-//                     .text(function (d) { return d });
-
-
+// Handles changing between GUI Editor, Text Input, and Export divs
 let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
 let menuMap = new Map(menuMapArray);
 
-//var menuText = menu.selectAll('text')
 let handleMenuClick = function(e) {
     // Id of newly clicked element
     let itemID = e.id;
@@ -88,7 +37,6 @@ let handleMenuClick = function(e) {
         let currOption = menuOptions[option];
         // div associated with the id        
         let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
-        //let currOptionDiv = menuMap.get(currOption.id);
 
         // If we find the current element, add active class and display associated div
         if (currOption.id === itemID) {
@@ -109,85 +57,7 @@ for (let i = 0; i < menuOptions.length; i++) {
     );
 }
 
-
-// menu.on("click", function (d) {
-//     console.log(d);
-//     if (d === "inputText") {
-//         d3.select('#inputDiv')
-//             .style('display', 'inline-block')
-//             .style('width', '100%');
-//         d3.select('#exportDiv')
-//             .style('display', 'none');
-
-//         d3.select("#inputText")
-//             .classed('active', true);
-
-//         d3.select("#export")
-//             .classed('active', false);
-
-//         console.log(document.getElementById("inputText").classList);
-
-//     }
-//     else if (d === "export") {
-//         d3.select('#inputDiv').style('display', 'none');
-//         d3.select('#exportDiv').style('display', 'inline-block');
-
-//         d3.select("#export")
-//             .classed('active', true);
-
-//         d3.select("#inputText")
-//             .classed('active', false);
-
-
-//     }
-// });
-
-
-// // Text Input tab
-// let inputDiv = sidebar.append('div')
-//                     .attr('id', 'inputDiv');
-
-// let inputBox = inputDiv.append('textarea')
-//                     .attr('name', 'expression')
-//                     .attr('size', 50)
-//                     .attr('rows', 40)
-//                     .style('width', '100%')
-//                     .style('height', bodyH - 40)
-//                     .style('padding', '10px')
-//                     //.style('text-align', 'center')
-//                     .attr('id', 'inputBox');
-                    //.attr('placeholder', 'expression');
-
-// // Download SVG tab
-// var exportDiv = sidebar.append('div')
-//                     .attr('id', 'exportDiv')
-//                     .style('display', 'none');
-
-// Button for downloading/exporting svg
-// var exportButton = exportDiv.append('button')
-//                             .attr('id', 'download')
-//                             .text('Export SVG')
-//                             .style('font-size', '20px')
-//                             .style('font-weight', 'medium')
-//                             .style('font', 'Helvetica Neue')
-//                             .style('border-radius', '10px')
-//                             .style('background-color', 'whitesmoke')
-//                             .on('click', function() {
-//                                 downloadSVG();
-//                             });
-
-// var downloadButton = exportDiv.append('button')
-//                             .attr('id', 'downloadJSON')
-//                             .text('Download JSON')
-//                             .style('font-size', '20px')
-//                             .style('font-weight', 'medium')
-//                             .style('font', 'Helvetica Neue')
-//                             .style('border-radius', '10px')
-//                             .style('background-color', 'whitesmoke')
-//                             .on('click', function() {
-//                                 downloadJSON();
-//                             });
-
+// Action associated w/ Download JSON Button
 function downloadJSON(data) {
 
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
@@ -227,9 +97,32 @@ uploadBox.on('input', function() {
 //                 .style('height', bodyH + "px")
 //                 .style('float', 'left');
 
+function toggleDropdown(event) {
+    event = event || window.event;
+    let target = event.target || event.srcElement;
+
+    console.log(target.id);
+
+    // come back to abstract this
+    let addAgentInput = document.getElementById('addAgentInput');
+    if (addAgentInput.style.display == 'block') {
+        addAgentInput.style.display = 'none';
+    } else {
+        addAgentInput.style.display = 'block';
+    }
+
+}
+
+let addAgent = document.getElementById('addAgent');
+console.log(addAgent);
+addAgent.addEventListener('click', toggleDropdown);
+
+
+
 
 var svg = undefined
 
+// Action associated w/ Export SVG button
 function downloadSVG() {
     var config = {
         filename: 'kappa_rulevis',

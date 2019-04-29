@@ -37,17 +37,22 @@ p {
 
 button {
     border: 2px solid rgb(56,56,56);
+    padding: 10px 15px;
 }
 
 button:focus {
     outline:none;
 }
 
+button:hover {
+    cursor: pointer;
+}
+
 /*----------------------GENERAL DOM ELEMENTS------------------------*/
 
 /* Header div styling */
 #header {
-    background-color: rgb(53, 59, 68);
+    background-color: rgb(119, 135, 160);
     padding: 15px;
     margin: 0;
 }
@@ -56,7 +61,7 @@ button:focus {
 
 #sidebar {
     width: calc(30% - 2px);
-    border: 1px solid red;
+    border: 1px solid rgb(161, 161, 161);
     height: calc(100vh - 77px);
     float: left;
 }
@@ -70,20 +75,21 @@ button:focus {
 /* styling for each sidebar menu option/button */
 .menuOption {
     padding: 10px 10px;
-    background-color:rgb(200, 209, 226);
+    background-color:rgb(219, 219, 219);
     border: none;
     height: 40px;
     font-size: 14px;
     transition: 0.3s;
+    margin: 0;
 }
 
 .active {
-    background-color: rgb(158, 165, 179);
+    background-color: white;
 }
 
-.menuOption:hover {
+.menuOption:hover:not(.active) {
     cursor: pointer;
-    background-color: rgb(158, 165, 179);
+    background-color: rgb(228, 228, 228);
 }
 
 
@@ -126,14 +132,29 @@ textarea:focus {
 .gui-button {
     background-color: white;
     border: none;
-    border-bottom: 1px solid #afb1b6;
     color: rgb(75, 75, 75);
     padding: 18px 22px;
     width: 100%;
+    font-size: 14px;
 }
 
 .gui-button:hover {
     background-color: #eeeeee;
+}
+
+.gui-button-div {
+    border-bottom: 1px;
+}
+
+input[type=text] {
+    width: 90%;
+    display: none;
+    padding: 10px;
+
+}
+
+input[type=text]:focus {
+    outline: none;
 }
 
 /*-----------------SVG STYLING--------------------------*/

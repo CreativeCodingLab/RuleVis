@@ -32,16 +32,21 @@
           <div id="exportDiv">
             <button id="download" onclick="downloadSVG()">Export SVG</button>
             <button id="downloadJSON" onclick="downloadJSON()">Download JSON</button>
-          </div>
+          </div> 
+          
 
           <div id="guiDiv">
-            <button id="addAgent" class="gui-button">Add Agent</button>
-            <button id="addSite" class="gui-button">Add Site</button>
-            <button id="addLink" class="gui-button">Add Link</button>
-            <button id="editAgent" class="gui-button">Edit Agent</button>
-            <button id="editSite" class="gui-button">Edit Site</button>
-            <button id="editState" class="gui-button">Edit Internal State</button>
-            <button id="delete" class="gui-button">Delete</button>
+            <div class="gui-button-div" id="addAgentDiv">
+              <button id="addAgent" class="gui-button">Add Agent</button>
+              <input class="gui-input" type=text id="addAgentInput">
+            </div>
+            <div class="gui-button-div"><button id="addSite" class="gui-button">Add Site</button></div>
+            <div class="gui-button-div"><button id="addLink" class="gui-button">Add Link</button></div>
+            <div class="gui-button-div"><button id="editAgent" class="gui-button">Edit Agent</button></div>
+            <div class="gui-button-div"><button id="editSite" class="gui-button">Edit Site</button></div>
+            <div class="gui-button-div"><button id="editState" class="gui-button">Edit Internal State</button></div>
+            <div class="gui-button-div"><button id="delete" class="gui-button">Delete</button></div>
+
           </div>
         </div>
 
@@ -50,6 +55,7 @@
 
       <script type="text/javascript" src="visualizeFromJSON.js"></script>
       <script type="text/javascript" src="index.js"></script>
+
 
       <a id="downloadAnchorElem" style="display:none"></a>
 
