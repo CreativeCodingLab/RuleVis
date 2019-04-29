@@ -96,14 +96,14 @@ button:focus {
 textarea {
     width: 100%;
     padding: 10px;
-    
+    height: calc(100vh - 116px);
     box-sizing: border-box;
     border: 0px solid rgb(189, 189, 189);
     border-radius: 2px;
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 15px;
     background-color: rgb(230, 233, 239);
-    letter-spacing: 1.5px;
+    letter-spacing: 1.3px;
     line-height: 1.5;
 }
 
@@ -121,6 +121,19 @@ textarea:focus {
 /*----------------GUI EDITOR-----------------------*/
 #guiDiv {
     display: block;
+}
+
+.gui-button {
+    background-color: white;
+    border: none;
+    border-bottom: 1px solid #afb1b6;
+    color: rgb(75, 75, 75);
+    padding: 18px 22px;
+    width: 100%;
+}
+
+.gui-button:hover {
+    background-color: #eeeeee;
 }
 
 /*-----------------SVG STYLING--------------------------*/
