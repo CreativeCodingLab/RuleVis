@@ -37,6 +37,7 @@ p {
 button {
     border: 2px solid rgb(56,56,56);
     padding: 10px 15px;
+    font-size: 14px;
 }
 
 button:focus {
@@ -107,7 +108,7 @@ textarea {
     border-radius: 2px;
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 15px;
-    background-color: rgb(230, 233, 239);
+    background-color: white;
     letter-spacing: 1.3px;
     line-height: 1.5;
 }
@@ -142,17 +143,18 @@ textarea:focus {
 }
 
 .gui-button-div {
-    border-bottom: 1px;
+    border-bottom: 1px solid #eeeeee;
+    width: 100%;
 }
 
-input[type=text] {
-    width: 90%;
+div.gui-button-div > input[type=text] {
+    width: calc(100% - 60px);
     display: none;
     padding: 10px;
-
+    margin: 15px 20px;
 }
 
-input[type=text]:focus {
+div.gui-button-div > input[type=text]:focus {
     outline: none;
 }
 

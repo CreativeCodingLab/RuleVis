@@ -41,7 +41,7 @@ let handleMenuClick = function(e) {
         // If we find the current element, add active class and display associated div
         if (currOption.id === itemID) {
             currOption.classList.add('active');
-            currOptionDiv.style.display = 'inline-block';
+            currOptionDiv.style.display = 'block';
         } else {
             if (currOption.classList.contains('active')) {
                 currOption.classList.remove('active');
@@ -97,28 +97,13 @@ uploadBox.on('input', function() {
 //                 .style('height', bodyH + "px")
 //                 .style('float', 'left');
 
-function toggleInput(parentDiv) {
-    console.log("parentDivID = " + parentDiv);
+// Input: 
+function toggleInput(parentDivID) {
+    console.log("parentDivID = " + parentDivID);
 
-    let inputID = parentDiv + "Input";
+    let inputID = parentDivID + "Input";
     let inputElement = document.getElementById(inputID);
-    // event = event || window.event;
-    // let target = event.target || event.srcElement;
-
-    // console.log(target.id);
-    // // addAgent = button id
-    // // addAgentDiv = div containing button and input
-    // // addAgentInput = input
-
-    // let buttonID = target.id;   // #addAgent
-    // let inputID = buttonID + 'Input';
-
-    // console.log(inputID);
-
-    // let inputElement = document.getElementById(inputID);
-
-
-
+    
     if (inputElement.style.display == 'block') {
         inputElement.style.display = 'none';
     } else {
@@ -127,17 +112,16 @@ function toggleInput(parentDiv) {
 
 }
 
-// nameInputs will be a list of inputs
-// go to parent element and get id
-// get next child element (button) and add 
+// Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
+// Get the id of the parent div, which contains both button and input
+// Derive the id of the button associated w/ that functionality
+// Add an event listener to that button
 let nameInputs = document.querySelectorAll('div.gui-button-div button.gui-button + input.gui-input');
 for (var i = 0; i < nameInputs.length; i++) {
-    //console.log(nameInputs[i]);
-    let parentOfInputID = nameInputs[i].parentElement.id;
-    console.log("parentID = " + parentOfInputID);
-    let buttonID = parentOfInputID + 'Button';
+    let parentDivID = nameInputs[i].parentElement.id;
+    let buttonID = parentDivID + 'Button';
     let button = document.getElementById(buttonID);
-    button.addEventListener('click', function () {toggleInput(parentOfInputID)});
+    button.addEventListener('click', function () {toggleInput(parentDivID)});
 }
 
 var svg = undefined
