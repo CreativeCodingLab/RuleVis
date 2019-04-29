@@ -97,28 +97,48 @@ uploadBox.on('input', function() {
 //                 .style('height', bodyH + "px")
 //                 .style('float', 'left');
 
-function toggleDropdown(event) {
-    event = event || window.event;
-    let target = event.target || event.srcElement;
+function toggleInput(parentDiv) {
+    console.log("parentDivID = " + parentDiv);
 
-    console.log(target.id);
+    let inputID = parentDiv + "Input";
+    let inputElement = document.getElementById(inputID);
+    // event = event || window.event;
+    // let target = event.target || event.srcElement;
 
-    // come back to abstract this
-    let addAgentInput = document.getElementById('addAgentInput');
-    if (addAgentInput.style.display == 'block') {
-        addAgentInput.style.display = 'none';
+    // console.log(target.id);
+    // // addAgent = button id
+    // // addAgentDiv = div containing button and input
+    // // addAgentInput = input
+
+    // let buttonID = target.id;   // #addAgent
+    // let inputID = buttonID + 'Input';
+
+    // console.log(inputID);
+
+    // let inputElement = document.getElementById(inputID);
+
+
+
+    if (inputElement.style.display == 'block') {
+        inputElement.style.display = 'none';
     } else {
-        addAgentInput.style.display = 'block';
+        inputElement.style.display = 'block';
     }
 
 }
 
-let addAgent = document.getElementById('addAgent');
-console.log(addAgent);
-addAgent.addEventListener('click', toggleDropdown);
-
-
-
+// nameInputs will be a list of inputs
+// go to parent element and get id
+// get next child element (button) and add 
+let nameInputs = document.querySelectorAll('div.gui-button-div button.gui-button + input.gui-input');
+for (var i = 0; i < nameInputs.length; i++) {
+    //console.log(nameInputs[i]);
+    let parentOfInputID = nameInputs[i].parentElement.id;
+    console.log("parentID = " + parentOfInputID);
+    let buttonID = parentOfInputID + 'Button';
+    let button = document.getElementById(buttonID);
+    button.addEventListener('click', function () {toggleInput(parentOfInputID)});
+}
 
 var svg = undefined
 
