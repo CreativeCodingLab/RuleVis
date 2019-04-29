@@ -144,6 +144,8 @@ textarea:focus {
 
 svg {
     position: absolute;
+    width: 70%;
+    height: calc(100vh - 77px);
     top: 77;
     right: 0;
 }

@@ -253,8 +253,8 @@ function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
     svgDiv.selectAll('svg').remove()
     svg = svgDiv.append('svg') // FIXME: dupe code
-                .attr('width', w+'px')
-                .attr('height', h+'px')
+                .attr('width', '100%')
+                .attr('height', '100%')
                 // .attr('margin-left', function () {
                 //     let sidebarW = document.getElementById('sidebar').offsetWidth;
                 //     return sidebarW;
