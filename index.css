@@ -158,6 +158,10 @@ div.gui-button-div > input[type=text]:focus {
     outline: none;
 }
 
+.gui-button-div-active {
+    background-color: #eeeeee;
+}
+
 /*-----------------SVG STYLING--------------------------*/
 #svgDiv {
     width: 70%;

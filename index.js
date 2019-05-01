@@ -81,47 +81,35 @@ uploadBox.on('input', function() {
 
 });
 
-// Create parent div for svg
-// let svgDiv = d3.select('#main').append('div')
-//                 .attr('id', 'svgDiv')
-//                 .style('width', function () {
-//                     // If window size < 600, svg should reflect size of parent div
-//                     if (bodyW > 600) {
-//                         return 70 + '%';
-//                     } else {
-//                         w = bodyW - 10;
-//                         return 100 + '%';
-//                     }
-//                 })
-//                 .style('height', bodyH + "px")
-//                 .style('float', 'left');
 
-// Input: 
-function toggleInput(parentDivID) {
-    console.log("parentDivID = " + parentDivID);
+// Input:   elementID = id of element to be turned on
+//          type = querySelector string that returns set of elements containing elementID, to be turned off
+// Result:  1) Turns on the visibility of element specified by supplied ID
+//          2) Turns off visibility of other elements of other 
+function toggleVisibility(elementID, typeSelector) {
+    let element = document.getElementById(elementID);
+    let type = document.querySelectorAll(typeSelector);
 
-    let inputID = parentDivID + "Input";
-    let inputElement = document.getElementById(inputID);
-    
-    if (inputElement.style.display == 'block') {
-        inputElement.style.display = 'none';
-    } else {
-        inputElement.style.display = 'block';
+    // Hide all input elements
+    for (var i = 0; i < type.length; i++) {
+        type[i].style.display = 'none';
     }
 
+    // Show input element 
+    element.style.display = 'block';
 }
 
 // Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
 // Get the id of the parent div, which contains both button and input
 // Derive the id of the button associated w/ that functionality
 // Add an event listener to that button
-let nameInputs = document.querySelectorAll('div.gui-button-div button.gui-button + input.gui-input');
-for (var i = 0; i < nameInputs.length; i++) {
-    let parentDivID = nameInputs[i].parentElement.id;
-    let buttonID = parentDivID + 'Button';
-    let button = document.getElementById(buttonID);
-    button.addEventListener('click', function () {toggleInput(parentDivID)});
-}
+// let nameInputs = document.querySelectorAll('div.gui-button-div button.gui-button + input.gui-input');
+// for (var i = 0; i < nameInputs.length; i++) {
+//     let parentDivID = nameInputs[i].parentElement.id;
+//     let buttonID = parentDivID + 'Button';
+//     let button = document.getElementById(buttonID);
+//     button.addEventListener('click', function () {toggleInput(parentDivID)});
+// }
 
 var svg, overlay
 
@@ -139,19 +127,21 @@ inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
 
     clearExpressions()
+    
     overlay = svg.append('g')
                 .attr('id', 'overlay')
     svg.on('mousemove', () => {
         let e = d3.event
-        console.log(e.pageX, e.pageY)
+        //console.log(e.pageX, e.pageY)
 
         overlay.selectAll('circle')
                 .remove()
         overlay.append('circle')
                 .attr('cx', e.pageX - sidebarW)
                 .attr('cy', e.pageY - headerH)
-                .attr('r', 10)
+                .attr('r', 27)
     })
+
     visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
@@ -324,3 +314,40 @@ function getJSON(input) {
     });
     return expression.text();
 };
+
+// 
+let guiState = 'none';
+
+function activateGUIAction(divID) {
+    // Remove active class from whatever was there before
+    let prevActive = document.querySelector('div.gui-button-div-active');
+    if (prevActive) {
+        prevActive.classList.remove('gui-button-div-active');
+    }
+
+    // Add the active class to the divID 
+    document.getElementById(divID).classList.add('gui-button-div-active');
+    document.getElementById(divID + "Button").classList.add('gui-button-div-active');
+}
+
+function toggleActiveGUI(action) {
+    guiState = action;
+    toggleVisibility((action + "Input"), 'input.gui-input');
+    //toggleActiveStyle(action);
+}
+
+function addAgent() {
+    toggleActiveGUI('addAgent');
+    // Visually tell user that we are adding an agent right now
+    //activateGUIAction('addAgent');
+
+    // Reveal the input field
+    //toggleVisibility('addAgent');
+
+    let agentName = document.getElementById('addAgentInput').value;
+    console.log(agentName);
+}
+
+function addSite() {
+    toggleActiveGUI('addSite');
+}
