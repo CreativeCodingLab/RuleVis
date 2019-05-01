@@ -235,10 +235,10 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", (d,i) => rs[i])
-                            .attr("fill", d => d[side[i]].parent === undefined ?
+                            .attr("fill", d => d[side[i]].isAgent ?
                                                     d[side[i]].name ? coloragent : "#fff" :
                                                d[side[i]].bond ? colorsite : "#fff")
-                            .attr("stroke", d => d[side[i]].parent === undefined ? coloragent : colorsite)
+                            .attr("stroke", d => d[side[i]].isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]].name ? 1 : 0);
 
@@ -246,7 +246,7 @@ function visualizeExpression(rule, group) {
                         .selectAll("circle")
                         .data(nodes)
                         .enter()
-                            .filter(d => d[side[i]].parent !== undefined
+                            .filter(d => !d[side[i]].isAgent
                                       && d[side[i]].bond == undefined)
                             .append("circle")
                             .attr("r", 4)
@@ -255,10 +255,10 @@ function visualizeExpression(rule, group) {
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].name)
-                        .attr("class", d => d[side[i]].parent == undefined ? "agent" : "site")
+                        .attr("class", d => d[side[i]].isAgent ? "agent" : "site")
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", d => d[side[i]].parent === undefined ? 16 : 12)
+                        .attr("font-size", d => d[side[i]].isAgent ? 16 : 12)
                         .attr("font-family", "Helvetica Neue")
                         .style('opacity', d => d.label ? 1 : 0);
 
