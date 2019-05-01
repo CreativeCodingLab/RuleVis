@@ -7,8 +7,7 @@ let headerH = document.getElementById('header').clientHeight;
 let h = document.getElementById('svgDiv').clientHeight;
 let w = document.getElementById('svgDiv').clientWidth;
 
-console.log(document.getElementById('sidebar').clientWidth);
-console.log(w);
+let sidebarW = document.getElementById('sidebar').clientWidth;
 
 var expression;
 
@@ -149,8 +148,8 @@ inputBox.on("input", () => {
         overlay.selectAll('circle')
                 .remove()
         overlay.append('circle')
-                .attr('cx', e.pageX - 200)
-                .attr('cy', e.pageY - 200)
+                .attr('cx', e.pageX - sidebarW)
+                .attr('cy', e.pageY - headerH)
                 .attr('r', 10)
     })
     visualizeExpression(rule,
