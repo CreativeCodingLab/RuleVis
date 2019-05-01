@@ -124,7 +124,7 @@ for (var i = 0; i < nameInputs.length; i++) {
     button.addEventListener('click', function () {toggleInput(parentDivID)});
 }
 
-var svg = undefined
+var svg, overlay
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
@@ -140,6 +140,19 @@ inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
 
     clearExpressions()
+    overlay = svg.append('g')
+                .attr('id', 'overlay')
+    svg.on('mousemove', () => {
+        let e = d3.event
+        console.log(e.pageX, e.pageY)
+
+        overlay.selectAll('circle')
+                .remove()
+        overlay.append('circle')
+                .attr('cx', e.pageX - 200)
+                .attr('cy', e.pageY - 200)
+                .attr('r', 10)
+    })
     visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
@@ -160,7 +173,6 @@ function clearExpressions() {
                 .call(d3.zoom().on("zoom", function () {
                     svg.attr("transform", d3.event.transform)
                 }))
-                .append("g")
 }
 
 // simulation stores
@@ -219,10 +231,10 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", (d,i) => rs[i])
-                            .attr("fill", d => d[side[i]].parent === undefined ?
+                            .attr("fill", d => d[side[i]].isAgent ?
                                                     d[side[i]].name ? coloragent : "#fff" :
                                                d[side[i]].bond ? colorsite : "#fff")
-                            .attr("stroke", d => d[side[i]].parent === undefined ? coloragent : colorsite)
+                            .attr("stroke", d => d[side[i]].isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]].name ? 1 : 0);
 
@@ -230,7 +242,7 @@ function visualizeExpression(rule, group) {
                         .selectAll("circle")
                         .data(nodes)
                         .enter()
-                            .filter(d => d[side[i]].parent !== undefined
+                            .filter(d => !d[side[i]].isAgent
                                       && d[side[i]].bond == undefined)
                             .append("circle")
                             .attr("r", 4)
@@ -239,10 +251,10 @@ function visualizeExpression(rule, group) {
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].name)
-                        .attr("class", d => d[side[i]].parent == undefined ? "agent" : "site")
+                        .attr("class", d => d[side[i]].isAgent ? "agent" : "site")
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", d => d[side[i]].parent === undefined ? 16 : 12)
+                        .attr("font-size", d => d[side[i]].isAgent ? 16 : 12)
                         .attr("font-family", "Helvetica Neue")
                         .style('opacity', d => d.label ? 1 : 0);
 

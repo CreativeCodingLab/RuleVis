@@ -37,9 +37,10 @@ function KappaRule(lhs, rhs) {
         raw.replace(/\s+/g, '') // kill whitespace
             .split(regex.token).filter(s => s)
 
-    let chart = [lhs, rhs]  // VERIFY whether tokenize can make strings become falsy
+    this.chart = [lhs, rhs]  // VERIFY whether tokenize can make strings become falsy
                 .map( u => u ? tokenize(u) : undefined)
                 .map( u => u ? tinynlp.parse(u, pattern, 'start') : u)
+    let chart = this.chart
 
     console.log(chart)
     this.expression = chart.map( c => c !== undefined ? simplify(c) : c )
@@ -62,7 +63,7 @@ function KappaRule(lhs, rhs) {
 
     // cannot assume aligned sites
     this.sites = e[0].sites.map( (u) => 
-        ({id: u.id, parent: u.parent,
+        ({id: u.id,
           lhs: u, rhs: new Site(...u.id) })
     )
     if (e[1])
@@ -71,25 +72,26 @@ function KappaRule(lhs, rhs) {
             console.log("merge", u, v)
 
             if (u === undefined)
-                this.sites.push({id: v.id, parent: v.parent,
-                            lhs: new Site(v.parent, v.id[1]), rhs: v })
+                this.sites.push({id: v.id,
+                            lhs: new Site(...v.id), rhs: v })
             else
                 u.rhs = v
         })
     // generate anonymous agents as needed (TODO: for bonds, too)
     e.forEach((expr,i) =>
         expr.virtualSites.forEach((v,j) => {
-            let par = agents.length + j,
-                tar = new Site([par, 0])
-            tar.bond = [-1, false] // VERIFY
-            
+            console.log(v)
+            let par = this.agents.length + j // assign fake id
+            // tar = new Site([-1, 0])
+            v.bond = [-1, false]
+
             this.sites.push({
-                id: [par, 0], parent: par,
-                lhs: tar, rhs: {...tar},
+                id: [par, v.id[1]], parent: par,
+                lhs: v, rhs: {...v},
             })
             let res = this.sites.slice(-1)[0][['lhs', 'rhs'][i]] // BRITTLE
-            res.state = `of-${v.boundTo}`
-            res.name = v.boundAt ? v.boundAt : '_'
+            res.state = v.boundTo ? `of ${v.boundTo}` : ''
+            res.name = v.boundAt ? v.boundAt : '_' // FIXME: Site gets hidden if its name is falsy.
         })
     )
 
@@ -112,7 +114,7 @@ function KappaRule(lhs, rhs) {
                                 }))
         let anon = u.virtualBonds
             .map(([src,_],i) => ({'source': getIndex(src),
-                                 'target': getIndex([agents.length+i, 0]),
+                                 'target': getIndex([this.agents.length+i, 0]),
                                  // BRITTLE: look up anonymous index
                                  'isAnonymous': true}))
         return [...named, ...anon]
@@ -120,11 +122,11 @@ function KappaRule(lhs, rhs) {
     this.bonds = {lhs: bonds[0], rhs: bonds[1]}
 
     // treat parents (site-agent links) once
-    this.parents = this.sites.filter(u => u.parent < agentCount) // ignore virtual sites
-                    .map(u => ({'source': u.parent, // agentId is already a valid index
+    this.parents = this.sites.filter(u => u.id[0] < agentCount) // ignore virtual sites
+                    .map(u => ({'source': u.id[0], // agentId is already a valid index
                                 'target': getIndex(u.id),
                                 'isParent': true,
-                                'sibCount': this.agents[u.parent].siteCount,
+                                'sibCount': this.agents[u.id[0]].siteCount,
                                }))
 }
 
@@ -134,11 +136,11 @@ function Agent(idx) {
     // this.interface = []
     this.siteCount = 0
     this.id = idx
+    this.isAgent = true
 }
 function Site(par, idx) {
     this.id = [par, idx]
-    this.parent = par
-
+    // this.isSite = true
     this.state = undefined
 }
 
@@ -161,6 +163,8 @@ function simplify(chart) {
             loc = ret.sites ? ret.sites.slice(-1)[0] : null
             // loc = curr ? curr.interface ? curr.interface.slice(-1)[0] : null : null
 
+        let virtualSiteCount = 0
+
         let rule = {
         'agent': () => {ret.agents.push(new Agent(ret.agents.length))},
         'agent-name': () => {
@@ -169,7 +173,7 @@ function simplify(chart) {
                 // loc.boundTo = new Agent()
                 // loc.boundTo.name = node.subtrees[0].root[0]
                 ret.virtualSites.slice(-1)[0]
-                .boundTo = node.subtrees[0].root[0]
+                    .boundTo = node.subtrees[0].root[0]
             }
             else curr.name = node.subtrees[0].root[0]
         },
@@ -181,20 +185,25 @@ function simplify(chart) {
         },
         'site-name': () => {
             if (ret.interfacing) {
+                // e.g. x[y.B]
+
                 // loc.boundAt = new Site() // TODO: propagate stub to top
                 // loc.boundAt.name = node.subtrees[0].root[0]
                 loc.bond = [-1, false]
-                console.log(loc)
 
-                let res = new Site([-1,0])
-                res.boundAt = node.subtrees[0].root[0]
-                res.bond = [-1, false]
+                let tmp = new Site(-1, virtualSiteCount)
+                virtualSiteCount += 1
+                tmp.boundAt = node.subtrees[0].root[0]
+                tmp.bond = [-1, false]
 
                 ret.virtualBonds.push([loc.id, [-1,0]]) // VERIFY
-                ret.virtualSites.push(res)
+                ret.virtualSites.push(tmp)
                 // TODO: attach to virtual agent
             }
-            else loc.name = node.subtrees[0].root[0]
+            else {
+                loc.bond = [-1, true]
+                loc.name = node.subtrees[0].root[0]
+            }
         },
         'number': () => {
             if (ret.interfacing) {
@@ -212,25 +221,23 @@ function simplify(chart) {
         },
         
         '_': () => {
-            if (ret.interfacing) {
-                loc.bond = [-1, false]
-                
-                let res = new Site([-1,0])
-                res.bond = [-1, false]
+            if (ret.interfacing) {                
+                let tmp = new Site(-1, virtualSiteCount)
+                virtualSiteCount += 1
+                tmp.bond = [-1, false]
 
                 ret.virtualBonds.push([loc.id, [-1,0]])
-                ret.virtualSites.push(res)
+                ret.virtualSites.push(tmp)
             }},
         '.': () => {
-            /* if (ret.interfacing) {
-                loc.bond = null
-            }*/ },
-        '#': () => {
-            if (ret.interfacing) {
-                loc.bond = undefined // TODO
+            if (ret.interfacing && loc.bond[1]) {
+                loc.bond = undefined
             } else if (ret.subscripting) {
                 loc.state = undefined
             }},
+        '#': () => {
+            // default case
+            },
 
         '[': () => {ret.interfacing = true},
         ']': () => {ret.interfacing = false},
