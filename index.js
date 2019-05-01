@@ -140,7 +140,7 @@ for (var i = 0; i < nameInputs.length; i++) {
     button.addEventListener('click', function () {toggleInput(parentOfInputID)});
 }
 
-var svg = undefined
+var svg, overlay
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
@@ -156,6 +156,19 @@ inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
 
     clearExpressions()
+    overlay = svg.append('g')
+                .attr('id', 'overlay')
+    svg.on('mousemove', () => {
+        let e = d3.event
+        console.log(e.pageX, e.pageY)
+
+        overlay.selectAll('circle')
+                .remove()
+        overlay.append('circle')
+                .attr('cx', e.pageX - 200)
+                .attr('cy', e.pageY - 200)
+                .attr('r', 10)
+    })
     visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
@@ -176,7 +189,6 @@ function clearExpressions() {
                 .call(d3.zoom().on("zoom", function () {
                     svg.attr("transform", d3.event.transform)
                 }))
-                .append("g")
 }
 
 // simulation stores
