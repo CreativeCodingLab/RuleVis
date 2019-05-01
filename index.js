@@ -82,22 +82,7 @@ uploadBox.on('input', function() {
 });
 
 
-// Input:   elementID = id of element to be turned on
-//          type = querySelector string that returns set of elements containing elementID, to be turned off
-// Result:  1) Turns on the visibility of element specified by supplied ID
-//          2) Turns off visibility of other elements of other 
-function toggleVisibility(elementID, typeSelector) {
-    let element = document.getElementById(elementID);
-    let type = document.querySelectorAll(typeSelector);
 
-    // Hide all input elements
-    for (var i = 0; i < type.length; i++) {
-        type[i].style.display = 'none';
-    }
-
-    // Show input element 
-    element.style.display = 'block';
-}
 
 // Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
 // Get the id of the parent div, which contains both button and input
@@ -320,9 +305,10 @@ let guiState = 'none';
 
 function activateGUIAction(divID) {
     // Remove active class from whatever was there before
-    let prevActive = document.querySelector('div.gui-button-div-active');
-    if (prevActive) {
-        prevActive.classList.remove('gui-button-div-active');
+    let prevActive = document.querySelectorAll('div.gui-button-div-active, button.gui-button-div-active');
+
+    for (var i = 0; i < prevActive.length; i++) {
+        prevActive[i].classList.remove('gui-button-div-active');
     }
 
     // Add the active class to the divID 
@@ -330,8 +316,27 @@ function activateGUIAction(divID) {
     document.getElementById(divID + "Button").classList.add('gui-button-div-active');
 }
 
+// Input:   elementID = id of element to be turned on
+//          type = querySelector string that returns set of elements containing elementID, to be turned off
+// Result:  1) Turns on the visibility of element specified by supplied ID
+//          2) Turns off visibility of other elements of other 
+function toggleVisibility(elementID, typeSelector) {
+    let element = document.getElementById(elementID);
+    let type = document.querySelectorAll(typeSelector);
+
+    // Hide all input elements
+    for (var i = 0; i < type.length; i++) {
+        type[i].style.display = 'none';
+    }
+
+    // Show input element 
+    element.style.display = 'block';
+}
+
+
 function toggleActiveGUI(action) {
     guiState = action;
+    activateGUIAction(action);
     toggleVisibility((action + "Input"), 'input.gui-input');
     //toggleActiveStyle(action);
 }
