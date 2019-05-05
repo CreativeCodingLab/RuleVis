@@ -1,167 +1,104 @@
 // Titles & headers
-let body = d3.select("body");
-let header = body.append('div').attr('id', 'header');
-let headerText = header.append('h1').text("Kappa: Rule-based modeling for biological processes");
+let header = d3.select("#header");
 
 // Height of header + 15px of margin on top and bottom
 let headerH = document.getElementById('header').clientHeight;
 
-// Dimensions of entire page EXCLUDING header, in order to calculate other element sizes
-let bodyH = window.document.documentElement.clientHeight - headerH;
-let bodyW = window.document.documentElement.clientWidth;
+let h = document.getElementById('svgDiv').clientHeight;
+let w = document.getElementById('svgDiv').clientWidth;
 
-// Set up the SVG attributes
-let h = bodyH;
-let w = bodyW * 0.7;
+let sidebarW = document.getElementById('sidebar').clientWidth;
+
+var expression;
 
 // Create container div for styling purposes
-let main = d3.select('body').append('div')
-                .attr('id', 'main');
-                //.style('text-align', 'center');
+let main = d3.select('div#main');
+let sidebar = d3.select('div#sidebar');
+let sidebarMenu = d3.select('div#sidebarMenu');
+let menuOptions = document.getElementsByClassName('menuOption');
+let inputDiv = document.getElementById('inputDiv');
+let inputBox = d3.select('textarea#inputBox');
+let exportDiv = d3.select('exportDiv');
+let exportButton = d3.select('button#download');
+let downloadButton = d3.select('button#downloadJSON');
+let svgDiv = d3.select('div#svgDiv');
 
-/* main.append('p')
-    .text('Example Kappa syntax: \n A(x[1],z[3]),B(x[2],y[1]),C(x[3],y[2],z[.])')
-                .style('width', w + "px")
-                .style('height', 10 + "px")
-                .style('display', 'inline-block'); */
+// Handles changing between GUI Editor, Text Input, and Export divs
+let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
+let menuMap = new Map(menuMapArray);
 
-// Sidebar for different options
-let sidebar = main.append('div')
-                    .attr('id', 'sidebar')
-                    .style('width', (bodyW > 600 ? 30 : 100) + '%')
-                    .style('height', (bodyW > 600 ? bodyH : bodyH*0.35) + 'px')
-                    .style('float', 'left')
-                    .style('background-color', 'rgb(230, 233, 239)')
-                    .style('text-align', 'center');
+let handleMenuClick = function(e) {
+    // Id of newly clicked element
+    let itemID = e.id;
 
-let menuOptions = ["inputText", "export"];
+    for (let option = 0; option < menuOptions.length; option++) {
+        // id of the menu option clicked
+        let currOption = menuOptions[option];
+        // div associated with the id        
+        let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
 
-let sidebarMenu = sidebar.append('div')
-                    .attr('id', 'sidebarMenu')
-                    .style('width', '100%');
-
-// Menu buttons
-let menu = sidebarMenu.selectAll('input')
-                    .data(menuOptions)
-                    .enter()
-                    .append('input')
-                    .attr('type', 'button')
-                    .attr('value', function (d) { return d })
-                    .attr('class', 'menuOption')
-                    .attr('id', function (d) { return d });
-
-// var menuGroups = sidebarMenu.selectAll('div')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('div')
-//                     .attr('width', '20px')
-//                     .attr('transform', function (i) {
-//                         return ('translateX(' + i*20 + ')');
-//                     })
-//                     .attr('class', 'menuOption')
-//                     .attr('id', function (d) { return d });
-
-// let menuLabels = sidebarMenu.selectAll('text')
-//                     .data(menuOptions)
-//                     .enter()
-//                     .append('text')
-//                     .attr('x', function (i) {
-//                         return (10 + i*20);
-//                     })
-//                     .attr('y', 0)
-//                     .style('padding', '0px, 5px')
-//                     .text(function (d) { return d });
-
-//var menuText = menu.selectAll('text')
-
-                    
-menu.on("click", function (d) {
-    console.log(d);
-    if (d === "inputText") {
-        d3.select('#inputDiv')
-            .style('display', 'inline-block')
-            .style('width', '100%');
-        d3.select('#exportDiv')
-            .style('display', 'none');
-
-        d3.select("#inputText")
-            .classed('active', true);
-        
-        d3.select("#export")
-            .classed('active', false);
-
-        console.log(document.getElementById("inputText").classList);
-
-    } 
-    else if (d === "export") {
-        d3.select('#inputDiv').style('display', 'none');
-        d3.select('#exportDiv').style('display', 'inline-block');
-        
-        d3.select("#export")
-            .classed('active', true);
-        
-        d3.select("#inputText")
-            .classed('active', false);
-        
-        
+        // If we find the current element, add active class and display associated div
+        if (currOption.id === itemID) {
+            currOption.classList.add('active');
+            currOptionDiv.style.display = 'block';
+        } else {
+            if (currOption.classList.contains('active')) {
+                currOption.classList.remove('active');
+            }
+            currOptionDiv.style.display = 'none';
+        }
     }
+}
+
+for (let i = 0; i < menuOptions.length; i++) {
+    menuOptions[i].addEventListener('click', 
+        function() { handleMenuClick(menuOptions[i]) } 
+    );
+}
+
+// Action associated w/ Download JSON Button
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
 });
 
 
-// Text Input tab
-let inputDiv = sidebar.append('div')
-                    .attr('id', 'inputDiv');
-
-let inputBox = inputDiv.append('textarea')
-                    .attr('name', 'expression')
-                    .attr('size', 50)
-                    .attr('rows', 40)
-                    .style('width', '100%')
-                    .style('height', bodyH - 40)
-                    .style('padding', '10px')
-                    //.style('text-align', 'center')
-                    .attr('id', 'inputBox');
-                    //.attr('placeholder', 'expression');
-
-// Download SVG tab
-var exportDiv = sidebar.append('div')
-                    .attr('id', 'exportDiv')
-                    .style('display', 'none');
-
-// Button for downloading/exporting svg
-var exportButton = exportDiv.append('button')
-                            .attr('id', 'download')
-                            .text('Export SVG')
-                            .style('font-size', '20px')
-                            .style('font-weight', 'medium')
-                            .style('font', 'Helvetica Neue')
-                            .style('border-radius', '10px')
-                            .style('background-color', 'whitesmoke')
-                            .on('click', function() {
-                                downloadSVG();
-                            });
-
-// Create parent div for svg
-let svgDiv = d3.select('#main').append('div')
-                .attr('id', 'svgDiv')
-                .style('width', function () {
-                    // If window size < 600, svg should reflect size of parent div
-                    if (bodyW > 600) {
-                        return 70 + '%';
-                    } else {
-                        w = bodyW - 10;
-                        return 100 + '%';
-                    }
-                })
-                .style('height', bodyH + "px")
-                .style('float', 'left');
-
-var svg = undefined
 
 
+// Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
+// Get the id of the parent div, which contains both button and input
+// Derive the id of the button associated w/ that functionality
+// Add an event listener to that button
+// let nameInputs = document.querySelectorAll('div.gui-button-div button.gui-button + input.gui-input');
+// for (var i = 0; i < nameInputs.length; i++) {
+//     let parentDivID = nameInputs[i].parentElement.id;
+//     let buttonID = parentDivID + 'Button';
+//     let button = document.getElementById(buttonID);
+//     button.addEventListener('click', function () {toggleInput(parentDivID)});
+// }
 
+var svg, overlay
 
-
+// Action associated w/ Export SVG button
 function downloadSVG() {
     var config = {
         filename: 'kappa_rulevis',
@@ -175,6 +112,21 @@ inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
 
     clearExpressions()
+    
+    overlay = svg.append('g')
+                .attr('id', 'overlay')
+    svg.on('mousemove', () => {
+        let e = d3.event
+        //console.log(e.pageX, e.pageY)
+
+        overlay.selectAll('circle')
+                .remove()
+        overlay.append('circle')
+                .attr('cx', e.pageX - sidebarW)
+                .attr('cy', e.pageY - headerH)
+                .attr('r', 27)
+    })
+
     visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
@@ -185,18 +137,20 @@ function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
     svgDiv.selectAll('svg').remove()
     svg = svgDiv.append('svg') // FIXME: dupe code
-                .attr('width', w+'px')
-                .attr('height', h+'px')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                // .attr('margin-left', function () {
+                //     let sidebarW = document.getElementById('sidebar').offsetWidth;
+                //     return sidebarW;
+                // })
                 .attr('id', 'svg')
                 .call(d3.zoom().on("zoom", function () {
                     svg.attr("transform", d3.event.transform)
                 }))
-                .append("g")
 }
 
-// visual properties
-var agents, parents, // unified
-    sites, bonds, // bifurcated into {lhs, rhs}
+// simulation stores
+var nodes, links,
     simulation
 function visualizeExpression(rule, group) {
     // d3.selectAll("svg > *").remove();
@@ -205,8 +159,7 @@ function visualizeExpression(rule, group) {
     var coloragent = '#3eb78a';
     var colorsite = '#fcc84e';
   
-    let nodes = [...rule.agents,
-                 ...rule.sites]
+    nodes = [...rule.agents, ...rule.sites]
 
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/)
@@ -216,18 +169,20 @@ function visualizeExpression(rule, group) {
                   false
     }) // FIXME: don't mutate the KappaRule
 
-    let linkSet = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
-    // [...new Set()];
-
+    links = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
+    // links = [...new Set([...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents])];
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
-        .links(linkSet)
-        .linkDistance(d => !d.isParent ? 80 : d.sibCount > 6 ? 65 : d.sibCount > 3 ? 50 : 35)
+        .links(links)
+        .linkDistance(d => !d.isParent ? 80 :
+                            d.sibCount > 6 ? 45 :
+                            d.sibCount > 3 ? 35 : 30)
         // .avoidOverlaps(true);
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
 
+    // visualization stores
     let link = [], node = [], freeNode = [],
         name = [], state = [], nodeGroup = []
     group.forEach((root, i) => {
@@ -238,9 +193,7 @@ function visualizeExpression(rule, group) {
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", d => 0.4 )
-                            // .attr("stroke-opacity", d => {console.log(d); return 0.4} )
-                            // TODO: identify empty agents!
+                            .attr("stroke-opacity", 0.4)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
         nodeGroup[i] = root.selectAll('.node')
@@ -252,35 +205,38 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", (d,i) => rs[i])
-                            .attr("fill", d => d[side[i]].parent === undefined ?
+                            .attr("fill", d => d[side[i]].isAgent ?
                                                     d[side[i]].name ? coloragent : "#fff" :
                                                d[side[i]].bond ? colorsite : "#fff")
-                            .attr("stroke", d => d[side[i]].parent === undefined ? coloragent : colorsite)
-                            .attr("stroke-width", 3);
+                            .attr("stroke", d => d[side[i]].isAgent ? coloragent : colorsite)
+                            .attr("stroke-width", 3)
+                            .style("opacity", d => d[side[i]].name ? 1 : 0);
 
         freeNode[i] = root.append("g")
                         .selectAll("circle")
                         .data(nodes)
                         .enter()
-                            .filter(d => d[side[i]].parent !== undefined && d.bond == undefined)
+                            .filter(d => !d[side[i]].isAgent
+                                      && d[side[i]].bond == undefined)
                             .append("circle")
                             .attr("r", 4)
-                            .attr("fill", "black");
+                            .attr("fill", "black")
+                            .style("opacity", d => d[side[i]].name ? 1 : 0);
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].name)
-                        .attr("class", d => d[side[i]].parent == undefined ? "agent" : "site")
+                        .attr("class", d => d[side[i]].isAgent ? "agent" : "site")
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", d => d[side[i]].parent === undefined ? 16 : 12)
+                        .attr("font-size", d => d[side[i]].isAgent ? 16 : 12)
                         .attr("font-family", "Helvetica Neue")
-                        .style('opacity', d => d[side[i]].parent === undefined ? 1 : 0);
+                        .style('opacity', d => d.label ? 1 : 0);
 
         state[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]].state)
                         .attr("fill", "black")
                         .attr("font-size", 12)
-                        .style('opacity', 0);
+                        .style('opacity', d => d.label ? 1 : 0);
 
         // FIXME: find the counterpart of (this) on the rule's other side.
         nodeGroup[i].on("mouseover", function(d,i) {
@@ -307,7 +263,7 @@ function visualizeExpression(rule, group) {
     simulation.on("tick", () => {
         // one simulation drives both charts!
         // note the different translate() assigned to each group.
-        
+
         link.forEach(sel => sel
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
@@ -326,6 +282,13 @@ function visualizeExpression(rule, group) {
             .attr("x", d => d.x)
             .attr("y", d => d.y+14))
         });
+
+    // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
+    jsonBlob = {...rule, text: inputBox.property('value')}
+    downloadButton.on('click', function() {
+      downloadJSON(jsonBlob);
+    })
+
 };
 
 // Prints expression to expression
@@ -336,3 +299,60 @@ function getJSON(input) {
     });
     return expression.text();
 };
+
+// 
+let guiState = 'none';
+
+function activateGUIAction(divID) {
+    // Remove active class from whatever was there before
+    let prevActive = document.querySelectorAll('div.gui-button-div-active, button.gui-button-div-active');
+
+    for (var i = 0; i < prevActive.length; i++) {
+        prevActive[i].classList.remove('gui-button-div-active');
+    }
+
+    // Add the active class to the divID 
+    document.getElementById(divID).classList.add('gui-button-div-active');
+    document.getElementById(divID + "Button").classList.add('gui-button-div-active');
+}
+
+// Input:   elementID = id of element to be turned on
+//          type = querySelector string that returns set of elements containing elementID, to be turned off
+// Result:  1) Turns on the visibility of element specified by supplied ID
+//          2) Turns off visibility of other elements of other 
+function toggleVisibility(elementID, typeSelector) {
+    let element = document.getElementById(elementID);
+    let type = document.querySelectorAll(typeSelector);
+
+    // Hide all input elements
+    for (var i = 0; i < type.length; i++) {
+        type[i].style.display = 'none';
+    }
+
+    // Show input element 
+    element.style.display = 'block';
+}
+
+
+function toggleActiveGUI(action) {
+    guiState = action;
+    activateGUIAction(action);
+    toggleVisibility((action + "Input"), 'input.gui-input');
+    //toggleActiveStyle(action);
+}
+
+function addAgent() {
+    toggleActiveGUI('addAgent');
+    // Visually tell user that we are adding an agent right now
+    //activateGUIAction('addAgent');
+
+    // Reveal the input field
+    //toggleVisibility('addAgent');
+
+    let agentName = document.getElementById('addAgentInput').value;
+    console.log(agentName);
+}
+
+function addSite() {
+    toggleActiveGUI('addSite');
+}

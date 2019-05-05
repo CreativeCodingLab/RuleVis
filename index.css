@@ -1,10 +1,5 @@
+/* --------GLOBAL STYLES----------------------------------------------*/
 body {
-    margin: 0;
-}
-/* Header div styling */
-#header {
-    background-color: rgb(53, 59, 68);
-    padding: 15px;
     margin: 0;
 }
 
@@ -39,18 +34,82 @@ p {
     text-align: center;
 }
 
+button {
+    border: 2px solid rgb(56,56,56);
+    padding: 10px 15px;
+    font-size: 14px;
+}
+
+button:focus {
+    outline:none;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+/*----------------------GENERAL DOM ELEMENTS------------------------*/
+
+/* Header div styling */
+#header {
+    background-color: rgb(119, 135, 160);
+    padding: 15px;
+    margin: 0;
+}
+
+/* --------------SIDEBAR MENU--------------------------------*/
+
+#sidebar {
+    width: calc(30% - 2px);
+    border: 1px solid rgb(161, 161, 161);
+    height: calc(100vh - 77px);
+    float: left;
+}
+
+#sidebarMenu {
+    background-color: rgb(219, 219, 219);
+    text-align: left;
+    width: 100%;
+}
+
+/* styling for each sidebar menu option/button */
+.menuOption {
+    padding: 10px 10px;
+    background-color:rgb(219, 219, 219);
+    border: none;
+    height: 40px;
+    font-size: 14px;
+    transition: 0.3s;
+    margin: 0;
+}
+
+.active {
+    background-color: white;
+}
+
+.menuOption:hover:not(.active) {
+    cursor: pointer;
+    background-color: rgb(228, 228, 228);
+}
+
+
+/* ------------------TEXT INPUT DIV--------------------*/
 /* Some style formatting for text box [VERIFY] */
+#inputDiv {
+    display: none;
+}
+
 textarea {
     width: 100%;
     padding: 10px;
-    
+    height: calc(100vh - 116px);
     box-sizing: border-box;
     border: 0px solid rgb(189, 189, 189);
     border-radius: 2px;
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 15px;
-    background-color: rgb(230, 233, 239);
-    letter-spacing: 1.5px;
+    background-color: white;
+    letter-spacing: 1.3px;
     line-height: 1.5;
 }
 
@@ -58,6 +117,63 @@ textarea {
 /*  Note - May create an accessibilty issue on different platforms*/
 textarea:focus {
     outline:none;
+}
+
+/*---------------EXPORT DIV----------------------*/
+#exportDiv {
+    display: none;
+}
+
+/*----------------GUI EDITOR-----------------------*/
+#guiDiv {
+    display: block;
+}
+
+.gui-button {
+    background-color: white;
+    border: none;
+    color: rgb(75, 75, 75);
+    padding: 18px 22px;
+    width: 100%;
+    font-size: 14px;
+}
+
+.gui-button:hover {
+    background-color: #eeeeee;
+}
+
+.gui-button-div {
+    border-bottom: 1px solid #eeeeee;
+    width: 100%;
+}
+
+div.gui-button-div > input[type=text] {
+    width: calc(100% - 60px);
+    display: none;
+    padding: 10px;
+    margin: 15px 20px;
+}
+
+div.gui-button-div > input[type=text]:focus {
+    outline: none;
+}
+
+.gui-button-div-active {
+    background-color: #eeeeee;
+}
+
+/*-----------------SVG STYLING--------------------------*/
+#svgDiv {
+    width: 70%;
+    height: calc(100vh - 77px);
+}
+
+svg {
+    position: absolute;
+    width: 70%;
+    height: calc(100vh - 77px);
+    top: 77;
+    right: 0;
 }
 
 /* prevent labels from intercepting mouse events (todo: disable being highlighted at all) */
@@ -69,36 +185,3 @@ svg text {
 svg text .agent {
     font-weight: 700;
 }
-
-button {
-    border: 2px solid rgb(56,56,56);
-}
-
-button:focus {
-    outline:none;
-}
-
-#sidebarMenu {
-    background-color: rgb(200, 209, 226);
-    margin-bottom: 10px;
-    text-align: left;
-}
-
-.menuOption {
-    padding: 10px 10px;
-    background-color:rgb(200, 209, 226);
-    border: none;
-    height: 40px;
-    font-size: 14px;
-    transition: 0.3s;
-}
-
-.active {
-    background-color: rgb(158, 165, 179);
-}
-
-.menuOption:hover {
-    cursor: pointer;
-    background-color: rgb(158, 165, 179);
-}
-

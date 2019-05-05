@@ -11,10 +11,79 @@
     </head>
 
     <body>
-      <div id="header"></div>
+      <div id="header">
+        <h1>Kappa: Rule-based modeling for biological processes</h1>
+      </div>
       <script type="text/javascript" src="KappaRule.js"></script>
       <!--<script type="text/javascript" src="interface.js"></script>-->
+
+      <div id="main">
+        <div id="sidebar" class="column">
+          <div id="sidebarMenu">
+            <button id="gui" class="menuOption active">GUI Editor</button>
+            <button id="inputText" class="menuOption">Text Input</button>
+            <button id="export" class="menuOption">Export</button>
+          </div>  
+          
+          <div id="inputDiv">
+            <textarea id="inputBox" rows="30" cols="90" name="expression" placeholder="Begin typing an expression to visualize it."></textarea>
+          </div>
+
+          <div id="exportDiv">
+            <button id="download" onclick="downloadSVG()">Export SVG</button>
+            <button id="downloadJSON" onclick="downloadJSON()">Download JSON</button>
+          </div> 
+          
+
+          <div id="guiDiv">
+
+            <!--Div ids are named for that functionality
+                Append "Button" or "Input" to the div id to access the button and input
+                  associated w/ that fuctionality, respectively.-->
+            <div class="gui-button-div" id="addAgent">
+              <button id="addAgentButton" class="gui-button" onclick="addAgent()">Add Agent</button>
+              <input class="gui-input" type=text id="addAgentInput" placeholder="Add Agent name">
+            </div>
+
+            <div class="gui-button-div" id="addSite">
+              <button id="addSiteButton" class="gui-button" onclick="addSite()">Add Site</button>
+              <input class="gui-input" type=text id="addSiteInput">
+            </div>
+
+            <div class="gui-button-div" id="addLink">
+              <button id="addLinkButton" class="gui-button">Add Link</button>
+            </div>
+
+            <div class="gui-button-div" id="editAgent">
+              <button id="editAgentButton" class="gui-button">Edit Agent</button>
+              <input class="gui-input" type=text id="editAgentInput">
+            </div>
+
+            <div class="gui-button-div" id="editSite">
+              <button id="editSiteButton" class="gui-button">Edit Site</button>
+              <input class="gui-input" type=text id="editSiteInput">
+            </div>
+
+            <div class="gui-button-div" id="editState">
+              <button id="editStateButton" class="gui-button">Edit Internal State</button>
+              <input class="gui-input" type=text id="editStateInput">
+            </div>
+
+            <div class="gui-button-div" id="delete">
+              <button id="deleteButton" class="gui-button">Delete</button>
+            </div>
+
+          </div>
+        </div>
+
+        <div id="svgDiv" class="column"></div>
+      </div>
+
+      <script type="text/javascript" src="visualizeFromJSON.js"></script>
       <script type="text/javascript" src="index.js"></script>
+
+
+      <a id="downloadAnchorElem" style="display:none"></a>
 
       <form id="svgform" method="post" action="download.pl">
           <input type="hidden" id="output_format" name="output_format" value="">
