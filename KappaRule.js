@@ -33,6 +33,9 @@ pattern.terminalSymbols = (token) => {
 }
 
 function KappaRule(lhs, rhs) {
+    // INPUT: a pair of strings, each representing a Kappa expression
+    // INSTANTIATES: a mutable KappaRule
+
     const tokenize = (raw) =>
         raw.replace(/\s+/g, '') // kill whitespace
             .split(regex.token).filter(s => s)
@@ -130,7 +133,24 @@ function KappaRule(lhs, rhs) {
                                }))
 }
 
-// KappaRule.prototype.toString = function () {}
+KappaRule.prototype.toString = function () {
+    // GENERALIZE
+    // TODO: bonds should store their own relative index?
+
+    return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.bonds.lhs[0]}])`
+}
+
+KappaRule.prototype.addAgent = function (name, x=0, y=0) {
+    // VERIFY
+
+    let u = new Agent(this.agents.length)
+    u.name = name
+    u.siteCount = 0
+    this.agents.push({id: u.id, label: true,
+        lhs: u, rhs: {...u}, // symmetrical
+        siteCount: u.siteCount, x: x, y: y
+    })
+}
 
 function Agent(idx) {
     // this.interface = []

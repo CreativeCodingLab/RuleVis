@@ -81,9 +81,6 @@ uploadBox.on('input', function() {
 
 });
 
-
-
-
 // Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
 // Get the id of the parent div, which contains both button and input
 // Derive the id of the button associated w/ that functionality
@@ -96,7 +93,7 @@ uploadBox.on('input', function() {
 //     button.addEventListener('click', function () {toggleInput(parentDivID)});
 // }
 
-var svg, overlay
+var svg, svgGroups, overlay
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
@@ -110,27 +107,9 @@ let rule = new KappaRule('A(x[.])') // TODO: handle empty string gracefully
 
 inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
-
     clearExpressions()
-    
-    overlay = svg.append('g')
-                .attr('id', 'overlay')
-    svg.on('mousemove', () => {
-        let e = d3.event
-        //console.log(e.pageX, e.pageY)
 
-        overlay.selectAll('circle')
-                .remove()
-        overlay.append('circle')
-                .attr('cx', e.pageX - sidebarW)
-                .attr('cy', e.pageY - headerH)
-                .attr('r', 27)
-    })
-
-    visualizeExpression(rule,
-        [svg.append('g').attr('transform', `translate(0,0)`),
-            svg.append('g').attr('transform', `translate(${w/2},0)`)]
-        ) // TODO: pass if either side of rule is malformed
+    visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 });
 
 function clearExpressions() {
@@ -147,7 +126,36 @@ function clearExpressions() {
                 .call(d3.zoom().on("zoom", function () {
                     svg.attr("transform", d3.event.transform)
                 }))
+
+    initializeOverlay() // depends on svg
+
+    svgGroups =
+        [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)]
 }
+function initializeOverlay() {    
+    overlay = svg.append('g')
+                .attr('id', 'overlay')
+    svg.on('mouseenter', () => {
+        overlay.append('circle')
+                .attr('r', 27)
+                .style('fill', 'none')
+                .style('stroke', 'black')
+                .style('stroke-dasharray', '8 4')
+    })
+    svg.on('mousemove', () => {
+        let e = d3.event
+        //console.log(e.pageX, e.pageY)
+        overlay.select('circle')
+                .attr('cx', e.pageX - sidebarW)
+                .attr('cy', e.pageY - headerH)
+    })
+    svg.on('mouseleave', () => {
+        overlay.selectAll('circle')
+                .remove()
+    })
+}
+clearExpressions(); // initializes canvas
 
 // simulation stores
 var nodes, links,
