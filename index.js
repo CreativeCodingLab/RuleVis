@@ -116,16 +116,16 @@ function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
     svgDiv.selectAll('svg').remove()
     svg = svgDiv.append('svg') // FIXME: dupe code
+                .attr('id', 'svg')
                 .attr('width', '100%')
                 .attr('height', '100%')
                 // .attr('margin-left', function () {
                 //     let sidebarW = document.getElementById('sidebar').offsetWidth;
                 //     return sidebarW;
                 // })
-                .attr('id', 'svg')
-                .call(d3.zoom().on("zoom", function () {
+                /* .call(d3.zoom().on("zoom", function () {
                     svg.attr("transform", d3.event.transform)
-                }))
+                })) */
 
     initializeOverlay() // depends on svg
 
@@ -134,6 +134,8 @@ function clearExpressions() {
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
 }
 function initializeOverlay() {    
+    // ASSUME agent placement for now
+
     overlay = svg.append('g')
                 .attr('id', 'overlay')
     svg.on('mouseenter', () => {
@@ -153,6 +155,18 @@ function initializeOverlay() {
     svg.on('mouseleave', () => {
         overlay.selectAll('circle')
                 .remove()
+    })
+
+    svg.on('click', () => {
+        console.log('canvas touched')
+
+        let p = d3.event
+        rule.addAgent('C', p.x, p.y)
+
+        clearExpressions()
+        visualizeExpression(rule, svgGroups)
+
+        inputBox.node().value = rule.toString()
     })
 }
 clearExpressions(); // initializes canvas
