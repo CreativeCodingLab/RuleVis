@@ -50,14 +50,13 @@ function KappaRule(lhs, rhs) {
     // TODO: store expression as a diff, not as two independent sides.
 
     // convert expression into a diff
-    let e = this.expression,
-        agentCount = e[0].agents.length // VERIFY: assume aligned agents
+    let e = this.expression
     if (!e[1])
         e[1] = {'agents': [], 'sites': [], 'virtualSites': [],
                               'bonds': [], 'virtualBonds': []} // BRITTLE
 
     // ASSUME aligned agents
-    this.agents = d3.range(agentCount).map( (i) =>
+    this.agents = d3.range(e[0].agents.length).map( (i) =>
                      ({id: e[0].agents[i].id,
                        siteCount: e[0].agents[i].siteCount,
                        lhs: e[0].agents[i],
@@ -98,58 +97,67 @@ function KappaRule(lhs, rhs) {
         })
     )
 
-    // helper function to create links
-    let getIndex = (siteId) => {
-        if (!siteId) throw new Error("expression merger cannot look up a site without its index")
-
-        let [a,b] = siteId
-        return this.agents.length +
-               this.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
-      }  
-
     // treat bonds (site-site links) separately
     let bonds = e.map((u,i) => {
         if (!u) return []
         let named = u.bonds
             .filter(bnd => bnd && bnd[1])
-            .map(([src,tar]) => ({'source': getIndex(src),
-                                'target': getIndex(tar)
+            .map(([src,tar]) => ({'source': this.getIndex(src),
+                                'target': this.getIndex(tar)
                                 }))
         let anon = u.virtualBonds
-            .map(([src,_],i) => ({'source': getIndex(src),
-                                 'target': getIndex([this.agents.length+i, 0]),
-                                 // BRITTLE: look up anonymous index
-                                 'isAnonymous': true}))
+            .map(([src,_],i) => ({'source': this.getIndex(src),
+                                    'target': this.getIndex([this.agents.length+i, 0]),
+                                    // BRITTLE: look up anonymous index
+                                    'isAnonymous': true}))
         return [...named, ...anon]
         })
-    this.bonds = {lhs: bonds[0], rhs: bonds[1]}
+    this.bonds = {lhs: bonds[0], rhs: bonds[1]} // FIXME: flipped
 
     // treat parents (site-agent links) once
-    this.parents = this.sites.filter(u => u.id[0] < agentCount) // ignore virtual sites
+    this.parents = this.sites.filter(u => u.id[0] < e[0].agents.length) // ignore virtual sites
                     .map(u => ({'source': u.id[0], // agentId is already a valid index
-                                'target': getIndex(u.id),
+                                'target': this.getIndex(u.id),
                                 'isParent': true,
                                 'sibCount': this.agents[u.id[0]].siteCount,
-                               }))
+                                }))
 }
 
-KappaRule.prototype.toString = function () {
-    // GENERALIZE
-    // TODO: bonds should store their own relative index?
+KappaRule.prototype = { // n.b. arrow notation on helper functions would discard 'this' context
+    getIndex: function(siteId) {
+        // helper function to create links  
+        if (!siteId) throw new Error("expression merger cannot look up a site without its index")
+    
+        let [a,b] = siteId
+        return this.agents.length +
+                this.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
+    },
 
-    return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.bonds.lhs[0]}])`
-}
-
-KappaRule.prototype.addAgent = function (name, x=0, y=0) {
-    // VERIFY
-
-    let u = new Agent(this.agents.length)
-    u.name = name
-    u.siteCount = 0
-    this.agents.push({id: u.id, label: true,
-        lhs: u, rhs: {...u}, // symmetrical
-        siteCount: u.siteCount, x: x, y: y
-    })
+    setBonds: function(expr) { // FIXME: update bonds from internal representation alone
+        // instantiates:
+        //   this.bonds.lhs: [{source, target, isAnonymous}]
+        //   this.bonds.rhs: ~
+        //   this.parents: [{source, target, isParent, sibCount}]
+    
+    },
+    toString: function () {
+        // GENERALIZE
+        // TODO: bonds should store their own relative index?
+    
+        return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.bonds.lhs[0]}])`
+    },
+    addAgent: function (name, x=0, y=0) {
+        let u = new Agent(this.agents.length)
+        u.name = name
+        u.siteCount = 0
+        this.agents.push(
+            {id: u.id, label: true,
+             lhs: u, rhs: {...u}, // addition to both sides of rule
+             siteCount: u.siteCount,
+             x: x, y: y // FIXME
+        })
+        this.setBonds() // FIXME
+    }
 }
 
 function Agent(idx) {
