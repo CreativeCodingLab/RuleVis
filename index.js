@@ -300,18 +300,18 @@ function getJSON(input) {
     return expression.text();
 };
 
-// 
+
 let guiState = 'none';
 
-function activateGUIAction(divID) {
+// Styles the active GUI action button + div so the user knows which action they are performing
+function addActiveStyle(divID) {
     // Remove active class from whatever was there before
     let prevActive = document.querySelectorAll('div.gui-button-div-active, button.gui-button-div-active');
-
     for (var i = 0; i < prevActive.length; i++) {
         prevActive[i].classList.remove('gui-button-div-active');
     }
 
-    // Add the active class to the divID 
+    // Once all active classes are remove, re-add the active class to the divID 
     document.getElementById(divID).classList.add('gui-button-div-active');
     document.getElementById(divID + "Button").classList.add('gui-button-div-active');
 }
@@ -333,22 +333,19 @@ function toggleVisibility(elementID, typeSelector) {
     element.style.display = 'block';
 }
 
-
+// Sets the styling/interface up for a GUI action
 function toggleActiveGUI(action) {
     guiState = action;
-    activateGUIAction(action);
+    addActiveStyle(action);
     toggleVisibility((action + "Input"), 'input.gui-input');
-    //toggleActiveStyle(action);
 }
 
 function addAgent() {
+    // Sets the interface up for adding an agent
     toggleActiveGUI('addAgent');
-    // Visually tell user that we are adding an agent right now
-    //activateGUIAction('addAgent');
 
-    // Reveal the input field
-    //toggleVisibility('addAgent');
-
+    // will probably need to update to an onchange listener for the input value
+    // otherwise this will be called when user initially clicks on the button, but there is no way for name to be there yet
     let agentName = document.getElementById('addAgentInput').value;
     console.log(agentName);
 }
