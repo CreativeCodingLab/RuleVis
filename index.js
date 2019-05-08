@@ -215,7 +215,7 @@ function visualizeExpression(rule, group) {
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", d => d.source[side[i]] && d.source[side[i]].name ? 0.4 : 0)
+                            .attr("stroke-opacity", d => !d.isParent || d.source[side[i]] && d.source[side[i]].name ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
         nodeGroup[i] = root.selectAll('.node')

@@ -146,7 +146,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
     },
     toString: function () {
         // GENERALIZE
-        // TODO: bonds should store their own relative index?
+        // TODO: handle anonymous bonds
     
         // return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.bonds.lhs[0]}])`
         let agentStrings = {lhs: [], rhs: []}
