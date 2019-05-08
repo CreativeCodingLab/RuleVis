@@ -1,10 +1,10 @@
 const pattern = new tinynlp.Grammar([
-    'start -> pattern',  
+    'start -> pattern | ',  
     'pattern -> agent more-pattern | agent',
     'more-pattern -> , pattern',
     
     'agent -> agent-name ( interface ) | . ( interface ) | .', // VERIFY
-    'interface -> site more-interface | site',
+    'interface -> site more-interface | site | .', // VERIFY
     'more-interface -> , interface',
     
     'site -> site-name internal-state link-state | site-name link-state internal-state | site-name internal-state | site-name link-state | site-name',
@@ -49,11 +49,15 @@ function KappaRule(lhs, rhs) {
     this.expression = chart.map( c => c !== undefined ? simplify(c) : c )
     // TODO: store expression as a diff, not as two independent sides.
 
-    // convert expression into a diff
-    let e = this.expression
+    let e = this.expression // TODO: handle trivial case in simplify
     if (!e[1])
         e[1] = {'agents': [], 'sites': [], 'virtualSites': [],
-                              'bonds': [], 'virtualBonds': []} // BRITTLE
+                              'bonds': [], 'virtualBonds': []}
+    if (!e[0])
+        e[0] = {'agents': [], 'sites': [], 'virtualSites': [],
+                              'bonds': [], 'virtualBonds': []}
+
+    // convert expression into a diff
 
     // ASSUME aligned agents
     this.agents = d3.range(e[0].agents.length).map( (i) =>
@@ -144,7 +148,29 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         // GENERALIZE
         // TODO: bonds should store their own relative index?
     
-        return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.bonds.lhs[0]}])`
+        // return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.bonds.lhs[0]}])`
+        let agentStrings = {lhs: [], rhs: []}
+        this.agents.forEach((u, i) => {
+            let children = this.sites.filter(v => v.id[0] == i)
+            
+            let bake = (w) => {
+                let siteStrings = []
+                children.forEach(v => {
+                    let res = v[w].name || '.'
+                    if (v[w].bond) res += `[${v[w].bond[0]}]`
+                    if (v[w].state) res += `{${v[w].state}}`
+                    siteStrings.push(res)
+                })
+                console.log(siteStrings)
+                if (siteStrings.length == 0) siteStrings = ['.']
+
+                let name = u[w].name || '.'
+                return `${name}(${siteStrings.join(',')})`
+            }
+            agentStrings.lhs[i] = bake('lhs')
+            agentStrings.rhs[i] = bake('rhs')
+        })
+        return `${agentStrings.lhs.join(',')} -> ${agentStrings.rhs.join(',')}`
     },
     addAgent: function (name, x=0, y=0) {
         let u = new Agent(this.agents.length)
@@ -156,7 +182,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
              siteCount: u.siteCount,
              x: x, y: y // FIXME
         })
-        this.setBonds() // FIXME
+        // this.setBonds() // FIXME
     }
 }
 

@@ -103,7 +103,7 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-let rule = new KappaRule('A(x[.])') // TODO: handle empty string gracefully
+let rule = new KappaRule('') // TODO: handle empty string gracefully
 
 inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
@@ -215,7 +215,7 @@ function visualizeExpression(rule, group) {
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", 0.4)
+                            .attr("stroke-opacity", d => d.source[side[i]] && d.source[side[i]].name ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
         nodeGroup[i] = root.selectAll('.node')
