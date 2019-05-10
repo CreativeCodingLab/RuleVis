@@ -176,9 +176,9 @@ inputBox.on("input", () => {
         overlay.selectAll('circle')
                 .remove()
         overlay.append('circle')
-                .attr('cx', e.pageX - 200)
-                .attr('cy', e.pageY - 200)
-                .attr('r', 10)
+                .attr('cx', e.pageX - 0.3*(document.documentElement.clientWidth || document.body.clientWidth))
+                .attr('cy', e.pageY - headerH)
+                .attr('r', 27)
     })
     visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
