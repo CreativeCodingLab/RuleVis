@@ -57,6 +57,72 @@ for (let i = 0; i < menuOptions.length; i++) {
     );
 }
 
+// Reveals an input field if user clicks on a gui editor button
+function toggleInput(parentDivID) {
+    console.log("parentDivID = " + parentDivID);
+
+    let inputID = parentDivID + "Input";
+    let inputElement = document.getElementById(inputID);
+    
+    if (inputElement.style.display == 'block') {
+        console.log("in if");
+        inputElement.style.display = 'none';
+    } else {
+        inputElement.style.display = 'block';
+        console.log('in else');
+    }
+
+}
+
+
+function addAgent() {
+    toggleInput('addAgent');
+}
+
+function addSite() {
+    toggleInput('addSite');
+}
+
+function addLink() {
+    alert("add link");
+}
+
+function editAgent() {
+    toggleInput('editAgent');
+}
+
+function editSite() {
+    toggleInput('editSite');
+}
+
+function editState() {
+    toggleInput('editState');
+}
+
+function deleteItem() {
+    alert("delete");
+}
+
+// Directs to appropriate gui function based on button
+function guiHandler (actionID) {
+    if (actionID === 'addAgent') { addAgent(); } 
+    else if (actionID === 'addSite') { addSite(); }
+    else if (actionID === 'addLink') { addLink(); }
+    else if (actionID === 'editAgent') { editAgent(); }
+    else if (actionID === 'editSite') { editSite(); }
+    else if (actionID === 'editState') { editState(); }
+    else if (actionID === 'deleteItem') { deleteItem(); }
+}
+
+// Attach an event listener to all GUI buttons
+let guiButtons = document.getElementsByClassName('gui-button');
+for (var i = 0; i < guiButtons.length; i++) {
+    let parentDivID = guiButtons[i].parentElement.id;
+    guiButtons[i].addEventListener('click', function () { guiHandler(parentDivID) });
+}
+
+
+
 // Action associated w/ Download JSON Button
 function downloadJSON(data) {
 
@@ -83,32 +149,7 @@ uploadBox.on('input', function() {
 });
 
 
-// Input: 
-function toggleInput(parentDivID) {
-    console.log("parentDivID = " + parentDivID);
 
-    let inputID = parentDivID + "Input";
-    let inputElement = document.getElementById(inputID);
-    
-    if (inputElement.style.display == 'block') {
-        inputElement.style.display = 'none';
-    } else {
-        inputElement.style.display = 'block';
-    }
-
-}
-
-// Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
-// Get the id of the parent div, which contains both button and input
-// Derive the id of the button associated w/ that functionality
-// Add an event listener to that button
-let nameInputs = document.querySelectorAll('div.gui-button-div button.gui-button + input.gui-input');
-for (var i = 0; i < nameInputs.length; i++) {
-    let parentDivID = nameInputs[i].parentElement.id;
-    let buttonID = parentDivID + 'Button';
-    let button = document.getElementById(buttonID);
-    button.addEventListener('click', function () {toggleInput(parentDivID)});
-}
 
 var svg, overlay
 
