@@ -74,9 +74,24 @@ function toggleInput(parentDivID) {
 
 }
 
+var overlay
 
 function addAgent() {
     toggleInput('addAgent');
+
+    overlay = svg.append('g')
+                .attr('id', 'overlay')
+    svg.on('mousemove', () => {
+        let e = d3.event
+        console.log(e.pageX, e.pageY)
+
+        overlay.selectAll('circle')
+                .remove()
+        overlay.append('circle')
+                .attr('cx', e.pageX - 0.3*(document.documentElement.clientWidth || document.body.clientWidth))
+                .attr('cy', e.pageY - headerH)
+                .attr('r', 27)
+    })
 }
 
 function addSite() {
@@ -151,7 +166,7 @@ uploadBox.on('input', function() {
 
 
 
-var svg, overlay
+var svg
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
@@ -167,19 +182,7 @@ inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
 
     clearExpressions()
-    overlay = svg.append('g')
-                .attr('id', 'overlay')
-    svg.on('mousemove', () => {
-        let e = d3.event
-        console.log(e.pageX, e.pageY)
-
-        overlay.selectAll('circle')
-                .remove()
-        overlay.append('circle')
-                .attr('cx', e.pageX - 0.3*(document.documentElement.clientWidth || document.body.clientWidth))
-                .attr('cy', e.pageY - headerH)
-                .attr('r', 27)
-    })
+    
     visualizeExpression(rule,
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
