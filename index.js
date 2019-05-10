@@ -82,20 +82,6 @@ uploadBox.on('input', function() {
 
 });
 
-// Create parent div for svg
-// let svgDiv = d3.select('#main').append('div')
-//                 .attr('id', 'svgDiv')
-//                 .style('width', function () {
-//                     // If window size < 600, svg should reflect size of parent div
-//                     if (bodyW > 600) {
-//                         return 70 + '%';
-//                     } else {
-//                         w = bodyW - 10;
-//                         return 100 + '%';
-//                     }
-//                 })
-//                 .style('height', bodyH + "px")
-//                 .style('float', 'left');
 
 // Input: 
 function toggleInput(parentDivID) {
