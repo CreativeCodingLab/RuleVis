@@ -3,8 +3,8 @@ const pattern = new tinynlp.Grammar([
     'pattern -> agent more-pattern | agent',
     'more-pattern -> , pattern',
     
-    'agent -> agent-name ( interface ) | . ( interface ) | .', // VERIFY
-    'interface -> site more-interface | site | .', // VERIFY
+    'agent -> agent-name ( interface ) | . ( interface ) | agent-name | .', // VERIFY
+    'interface -> site more-interface | site',
     'more-interface -> , interface',
     
     'site -> site-name internal-state link-state | site-name link-state internal-state | site-name internal-state | site-name link-state | site-name',
@@ -89,7 +89,7 @@ function KappaRule(lhs, rhs) {
             console.log(v)
             let par = this.agents.length + j // assign fake id
             // tar = new Site([-1, 0])
-            v.bond = [-1, false]
+            v.port = [-1, false]
 
             this.sites.push({
                 id: [par, v.id[1]], parent: par,
@@ -125,6 +125,9 @@ function KappaRule(lhs, rhs) {
                                 'isParent': true,
                                 'sibCount': this.agents[u.id[0]].siteCount,
                                 }))
+
+    this.expression = null
+    this. chart = null
 }
 
 KappaRule.prototype = { // n.b. arrow notation on helper functions would discard 'this' context
@@ -136,42 +139,51 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         return this.agents.length +
                 this.sites.findIndex((u) => u.id[0] == a && u.id[1] == b)
     },
-
-    setBonds: function(expr) { // FIXME: update bonds from internal representation alone
-        // instantiates:
-        //   this.bonds.lhs: [{source, target, isAnonymous}]
-        //   this.bonds.rhs: ~
-        //   this.parents: [{source, target, isParent, sibCount}]
-    
-    },
     toString: function () {
         // GENERALIZE
         // TODO: handle anonymous bonds
     
-        // return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.bonds.lhs[0]}])`
+        // return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.ports.lhs[0]}])`
         let agentStrings = {lhs: [], rhs: []}
         this.agents.forEach((u, i) => {
-            let children = this.sites.filter(v => v.id[0] == i)
+            let children = this.sites.filter(v => v.id[0] == i) 
             
             let bake = (w) => {
                 let siteStrings = []
                 children.forEach(v => {
                     let res = v[w].name || '.'
-                    if (v[w].bond) res += `[${v[w].bond[0]}]`
+                    if (v[w].port) {
+                        if (v[w].port.length == 0)
+                            res += `[.]`
+                        else if (typeof v[w].port === 'number')
+                            res += `[${v[w].port}]`
+                        else
+                            res += `[_]`
+                    }
                     if (v[w].state) res += `{${v[w].state}}`
-                    siteStrings.push(res)
+                    if (res !== '.') siteStrings.push(res)
                 })
                 console.log(siteStrings)
-                if (siteStrings.length == 0) siteStrings = ['.']
+                // if (siteStrings.length == 0) siteStrings = ['.']
 
                 let name = u[w].name || '.'
-                return `${name}(${siteStrings.join(',')})`
+                return siteStrings.length == 0 ? `${name}`  
+                                               : `${name}(${siteStrings.join(',')})`
             }
             agentStrings.lhs[i] = bake('lhs')
             agentStrings.rhs[i] = bake('rhs')
         })
         return `${agentStrings.lhs.join(',')} -> ${agentStrings.rhs.join(',')}`
     },
+
+    /*setBonds: function(expr) { // FIXME: update bonds from internal representation alone
+        // instantiates:
+        //   this.ports.lhs: [{source, target, isAnonymous}]
+        //   this.ports.rhs: ~
+        //   this.parents: [{source, target, isParent, sibCount}]
+    
+    }, */
+
     addAgent: function (name, x=0, y=0) {
         let u = new Agent(this.agents.length)
         u.name = name
@@ -183,6 +195,12 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
              x: x, y: y // FIXME
         })
         // this.setBonds() // FIXME
+    },
+    deleteNode: function (agentIdx, siteIdx) {
+        // TODO
+    },
+    deleteEdge: function (linkIdx) {
+        // TODO: locate both ? references to the link
     }
 }
 
@@ -213,9 +231,9 @@ function simplify(chart) {
                         'bonds': [],
                         'virtualBonds': []}
 
-        let curr = ret.agents ? ret.agents.slice(-1)[0] : null,
-            loc = ret.sites ? ret.sites.slice(-1)[0] : null
-            // loc = curr ? curr.interface ? curr.interface.slice(-1)[0] : null : null
+        let ag = ret.agents ? ret.agents.slice(-1)[0] : null,
+            si = ret.sites ? ret.sites.slice(-1)[0] : null
+            // si = ag ? ag.interface ? ag.interface.slice(-1)[0] : null : null
 
         let virtualSiteCount = 0
 
@@ -224,53 +242,52 @@ function simplify(chart) {
         'agent-name': () => {
             if (ret.interfacing) {
                 // TODO: collect virtual agents, too
-                // loc.boundTo = new Agent()
-                // loc.boundTo.name = node.subtrees[0].root[0]
-                ret.virtualSites.slice(-1)[0]
-                    .boundTo = node.subtrees[0].root[0]
+                // ret.virtualSites.slice(-1)[0].boundTo = node.subtrees[0].root[0]
+
+                // finalize the port_link as 'some of type'
+                si.port.agent_name = node.subtrees[0].root[0]
             }
-            else curr.name = node.subtrees[0].root[0]
+            else ag.name = node.subtrees[0].root[0]
         },
         'site': () => {
-            let v = new Site(curr.id, curr.siteCount) // curr.interface.length
-            // curr.interface.push(v.id)
-            curr.siteCount += 1
+            let v = new Site(ag.id, ag.siteCount) // ag.interface.length
+            // ag.interface.push(v.id)
+            ag.siteCount += 1
             ret.sites.push(v)
         },
         'site-name': () => {
             if (ret.interfacing) {
-                // e.g. x[y.B]
+                // e.g. x[y.B], a 'some of type' link
 
-                // loc.boundAt = new Site() // TODO: propagate stub to top
-                // loc.boundAt.name = node.subtrees[0].root[0]
-                loc.bond = [-1, false]
+                si.port = {}
+                si.port.site_name = node.subtrees[0].root[0]
 
-                let tmp = new Site(-1, virtualSiteCount)
+                let tmp = new Site(-1, virtualSiteCount) // TODO: attach to virtual agent
                 virtualSiteCount += 1
                 tmp.boundAt = node.subtrees[0].root[0]
-                tmp.bond = [-1, false]
+                // tmp.port = 
 
-                ret.virtualBonds.push([loc.id, [-1,0]]) // VERIFY
+                ret.virtualBonds.push([si.id, [-1,0]]) // VERIFY
                 ret.virtualSites.push(tmp)
-                // TODO: attach to virtual agent
             }
             else {
-                loc.bond = [-1, true]
-                loc.name = node.subtrees[0].root[0]
+                si.port = null // 'whatever'
+                si.name = node.subtrees[0].root[0]
             }
         },
         'number': () => {
             if (ret.interfacing) {
                 let k = node.subtrees[0].root[0]
-                loc.bond = [parseInt(k), true]
+                si.port = parseInt(k) // 'explicit link' - TODO: attach bond partner
                 
                 let v = ret.bonds[k]
-            if (v) ret.bonds[k].push(loc.id)
-            else ret.bonds[k] = [loc.id]
+            if (v) ret.bonds[k].push(si.id)
+            else ret.bonds[k] = [si.id]
             }},
         'state-name': () => {
             if (ret.subscripting) {
-                loc.state = node.subtrees[0].root[0]
+                // TODO: parse multiple states per port
+                si.state = node.subtrees[0].root[0]
             }
         },
         
@@ -278,20 +295,20 @@ function simplify(chart) {
             if (ret.interfacing) {                
                 let tmp = new Site(-1, virtualSiteCount)
                 virtualSiteCount += 1
-                tmp.bond = [-1, false]
+                tmp.port = true // 'some'
 
-                ret.virtualBonds.push([loc.id, [-1,0]])
+                ret.virtualBonds.push([si.id, [-1,0]])
                 ret.virtualSites.push(tmp)
             }},
         '.': () => {
-            if (ret.interfacing && loc.bond[1]) {
-                loc.bond = undefined
-            } else if (ret.subscripting) {
-                loc.state = undefined
+            if (ret.interfacing && !si.port) {
+                si.port = [] // 'free'
             }},
         '#': () => {
-            // default case
-            },
+            // do nothing to a 'whatever'
+            if (ret.subscripting) {
+                si.state = undefined
+            }},
 
         '[': () => {ret.interfacing = true},
         ']': () => {ret.interfacing = false},

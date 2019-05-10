@@ -1,14 +1,6 @@
 // Titles & headers
 let header = d3.select("#header");
 
-// Height of header + 15px of margin on top and bottom
-let headerH = document.getElementById('header').clientHeight;
-
-let h = document.getElementById('svgDiv').clientHeight;
-let w = document.getElementById('svgDiv').clientWidth;
-
-let sidebarW = document.getElementById('sidebar').clientWidth;
-
 var expression;
 
 // Create container div for styling purposes
@@ -26,6 +18,23 @@ let svgDiv = d3.select('div#svgDiv');
 // Handles changing between GUI Editor, Text Input, and Export divs
 let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
 let menuMap = new Map(menuMapArray);
+
+// Height of header + 15px of margin on top and bottom
+let headerH, h, w, sidebarW
+let onWindowResize = (e) => {
+    headerH = document.getElementById('header').clientHeight;
+    h = document.getElementById('svgDiv').clientHeight;
+    w = document.getElementById('svgDiv').clientWidth;
+    sidebarW = document.getElementById('sidebar').clientWidth;
+}
+
+window.addEventListener('resize', onWindowResize, false)
+
+// SETUP
+window.addEventListener('load', function() {
+    onWindowResize() // initialize metrics
+    clearExpressions() // initialize canvas
+})
 
 let handleMenuClick = function(e) {
     // Id of newly clicked element
@@ -49,37 +58,11 @@ let handleMenuClick = function(e) {
         }
     }
 }
-
 for (let i = 0; i < menuOptions.length; i++) {
     menuOptions[i].addEventListener('click', 
         function() { handleMenuClick(menuOptions[i]) } 
     );
 }
-
-// Action associated w/ Download JSON Button
-function downloadJSON(data) {
-
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-  var dlAnchorElem = document.getElementById('downloadAnchorElem');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "expression.json");
-  dlAnchorElem.click();
-}
-
-var uploadBox = exportDiv.append('textarea')
-                          .attr('id', 'uploadJSON')
-                          .attr('placeholder', 'Paste JSON');
-
-uploadBox.on('input', function() {
-
-  data = JSON.parse(uploadBox.property('value'));
-  console.log(data);
-  clearExpressions();
-  visualizeFromJSON(data,
-           [svg.append('g').attr('transform', `translate(0,0)`),
-            svg.append('g').attr('transform', `translate(${w/2},0)`)])
-
-});
 
 // Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
 // Get the id of the parent div, which contains both button and input
@@ -169,7 +152,6 @@ function initializeOverlay() {
         inputBox.node().value = rule.toString()
     })
 }
-clearExpressions(); // initializes canvas
 
 // simulation stores
 var nodes, links,
@@ -200,7 +182,7 @@ function visualizeExpression(rule, group) {
         .linkDistance(d => !d.isParent ? 80 :
                             d.sibCount > 6 ? 45 :
                             d.sibCount > 3 ? 35 : 30)
-        // .avoidOverlaps(true);
+        .avoidOverlaps(true);
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
 
@@ -229,7 +211,7 @@ function visualizeExpression(rule, group) {
                             .attr("r", (d,i) => rs[i])
                             .attr("fill", d => d[side[i]].isAgent ?
                                                     d[side[i]].name ? coloragent : "#fff" :
-                                               d[side[i]].bond ? colorsite : "#fff")
+                                               d[side[i]].port && d[side[i]].length == 0 ? "#fff" : colorsite)
                             .attr("stroke", d => d[side[i]].isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]].name ? 1 : 0);
@@ -239,7 +221,8 @@ function visualizeExpression(rule, group) {
                         .data(nodes)
                         .enter()
                             .filter(d => !d[side[i]].isAgent
-                                      && d[side[i]].bond == undefined)
+                                            && d[side[i]].port
+                                            && d[side[i]].length == 0)
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black")
@@ -337,6 +320,31 @@ function addActiveStyle(divID) {
     document.getElementById(divID).classList.add('gui-button-div-active');
     document.getElementById(divID + "Button").classList.add('gui-button-div-active');
 }
+
+// Action associated w/ Download JSON Button
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
+});
 
 // Input:   elementID = id of element to be turned on
 //          type = querySelector string that returns set of elements containing elementID, to be turned off
