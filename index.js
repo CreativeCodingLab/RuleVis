@@ -64,17 +64,124 @@ for (let i = 0; i < menuOptions.length; i++) {
     );
 }
 
-// Selects all the inputs that are inside gui-button-divs that have a previous button neighbor
-// Get the id of the parent div, which contains both button and input
-// Derive the id of the button associated w/ that functionality
-// Add an event listener to that button
-// let nameInputs = document.querySelectorAll('div.gui-button-div button.gui-button + input.gui-input');
-// for (var i = 0; i < nameInputs.length; i++) {
-//     let parentDivID = nameInputs[i].parentElement.id;
-//     let buttonID = parentDivID + 'Button';
-//     let button = document.getElementById(buttonID);
-//     button.addEventListener('click', function () {toggleInput(parentDivID)});
-// }
+// Input:   elementID = id of element to be turned on
+//          type = querySelector string that returns set of elements containing elementID, to be turned off
+// Result:  1) Turns on the visibility of element specified by supplied ID
+//          2) Turns off visibility of other elements of other 
+/* function toggleVisibility(elementID, typeSelector) {
+    let element = document.getElementById(elementID);
+    let type = document.querySelectorAll(typeSelector);
+
+    // Hide all input elements
+    for (var i = 0; i < type.length; i++) {
+        type[i].style.display = 'none';
+    }
+
+    // Show input element 
+    element.style.display = 'block';
+}
+
+// Sets the styling/interface up for a GUI action
+function toggleActiveGUI(action) {
+    guiState = action;
+    addActiveStyle(action);
+    toggleVisibility((action + "Input"), 'input.gui-input');
+}
+
+function addAgent() {
+    // Sets the interface up for adding an agent
+    toggleActiveGUI('addAgent');
+
+    // will probably need to update to an onchange listener for the input value
+    // otherwise this will be called when user initially clicks on the button, but there is no way for name to be there yet
+    let agentName = document.getElementById('addAgentInput').value;
+    console.log(agentName);
+}
+
+function addSite() {
+    toggleActiveGUI('addSite');
+} */
+
+// Reveals an input field if user clicks on a gui editor button
+function toggleInput(parentDivID) {
+    console.log("parentDivID = " + parentDivID);
+
+    let inputID = parentDivID + "Input";
+    let inputElement = document.getElementById(inputID);
+    
+    if (inputElement.style.display == 'block') {
+        console.log("hide");
+        inputElement.style.display = 'none';
+    } else {
+        inputElement.style.display = 'block';
+        console.log('show');
+    }
+
+}
+// Directs to appropriate gui function based on button
+let actionHandler = {
+    'addAgent': () => {
+        toggleInput('addAgent')
+    },
+    'addSite': () => {
+        toggleInput('addSite');
+    },
+    'addLink': () => {
+        alert("add link");
+    },
+    'editAgent': () => {
+        toggleInput('editAgent');
+    },
+    'editSite': () => {
+        toggleInput('editSite');
+    },
+    'editState': () => {
+        toggleInput('editState');
+    },
+    'deleteItem': () => {
+        alert("delete");
+    },
+}
+// Attach an event listener to all GUI buttons
+let guiButtons = document.getElementsByClassName('gui-button');
+
+for (var i = 0; i < guiButtons.length; i++) {
+    let parentDivID = guiButtons[i].parentElement.id;
+    console.log(parentDivID)
+
+    guiButtons[i].addEventListener('click', () => {
+        actionHandler[parentDivID]()
+    });
+}
+
+
+// Action associated w/ Download JSON Button
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
+});
+
+
+
 
 var svg, svgGroups, overlay
 
@@ -91,7 +198,6 @@ let rule = new KappaRule('') // TODO: handle empty string gracefully
 inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
     clearExpressions()
-
     visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 });
 
@@ -348,41 +454,3 @@ uploadBox.on('input', function() {
             svg.append('g').attr('transform', `translate(${w/2},0)`)])
 
 });
-
-// Input:   elementID = id of element to be turned on
-//          type = querySelector string that returns set of elements containing elementID, to be turned off
-// Result:  1) Turns on the visibility of element specified by supplied ID
-//          2) Turns off visibility of other elements of other 
-function toggleVisibility(elementID, typeSelector) {
-    let element = document.getElementById(elementID);
-    let type = document.querySelectorAll(typeSelector);
-
-    // Hide all input elements
-    for (var i = 0; i < type.length; i++) {
-        type[i].style.display = 'none';
-    }
-
-    // Show input element 
-    element.style.display = 'block';
-}
-
-// Sets the styling/interface up for a GUI action
-function toggleActiveGUI(action) {
-    guiState = action;
-    addActiveStyle(action);
-    toggleVisibility((action + "Input"), 'input.gui-input');
-}
-
-function addAgent() {
-    // Sets the interface up for adding an agent
-    toggleActiveGUI('addAgent');
-
-    // will probably need to update to an onchange listener for the input value
-    // otherwise this will be called when user initially clicks on the button, but there is no way for name to be there yet
-    let agentName = document.getElementById('addAgentInput').value;
-    console.log(agentName);
-}
-
-function addSite() {
-    toggleActiveGUI('addSite');
-}
