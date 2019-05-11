@@ -51,11 +51,9 @@ function KappaRule(lhs, rhs) {
 
     let e = this.expression // TODO: handle trivial case in simplify
     if (!e[1])
-        e[1] = {'agents': [], 'sites': [], 'virtualSites': [],
-                              'bonds': [], 'virtualBonds': []}
+        e[1] = {'agents': [], 'sites': [], 'bonds': [], 'virtual': []}
     if (!e[0])
-        e[0] = {'agents': [], 'sites': [], 'virtualSites': [],
-                              'bonds': [], 'virtualBonds': []}
+        e[0] = {'agents': [], 'sites': [], 'bonds': [], 'virtual': []}
 
     // convert expression into a diff
 
@@ -63,71 +61,105 @@ function KappaRule(lhs, rhs) {
     this.agents = d3.range(e[0].agents.length).map( (i) =>
                      ({id: e[0].agents[i].id,
                        siteCount: e[0].agents[i].siteCount,
+                       isAgent: true,
                        lhs: e[0].agents[i],
                        rhs: e[1].agents[i] ? e[1].agents[i] : new Agent(i)}))
 
 
     // cannot assume aligned sites
     this.sites = e[0].sites.map( (u) => 
-        ({id: u.id,
-          lhs: u, rhs: new Site(...u.id) })
+        ({id: u.id, lhs: u, rhs: undefined })
     )
     if (e[1])
         e[1].sites.forEach( (v) => {
             let u = this.sites.find((u) => u.id[0] == v.id[0] && u.id[1] == v.id[1])
-            console.log("merge", u, v)
+            console.log("merge sites", u, v)
 
             if (u === undefined)
-                this.sites.push({id: v.id,
-                            lhs: new Site(...v.id), rhs: v })
+                this.sites.push({'id': v.id, 'lhs': undefined, 'rhs': v }) // VERIFY: dummy site? new Site(...u.id)
             else
                 u.rhs = v
         })
-    // generate anonymous agents as needed (TODO: for bonds, too)
-    e.forEach((expr,i) =>
-        expr.virtualSites.forEach((v,j) => {
-            console.log(v)
-            let par = this.agents.length + j // assign fake id
-            // tar = new Site([-1, 0])
-            v.port = [-1, false]
 
-            this.sites.push({
-                id: [par, v.id[1]], parent: par,
-                lhs: v, rhs: {...v},
-            })
-            let res = this.sites.slice(-1)[0][['lhs', 'rhs'][i]] // BRITTLE
-            res.state = v.boundTo ? `of ${v.boundTo}` : ''
-            res.name = v.boundAt ? v.boundAt : '_' // FIXME: Site gets hidden if its name is falsy.
-        })
-    )
-
-    // treat bonds (site-site links) separately
-    let bonds = e.map((u,i) => {
-        if (!u) return []
-        let named = u.bonds
-            .filter(bnd => bnd && bnd[1])
-            .map(([src,tar]) => ({'source': this.getIndex(src),
-                                'target': this.getIndex(tar)
-                                }))
-        let anon = u.virtualBonds
-            .map(([src,_],i) => ({'source': this.getIndex(src),
-                                    'target': this.getIndex([this.agents.length+i, 0]),
-                                    // BRITTLE: look up anonymous index
-                                    'isAnonymous': true}))
-        return [...named, ...anon]
-        })
-    this.bonds = {lhs: bonds[0], rhs: bonds[1]} // FIXME: flipped
-
-    // treat parents (site-agent links) once
-    this.parents = this.sites.filter(u => u.id[0] < e[0].agents.length) // ignore virtual sites
+    // treat parents (site-agent links)
+    this.parents = this.sites // .filter(u => u.id[0] < e[0].agents.length) // ignore virtual sites
                     .map(u => ({'source': u.id[0], // agentId is already a valid index
                                 'target': this.getIndex(u.id),
                                 'isParent': true,
                                 'sibCount': this.agents[u.id[0]].siteCount,
                                 }))
+    // treat bonds (site-site links)
+    this.bonds = e[0].bonds
+                .filter(bnd => bnd && bnd[1])
+                .map(([src,tar]) => ({'lhs': {'source': this.getIndex(src),
+                                                'target': this.getIndex(tar)},
+                                      'rhs': undefined})
+    )
+    if (e[1])
+        e[1].bonds.forEach( (v) => {
+            // merge named bonds only
+            let u = this.bonds.find((u) => u[0] && u[0] == v[0])
+            console.log("merge bonds", u, v)
+            if (u === undefined)
+                this.bonds.push({'id': v.id, 'lhs': undefined, 'rhs': v })
+            else
+                u.rhs = v
+        })
+
+    // generate anonymous agents as needed (TODO: for bonds, too)
+    e[0].virtual.forEach((v, j) => {
+        // VERIFY
+        // let par = this.agents.length + j // assign fake id
+        let [src_id, port] = v
+
+        let res = new Site([-1, j])
+        res.state = port.agent_name ? `of ${v.port.agent_name}` : ''
+        res.name = port.site_name ? v.port.site_name : '.'
+
+        this.bonds.push({
+            'lhs': {'source': this.getIndex(src_id),
+                    'target': this.agents.length + this.sites.length},
+            'rhs': undefined,
+            isAnonymous: true,
+        })
+        this.sites.push({id: res.id, lhs: res, rhs: {} })
+
+        /* let par = this.agents.length + j // assign fake id
+        this.sites.push({
+            id: [par, v.id[1]], parent: par,
+            lhs: v, rhs: {...v},
+        })
+        let res = this.sites.slice(-1)[0][['lhs', 'rhs'][i]]
+        */
+    })
+    e[1].virtual.forEach((v, j) => {
+        let [src_id, port] = v
+        let i = this.bonds.findIndex(u => u.source.id[0] == src_id[0] && u.source.id[1] == src_id[1] )
+
+        let link = {
+            'source': this.getIndex(src_id),
+            'target': this.agents.length + this.sites.length
+        }
+        let res = new Site([-1, e[0].virtual.length + j]) // brittle?
+        res.state = port.agent_name ? `of ${v.port.agent_name}` : ''
+        res.name = port.site_name ? v.port.site_name : '.'
+
+        if (i == -1) {
+            this.bonds.push( {
+                'lhs': undefined,
+                'rhs': res,
+                isAnonymous: true,
+            })
+            this.sites.push({id: res.id, lhs: {}, rhs: res })
+        }
+        else {
+            this.bonds[i].rhs = link
+            this.sites[i].rhs = res
+        }
+    })
 
     this.expression = null
-    this. chart = null
+    this.chart = null
 }
 
 KappaRule.prototype = { // n.b. arrow notation on helper functions would discard 'this' context
@@ -151,8 +183,8 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             let bake = (w) => {
                 let siteStrings = []
                 children.forEach(v => {
-                    let res = v[w].name || '.'
-                    if (v[w].port) {
+                    let res = v[w] ? v[w].name : '.'
+                    if (v[w] && v[w].port) {
                         if (v[w].port.length == 0)
                             res += `[.]`
                         else if (typeof v[w].port === 'number')
@@ -160,7 +192,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                         else
                             res += `[_]`
                     }
-                    if (v[w].state) res += `{${v[w].state}}`
+                    if (v[w] && v[w].state) res += `{${v[w].state}}`
                     if (res !== '.') siteStrings.push(res)
                 })
                 console.log(siteStrings)
@@ -191,6 +223,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         this.agents.push(
             {id: u.id, label: true,
              lhs: u, rhs: {...u}, // addition to both sides of rule
+             isAgent: true,
              siteCount: u.siteCount,
              x: x, y: y // FIXME
         })
@@ -227,23 +260,18 @@ function simplify(chart) {
                         'subscripting': false,
                         'agents': [],
                         'sites': [],
-                        'virtualSites': [],
                         'bonds': [],
-                        'virtualBonds': []}
+                        'virtual': [],
+                    }
 
         let ag = ret.agents ? ret.agents.slice(-1)[0] : null,
             si = ret.sites ? ret.sites.slice(-1)[0] : null
             // si = ag ? ag.interface ? ag.interface.slice(-1)[0] : null : null
 
-        let virtualSiteCount = 0
-
         let rule = {
         'agent': () => {ret.agents.push(new Agent(ret.agents.length))},
         'agent-name': () => {
             if (ret.interfacing) {
-                // TODO: collect virtual agents, too
-                // ret.virtualSites.slice(-1)[0].boundTo = node.subtrees[0].root[0]
-
                 // finalize the port_link as 'some of type'
                 si.port.agent_name = node.subtrees[0].root[0]
             }
@@ -261,14 +289,7 @@ function simplify(chart) {
 
                 si.port = {}
                 si.port.site_name = node.subtrees[0].root[0]
-
-                let tmp = new Site(-1, virtualSiteCount) // TODO: attach to virtual agent
-                virtualSiteCount += 1
-                tmp.boundAt = node.subtrees[0].root[0]
-                // tmp.port = 
-
-                ret.virtualBonds.push([si.id, [-1,0]]) // VERIFY
-                ret.virtualSites.push(tmp)
+                ret.virtual.push([si.id, si.port]) // VERIFY: picks up agent_name?
             }
             else {
                 si.port = null // 'whatever'
@@ -292,13 +313,9 @@ function simplify(chart) {
         },
         
         '_': () => {
-            if (ret.interfacing) {                
-                let tmp = new Site(-1, virtualSiteCount)
-                virtualSiteCount += 1
-                tmp.port = true // 'some'
-
-                ret.virtualBonds.push([si.id, [-1,0]])
-                ret.virtualSites.push(tmp)
+            if (ret.interfacing) {
+                si.port = true // 'some'
+                ret.virtual.push([si.id, si.port])
             }},
         '.': () => {
             if (ret.interfacing && !si.port) {

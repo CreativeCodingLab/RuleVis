@@ -168,13 +168,15 @@ function visualizeExpression(rule, group) {
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/)
     nodes.forEach((d) => {
-        d.label = d.parent === undefined ? true :
-                  d.lhs.state != d.rhs.state ? true :
-                  false
+        d.label = d.isAgent ? true :
+                     d.lhs && d.rhs &&
+                     (d.lhs.name != d.rhs.name || d.lhs.state != d.rhs.state) ?
+                     true : false
     }) // FIXME: don't mutate the KappaRule
 
-    links = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
-    // links = [...new Set([...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents])];
+    links = [...rule.bonds.map(u => u.lhs).filter(u => u),
+             ...rule.bonds.map(u => u.rhs).filter(u => u),
+             ...rule.parents]
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
@@ -183,6 +185,7 @@ function visualizeExpression(rule, group) {
                             d.sibCount > 6 ? 45 :
                             d.sibCount > 3 ? 35 : 30)
         .avoidOverlaps(true);
+    simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
 
@@ -192,14 +195,16 @@ function visualizeExpression(rule, group) {
     group.forEach((root, i) => {
         link[i] = root.append("g")
                         .selectAll("line")
-                        .data([...rule.bonds[side[i]], ...rule.parents])
+                        .data(links)
                         .enter()
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", d => !d.isParent || d.source[side[i]] && d.source[side[i]].name ? 0.4 : 0)
+                            .attr("stroke-opacity", d => d.source[side[i]] &&
+                                                         d.target[side[i]] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
+        // node base
         nodeGroup[i] = root.selectAll('.node')
                             .data(nodes)
                             .enter()
@@ -208,37 +213,35 @@ function visualizeExpression(rule, group) {
                             .call(simulation.drag);
 
         node[i] = nodeGroup[i].append('circle')
-                            .attr("r", (d,i) => rs[i])
-                            .attr("fill", d => d[side[i]].isAgent ?
-                                                    d[side[i]].name ? coloragent : "#fff" :
-                                               d[side[i]].port && d[side[i]].length == 0 ? "#fff" : colorsite)
-                            .attr("stroke", d => d[side[i]].isAgent ? coloragent : colorsite)
+                            .attr("r", (_,i) => rs[i])
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                                               d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
+                            .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
-                            .style("opacity", d => d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
 
+        // node annotations
         freeNode[i] = root.append("g")
                         .selectAll("circle")
                         .data(nodes)
                         .enter()
-                            .filter(d => !d[side[i]].isAgent
-                                            && d[side[i]].port
-                                            && d[side[i]].length == 0)
+                            .filter(d => !d.isAgent && d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0)
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black")
-                            .style("opacity", d => d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
 
         name[i] = nodeGroup[i].append("text")
-                        .text(d => d[side[i]].name)
-                        .attr("class", d => d[side[i]].isAgent ? "agent" : "site")
+                        .text(d => d[side[i]] && d[side[i]].name)
+                        .attr("class", d => d.isAgent ? "agent" : "site")
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", d => d[side[i]].isAgent ? 16 : 12)
+                        .attr("font-size", d => d.isAgent ? 16 : 12)
                         .attr("font-family", "Helvetica Neue")
                         .style('opacity', d => d.label ? 1 : 0);
 
         state[i] = nodeGroup[i].append("text")
-                        .text(d => d[side[i]].state)
+                        .text(d => d.state)
                         .attr("fill", "black")
                         .attr("font-size", 12)
                         .style('opacity', d => d.label ? 1 : 0);
@@ -264,9 +267,9 @@ function visualizeExpression(rule, group) {
             }
         });
     })
-    simulation.start(30,30,30);
+
     simulation.on("tick", () => {
-        // one simulation drives both charts!
+        // one simulation drives both charts! this is why the data on each side of the rule vis are shared.
         // note the different translate() assigned to each group.
 
         link.forEach(sel => sel
@@ -282,7 +285,7 @@ function visualizeExpression(rule, group) {
             .attr("cy", d => d.y + 10))
         name.forEach(sel => sel
             .attr("x", d => d.x)
-            .attr("y", d => d.parent === undefined ? d.y+4 : d.y+3))
+            .attr("y", d => d.y ? d.isAgent ? d.y+4 : d.y+3 : undefined ))
         state.forEach(sel => sel
             .attr("x", d => d.x)
             .attr("y", d => d.y+14))
