@@ -113,8 +113,9 @@ function KappaRule(lhs, rhs) {
         let [src_id, port] = v
 
         let res = new Site([-1, j])
-        res.state = port.agent_name ? `of ${v.port.agent_name}` : ''
-        res.name = port.site_name ? v.port.site_name : '.'
+        console.log(port)
+        res.state = port.agent_name ? `of ${port.agent_name}` : ''
+        res.name = port.site_name ? port.site_name : '.'
 
         this.bonds.push({
             'lhs': {'source': this.getIndex(src_id),
@@ -189,6 +190,8 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                             res += `[.]`
                         else if (typeof v[w].port === 'number')
                             res += `[${v[w].port}]`
+                        else if (typeof v[w].port !== 'boolean')
+                            res += `[${v[w].port.site_name}.${v[w].port.agent_name}]`
                         else
                             res += `[_]`
                     }
@@ -273,6 +276,7 @@ function simplify(chart) {
         'agent-name': () => {
             if (ret.interfacing) {
                 // finalize the port_link as 'some of type'
+                // let [_, port] = ret.virtual.slice(-1)[0]
                 si.port.agent_name = node.subtrees[0].root[0]
             }
             else ag.name = node.subtrees[0].root[0]
@@ -289,7 +293,7 @@ function simplify(chart) {
 
                 si.port = {}
                 si.port.site_name = node.subtrees[0].root[0]
-                ret.virtual.push([si.id, si.port]) // VERIFY: picks up agent_name?
+                ret.virtual.push([si.id, si.port])
             }
             else {
                 si.port = null // 'whatever'
