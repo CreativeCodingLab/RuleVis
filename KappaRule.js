@@ -92,7 +92,8 @@ function KappaRule(lhs, rhs) {
     this.bonds = e[0].bonds
                 .filter(bnd => bnd && bnd[1])
                 .map(([src,tar]) => ({'lhs': {'source': this.getIndex(src),
-                                                'target': this.getIndex(tar)},
+                                                'target': this.getIndex(tar),
+                                                'side': 'lhs'},
                                       'rhs': undefined})
     )
     if (e[1])
@@ -100,10 +101,15 @@ function KappaRule(lhs, rhs) {
             // merge named bonds only
             let u = this.bonds.find((u) => u[0] && u[0] == v[0])
             console.log("merge bonds", u, v)
+
+            let res = {'source': this.getIndex(v[0]),
+                        'target': this.getIndex(v[1]),
+                        'side': 'rhs'}
             if (u === undefined)
-                this.bonds.push({'id': v.id, 'lhs': undefined, 'rhs': v })
+                this.bonds.push({'lhs': undefined,
+                                'rhs': res})
             else
-                u.rhs = v
+                u.rhs = res
         })
 
     // generate anonymous agents as needed (TODO: for bonds, too)

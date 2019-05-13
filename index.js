@@ -306,8 +306,8 @@ function visualizeExpression(rule, group) {
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", d => d.source[side[i]] &&
-                                                         d.target[side[i]] ? 0.4 : 0)
+                            .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
+                                                         d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
         // node base
