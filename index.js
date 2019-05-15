@@ -74,24 +74,33 @@ function toggleInput(parentDivID) {
 
 }
 
-var overlay
+var overlay;
+var state = 'noEdit';
 
 function addAgent() {
     toggleInput('addAgent');
+    clearExpressions();
+    console.log('success');
+    
+    
+        state = 'addAgent';
 
-    overlay = svg.append('g')
-                .attr('id', 'overlay')
-    svg.on('mousemove', () => {
-        let e = d3.event
-        console.log(e.pageX, e.pageY)
-
-        overlay.selectAll('circle')
-                .remove()
-        overlay.append('circle')
-                .attr('cx', e.pageX - 0.3*(document.documentElement.clientWidth || document.body.clientWidth))
-                .attr('cy', e.pageY - headerH)
-                .attr('r', 27)
-    })
+        overlay = svg.append('g')
+                    .attr('id', 'overlay')
+        svg.on('mousemove', () => {
+            let e = d3.event
+            console.log(e.pageX, e.pageY)
+    
+            overlay.selectAll('circle')
+                    .remove()
+            overlay.append('circle')
+                    .attr('cx', e.pageX - 0.3*(document.documentElement.clientWidth || document.body.clientWidth))
+                    .attr('cy', e.pageY - headerH)
+                    .attr('r', 27)
+        })
+    
+    
+    
 }
 
 function addSite() {
