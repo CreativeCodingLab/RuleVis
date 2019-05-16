@@ -1,15 +1,6 @@
 // Titles & headers
 let header = d3.select("#header");
 
-// Height of header + 15px of margin on top and bottom
-let headerH = document.getElementById('header').clientHeight;
-
-let h = document.getElementById('svgDiv').clientHeight;
-let w = document.getElementById('svgDiv').clientWidth;
-
-console.log(document.getElementById('sidebar').clientWidth);
-console.log(w);
-
 var expression;
 
 // Create container div for styling purposes
@@ -27,6 +18,23 @@ let svgDiv = d3.select('div#svgDiv');
 // Handles changing between GUI Editor, Text Input, and Export divs
 let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
 let menuMap = new Map(menuMapArray);
+
+// Height of header + 15px of margin on top and bottom
+let headerH, h, w, sidebarW
+let onWindowResize = (e) => {
+    headerH = document.getElementById('header').clientHeight;
+    h = document.getElementById('svgDiv').clientHeight;
+    w = document.getElementById('svgDiv').clientWidth;
+    sidebarW = document.getElementById('sidebar').clientWidth;
+}
+
+window.addEventListener('resize', onWindowResize, false)
+
+// SETUP
+window.addEventListener('load', function() {
+    onWindowResize() // initialize metrics
+    clearExpressions() // initialize canvas
+})
 
 let handleMenuClick = function(e) {
     // Id of newly clicked element
@@ -50,14 +58,52 @@ let handleMenuClick = function(e) {
         }
     }
 }
-
 for (let i = 0; i < menuOptions.length; i++) {
     menuOptions[i].addEventListener('click', 
         function() { handleMenuClick(menuOptions[i]) } 
     );
 }
 
+// Input:   elementID = id of element to be turned on
+//          type = querySelector string that returns set of elements containing elementID, to be turned off
+// Result:  1) Turns on the visibility of element specified by supplied ID
+//          2) Turns off visibility of other elements of other 
+/* function toggleVisibility(elementID, typeSelector) {
+    let element = document.getElementById(elementID);
+    let type = document.querySelectorAll(typeSelector);
+
+    // Hide all input elements
+    for (var i = 0; i < type.length; i++) {
+        type[i].style.display = 'none';
+    }
+
+    // Show input element 
+    element.style.display = 'block';
+}
+
+// Sets the styling/interface up for a GUI action
+function toggleActiveGUI(action) {
+    guiState = action;
+    addActiveStyle(action);
+    toggleVisibility((action + "Input"), 'input.gui-input');
+}
+
+function addAgent() {
+    // Sets the interface up for adding an agent
+    toggleActiveGUI('addAgent');
+
+    // will probably need to update to an onchange listener for the input value
+    // otherwise this will be called when user initially clicks on the button, but there is no way for name to be there yet
+    let agentName = document.getElementById('addAgentInput').value;
+    console.log(agentName);
+}
+
+function addSite() {
+    toggleActiveGUI('addSite');
+} */
+
 // Reveals an input field if user clicks on a gui editor button
+// TODO: first, style all input elements to be hidden, then reveal appropriate one
 function toggleInput(parentDivID) {
     console.log("parentDivID = " + parentDivID);
 
@@ -65,86 +111,103 @@ function toggleInput(parentDivID) {
     let inputElement = document.getElementById(inputID);
     
     if (inputElement.style.display == 'block') {
-        console.log("in if");
+        console.log("hide");
         inputElement.style.display = 'none';
     } else {
         inputElement.style.display = 'block';
-        console.log('in else');
+        console.log('show');
     }
-
 }
 
 var overlay;
 var state = 'noEdit';
 
-function addAgent() {
-    toggleInput('addAgent');
-    clearExpressions();
-    console.log('success');
-    
-    
-        state = 'addAgent';
-
-        overlay = svg.append('g')
-                    .attr('id', 'overlay')
-        svg.on('mousemove', () => {
-            let e = d3.event
-            console.log(e.pageX, e.pageY)
-    
-            overlay.selectAll('circle')
-                    .remove()
-            overlay.append('circle')
-                    .attr('cx', e.pageX - 0.3*(document.documentElement.clientWidth || document.body.clientWidth))
-                    .attr('cy', e.pageY - headerH)
-                    .attr('r', 27)
-        })
-    
-    
-    
-}
-
-function addSite() {
-    toggleInput('addSite');
-}
-
-function addLink() {
-    alert("add link");
-}
-
-function editAgent() {
-    toggleInput('editAgent');
-}
-
-function editSite() {
-    toggleInput('editSite');
-}
-
-function editState() {
-    toggleInput('editState');
-}
-
-function deleteItem() {
-    alert("delete");
-}
 
 // Directs to appropriate gui function based on button
-function guiHandler (actionID) {
-    if (actionID === 'addAgent') { addAgent(); } 
-    else if (actionID === 'addSite') { addSite(); }
-    else if (actionID === 'addLink') { addLink(); }
-    else if (actionID === 'editAgent') { editAgent(); }
-    else if (actionID === 'editSite') { editSite(); }
-    else if (actionID === 'editState') { editState(); }
-    else if (actionID === 'deleteItem') { deleteItem(); }
-}
+let actionHandler = {
+    'addAgent': () => {
+        if (state !== 'addAgent') { toggleInput('addAgent'); }
+        //clearExpressions();
+        initializeOverlay();     
 
+        state = 'addAgent';
+        
+        if (state === 'addAgent') {
+            svg.on('mouseenter', () => {
+                overlay.append('circle')
+                        .attr('r', 27)
+                        .style('fill', 'none')
+                        .style('stroke', 'black')
+                        .style('fill', coloragent)
+                        .style('opacity', 0.5)
+                        .style('stroke-dasharray', '8 4')
+            })
+            svg.on('mousemove', () => {
+                let e = d3.event
+                //console.log(e.pageX, e.pageY)
+                overlay.select('circle') 
+                        .attr('cx', e.pageX - sidebarW)
+                        .attr('cy', e.pageY - headerH)
+            })
+            svg.on('mouseleave', () => {
+                overlay.selectAll('circle')
+                        .remove()
+            })
+        
+            svg.on('click', () => {
+                console.log('canvas touched')
+        
+                let inputValue = document.getElementById('addAgentInput').value;
+                if (inputValue === '') {
+                    inputValue = 'Agent A';
+                }
+        
+                let p = d3.event
+                rule.addAgent(inputValue, p.x, p.y)
+        
+                clearExpressions()
+                visualizeExpression(rule, svgGroups)
+        
+                inputBox.node().value = rule.toString()
+
+                actionHandler['addAgent']();
+        
+            })
+        }
+        
+    },
+    'addSite': () => {
+        toggleInput('addSite');
+        initializeOverlay();
+        state = 'addSite';
+    },
+    'addLink': () => {
+        alert("add link");
+    },
+    'editAgent': () => {
+        toggleInput('editAgent');
+    },
+    'editSite': () => {
+        toggleInput('editSite');
+    },
+    'editState': () => {
+        toggleInput('editState');
+    },
+    'deleteItem': () => {
+        alert("delete");
+    },
+}
 // Attach an event listener to all GUI buttons
 let guiButtons = document.getElementsByClassName('gui-button');
+
 for (var i = 0; i < guiButtons.length; i++) {
     let parentDivID = guiButtons[i].parentElement.id;
-    guiButtons[i].addEventListener('click', function () { guiHandler(parentDivID) });
-}
+    console.log(parentDivID)
 
+    guiButtons[i].addEventListener('click', () => {
+        actionHandler[parentDivID]()
+    });
+}
 
 
 // Action associated w/ Download JSON Button
@@ -175,7 +238,8 @@ uploadBox.on('input', function() {
 
 
 
-var svg
+
+var svg, svgGroups
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
@@ -185,57 +249,72 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
-let rule = new KappaRule('A(x[.])') // TODO: handle empty string gracefully
+let rule = new KappaRule('') // TODO: handle empty string gracefully
 
 inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
-
     clearExpressions()
-    
-    visualizeExpression(rule,
-        [svg.append('g').attr('transform', `translate(0,0)`),
-            svg.append('g').attr('transform', `translate(${w/2},0)`)]
-        ) // TODO: pass if either side of rule is malformed
+
+    visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 });
 
 function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
     svgDiv.selectAll('svg').remove()
     svg = svgDiv.append('svg') // FIXME: dupe code
+                .attr('id', 'svg')
                 .attr('width', '100%')
                 .attr('height', '100%')
                 // .attr('margin-left', function () {
                 //     let sidebarW = document.getElementById('sidebar').offsetWidth;
                 //     return sidebarW;
                 // })
-                .attr('id', 'svg')
-                .call(d3.zoom().on("zoom", function () {
+                /* .call(d3.zoom().on("zoom", function () {
                     svg.attr("transform", d3.event.transform)
-                }))
+                })) */
+
+    initializeOverlay() // depends on svg
+
+    svgGroups =
+        [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)]
+}
+function initializeOverlay() {    
+    // ASSUME agent placement for now
+
+    // Need this for this function, other handlers are action-specific in functions
+    overlay = svg.append('g')
+                .attr('id', 'overlay');
+
 }
 
 // simulation stores
 var nodes, links,
     simulation
+
+var coloragent = '#3eb78a';
+var colorsite = '#fcc84e';
+
 function visualizeExpression(rule, group) {
     // d3.selectAll("svg > *").remove();
     // subheading.text(JSON.stringify(expression)) // DEBUG
 
-    var coloragent = '#3eb78a';
-    var colorsite = '#fcc84e';
+    
   
     nodes = [...rule.agents, ...rule.sites]
 
     let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
                             d.siteCount > 5 ? 7+4*d.siteCount*/)
     nodes.forEach((d) => {
-        d.label = d.parent === undefined ? true :
-                  d.lhs.state != d.rhs.state ? true :
-                  false
+        d.label = d.isAgent ? true :
+                     d.lhs && d.rhs &&
+                     (d.lhs.name != d.rhs.name || d.lhs.state != d.rhs.state) ?
+                     true : false
     }) // FIXME: don't mutate the KappaRule
 
-    links = [...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents]
-    // links = [...new Set([...rule.bonds.lhs, ...rule.bonds.rhs, ...rule.parents])];
+    links = [...rule.bonds.map(u => u.lhs).filter(u => u),
+             ...rule.bonds.map(u => u.rhs).filter(u => u),
+             ...rule.parents]
     simulation = cola.d3adaptor(d3)
         .size([w/2,h])
         .nodes(nodes)
@@ -243,7 +322,8 @@ function visualizeExpression(rule, group) {
         .linkDistance(d => !d.isParent ? 80 :
                             d.sibCount > 6 ? 45 :
                             d.sibCount > 3 ? 35 : 30)
-        // .avoidOverlaps(true);
+        .avoidOverlaps(true);
+    simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
 
@@ -253,14 +333,16 @@ function visualizeExpression(rule, group) {
     group.forEach((root, i) => {
         link[i] = root.append("g")
                         .selectAll("line")
-                        .data([...rule.bonds[side[i]], ...rule.parents])
+                        .data(links)
                         .enter()
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
                             .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", 0.4)
+                            .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
+                                                         d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
 
+        // node base
         nodeGroup[i] = root.selectAll('.node')
                             .data(nodes)
                             .enter()
@@ -269,36 +351,35 @@ function visualizeExpression(rule, group) {
                             .call(simulation.drag);
 
         node[i] = nodeGroup[i].append('circle')
-                            .attr("r", (d,i) => rs[i])
-                            .attr("fill", d => d[side[i]].isAgent ?
-                                                    d[side[i]].name ? coloragent : "#fff" :
-                                               d[side[i]].bond ? colorsite : "#fff")
-                            .attr("stroke", d => d[side[i]].isAgent ? coloragent : colorsite)
+                            .attr("r", (_,i) => rs[i])
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                                               d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
+                            .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
-                            .style("opacity", d => d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
 
+        // node annotations
         freeNode[i] = root.append("g")
                         .selectAll("circle")
                         .data(nodes)
                         .enter()
-                            .filter(d => !d[side[i]].isAgent
-                                      && d[side[i]].bond == undefined)
+                            .filter(d => !d.isAgent && d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0)
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black")
-                            .style("opacity", d => d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
 
         name[i] = nodeGroup[i].append("text")
-                        .text(d => d[side[i]].name)
-                        .attr("class", d => d[side[i]].isAgent ? "agent" : "site")
+                        .text(d => d[side[i]] && d[side[i]].name)
+                        .attr("class", d => d.isAgent ? "agent" : "site")
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", d => d[side[i]].isAgent ? 16 : 12)
+                        .attr("font-size", d => d.isAgent ? 16 : 12)
                         .attr("font-family", "Helvetica Neue")
                         .style('opacity', d => d.label ? 1 : 0);
 
         state[i] = nodeGroup[i].append("text")
-                        .text(d => d[side[i]].state)
+                        .text(d => d.state)
                         .attr("fill", "black")
                         .attr("font-size", 12)
                         .style('opacity', d => d.label ? 1 : 0);
@@ -324,9 +405,9 @@ function visualizeExpression(rule, group) {
             }
         });
     })
-    simulation.start(30,30,30);
+
     simulation.on("tick", () => {
-        // one simulation drives both charts!
+        // one simulation drives both charts! this is why the data on each side of the rule vis are shared.
         // note the different translate() assigned to each group.
 
         link.forEach(sel => sel
@@ -342,7 +423,7 @@ function visualizeExpression(rule, group) {
             .attr("cy", d => d.y + 10))
         name.forEach(sel => sel
             .attr("x", d => d.x)
-            .attr("y", d => d.parent === undefined ? d.y+4 : d.y+3))
+            .attr("y", d => d.y ? d.isAgent ? d.y+4 : d.y+3 : undefined ))
         state.forEach(sel => sel
             .attr("x", d => d.x)
             .attr("y", d => d.y+14))
@@ -364,3 +445,44 @@ function getJSON(input) {
     });
     return expression.text();
 };
+
+
+let guiState = 'none';
+
+// Styles the active GUI action button + div so the user knows which action they are performing
+function addActiveStyle(divID) {
+    // Remove active class from whatever was there before
+    let prevActive = document.querySelectorAll('div.gui-button-div-active, button.gui-button-div-active');
+    for (var i = 0; i < prevActive.length; i++) {
+        prevActive[i].classList.remove('gui-button-div-active');
+    }
+
+    // Once all active classes are remove, re-add the active class to the divID 
+    document.getElementById(divID).classList.add('gui-button-div-active');
+    document.getElementById(divID + "Button").classList.add('gui-button-div-active');
+}
+
+// Action associated w/ Download JSON Button
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
+});
