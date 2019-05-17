@@ -302,9 +302,6 @@ function visualizeExpression(rule, group) {
     
   
     nodes = [...rule.agents, ...rule.sites]
-
-    let rs = nodes.map(d => d.lhs.siteCount === undefined ? 13 : 27 /*:
-                            d.siteCount > 5 ? 7+4*d.siteCount*/)
     nodes.forEach((d) => {
         d.label = d.isAgent ? true :
                      d.lhs && d.rhs &&
@@ -351,7 +348,7 @@ function visualizeExpression(rule, group) {
                             .call(simulation.drag);
 
         node[i] = nodeGroup[i].append('circle')
-                            .attr("r", (_,i) => rs[i])
+                            .attr("r", d => d.isAgent ? 27 : 13)
                             .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
                                                d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
