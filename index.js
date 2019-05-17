@@ -57,12 +57,11 @@ let handleMenuClick = function(e) {
             currOptionDiv.style.display = 'none';
         }
 
+        // If switching to a non-GUI tab, remove SVG mouse interactions and overlay
         if (currOption.id !== 'gui') {
             state = 'noEdit';
-            svg.on('mousemove', null);
-            svg.on('mouseenter', null);
-            svg.on('mouseleave', null);
-            svg.on('click', null);
+            clearSVGListeners();
+            clearOverlay();
         }
     }
 }
@@ -72,43 +71,6 @@ for (let i = 0; i < menuOptions.length; i++) {
     );
 }
 
-// Input:   elementID = id of element to be turned on
-//          type = querySelector string that returns set of elements containing elementID, to be turned off
-// Result:  1) Turns on the visibility of element specified by supplied ID
-//          2) Turns off visibility of other elements of other 
-/* function toggleVisibility(elementID, typeSelector) {
-    let element = document.getElementById(elementID);
-    let type = document.querySelectorAll(typeSelector);
-
-    // Hide all input elements
-    for (var i = 0; i < type.length; i++) {
-        type[i].style.display = 'none';
-    }
-
-    // Show input element 
-    element.style.display = 'block';
-}
-
-// Sets the styling/interface up for a GUI action
-function toggleActiveGUI(action) {
-    guiState = action;
-    addActiveStyle(action);
-    toggleVisibility((action + "Input"), 'input.gui-input');
-}
-
-function addAgent() {
-    // Sets the interface up for adding an agent
-    toggleActiveGUI('addAgent');
-
-    // will probably need to update to an onchange listener for the input value
-    // otherwise this will be called when user initially clicks on the button, but there is no way for name to be there yet
-    let agentName = document.getElementById('addAgentInput').value;
-    console.log(agentName);
-}
-
-function addSite() {
-    toggleActiveGUI('addSite');
-} */
 
 // Reveals an input field if user clicks on a gui editor button
 // TODO: first, style all input elements to be hidden, then reveal appropriate one
@@ -127,6 +89,8 @@ function toggleInput(parentDivID) {
     }
 }
 
+
+
 var overlay;
 var state = 'noEdit';
 
@@ -138,7 +102,6 @@ let actionHandler = {
         // If the user *just* clicked on addAgent button, open the input div
         // Else, the div is already open and they are adding another agent
         if (state !== 'addAgent') { toggleInput('addAgent'); }
-        //clearExpressions();
         initializeOverlay();     
 
         state = 'addAgent';
@@ -191,6 +154,8 @@ let actionHandler = {
         initializeOverlay();
         state = 'addSite';
 
+        // only show circle on mousemove if p.x and p.y are over an agent
+
         svg.on('mouseenter', () => {
             overlay.append('circle')
                     .attr('r', 13)
@@ -203,10 +168,33 @@ let actionHandler = {
         })
         svg.on('mousemove', () => {
             let e = d3.event
+            let minDist = 1;
+            let withinDist = false;
             //console.log(e.pageX, e.pageY)
-            overlay.select('circle') 
+            for (var i = 0; i < rule.agents.length; i++) {
+                let agent = rule.agents[i];
+                let xDist = agent.x - (e.pageX - sidebarW);
+                let yDist = agent.y - (e.pageY - headerH);
+                console.log("dist[" + agent.id + "] = " + Math.sqrt(xDist*xDist + yDist*yDist))
+
+                if (Math.sqrt(xDist*xDist + yDist*yDist) < 38) {
+                    withinDist = true;
+                }
+            }
+
+            if (withinDist === true) {
+                overlay.select('circle') 
+                    .style('opacity', 0.5);
+            } else {
+                overlay.select('circle') 
+                    .style('opacity', 0);
+            }
+
+            overlay.select('circle')
                     .attr('cx', e.pageX - sidebarW)
                     .attr('cy', e.pageY - headerH)
+
+            withinDist = false;
         })
         svg.on('mouseleave', () => {
             clearOverlay();
@@ -215,14 +203,19 @@ let actionHandler = {
         svg.on('click', () => {
             console.log('canvas touched')
             console.log('site added');
+
+
     
-            // let inputValue = document.getElementById('addAgentInput').value;
-            // if (inputValue === '') {
-            //     inputValue = 'Agent A';
-            // }
+            let inputValue = document.getElementById('addSiteInput').value;
+            if (inputValue === '') {
+                inputValue = 'Site X';
+            }
     
-            // let p = d3.event
-            // rule.addAgent(inputValue, p.x, p.y)
+            let p = d3.event
+
+
+            
+            rule.addSite(parent, inputValue, p.x, p.y)
     
             // clearExpressions()
             // visualizeExpression(rule, svgGroups)
@@ -333,6 +326,7 @@ function clearExpressions() {
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
 }
+
 function initializeOverlay() {    
     // ASSUME agent placement for now
     overlay = svg.append('g')
@@ -342,6 +336,13 @@ function initializeOverlay() {
 function clearOverlay() {
     overlay.selectAll('circle')
                 .remove()
+}
+
+function clearSVGListeners() {
+    svg.on('mousemove', null);
+    svg.on('mouseenter', null);
+    svg.on('mouseleave', null);
+    svg.on('click', null);
 }
 
 // simulation stores
