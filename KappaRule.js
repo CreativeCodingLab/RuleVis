@@ -287,11 +287,27 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             if (u.rhs && w.rhs) {u.rhs.port = k; w.rhs.port = k}
         }
     },
-    deleteNode: function (agentIdx, siteIdx) {
-        // TODO
+    deleteNode: function (agentIdx, siteIdx=-1) {
+        if (siteIdx == -1) {
+            // delete agent by:
+
+            // delete children sites
+            // delete self
+        }
+        else {
+            // delete sites by:
+
+            // unbind port
+            // (delete virtual site)
+            // unbind from parents
+            // delete self
+        }
     },
     deleteEdge: function (linkIdx) {
-        // TODO: locate both ? references to the link
+        // VERIFY: assume link indexes are preserved on lhs, rhs of rule
+        
+        // find sites whose port has this link
+        // unbind them
     }
 }
 
