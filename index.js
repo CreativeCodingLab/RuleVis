@@ -56,6 +56,14 @@ let handleMenuClick = function(e) {
             }
             currOptionDiv.style.display = 'none';
         }
+
+        if (currOption.id !== 'gui') {
+            state = 'noEdit';
+            svg.on('mousemove', null);
+            svg.on('mouseenter', null);
+            svg.on('mouseleave', null);
+            svg.on('click', null);
+        }
     }
 }
 for (let i = 0; i < menuOptions.length; i++) {
@@ -123,64 +131,107 @@ var overlay;
 var state = 'noEdit';
 
 
+
 // Directs to appropriate gui function based on button
 let actionHandler = {
     'addAgent': () => {
+        // If the user *just* clicked on addAgent button, open the input div
+        // Else, the div is already open and they are adding another agent
         if (state !== 'addAgent') { toggleInput('addAgent'); }
         //clearExpressions();
         initializeOverlay();     
 
         state = 'addAgent';
         
-        if (state === 'addAgent') {
-            svg.on('mouseenter', () => {
-                overlay.append('circle')
-                        .attr('r', 27)
-                        .style('fill', 'none')
-                        .style('stroke', 'black')
-                        .style('fill', coloragent)
-                        .style('opacity', 0.5)
-                        .style('stroke-dasharray', '8 4')
-                        .style('pointer-events', 'none')
-            })
-            svg.on('mousemove', () => {
-                let e = d3.event
-                //console.log(e.pageX, e.pageY)
-                overlay.select('circle') 
-                        .attr('cx', e.pageX - sidebarW)
-                        .attr('cy', e.pageY - headerH)
-            })
-            svg.on('mouseleave', () => {
-                overlay.selectAll('circle')
-                        .remove()
-            })
         
-            svg.on('click', () => {
-                console.log('canvas touched')
-        
-                let inputValue = document.getElementById('addAgentInput').value;
-                if (inputValue === '') {
-                    inputValue = 'Agent A';
-                }
-        
-                let p = d3.event
-                rule.addAgent(inputValue, p.x, p.y)
-        
-                clearExpressions()
-                visualizeExpression(rule, svgGroups)
-        
-                inputBox.node().value = rule.toString()
-
-                actionHandler['addAgent']();
-        
-            })
-        }
+        svg.on('mouseenter', () => {
+            overlay.append('circle')
+                    .attr('r', 27)
+                    .style('fill', 'none')
+                    .style('stroke', 'black')
+                    .style('fill', coloragent)
+                    .style('opacity', 0.5)
+                    .style('stroke-dasharray', '8 4')
+                    .style('pointer-events', 'none')
+        })
+        svg.on('mousemove', () => {
+            let e = d3.event
+            //console.log(e.pageX, e.pageY)
+            overlay.select('circle') 
+                    .attr('cx', e.pageX - sidebarW)
+                    .attr('cy', e.pageY - headerH)
+        })
+        svg.on('mouseleave', () => {
+            clearOverlay();
+        })
+    
+        svg.on('click', () => {
+            console.log('canvas touched')
+    
+            let inputValue = document.getElementById('addAgentInput').value;
+            if (inputValue === '') {
+                inputValue = 'Agent A';
+            }
+    
+            let p = d3.event
+            rule.addAgent(inputValue, p.x, p.y)
+    
+            clearExpressions()
+            visualizeExpression(rule, svgGroups)
+    
+            inputBox.node().value = rule.toString()
+    
+            actionHandler['addAgent']();
+    
+        })
         
     },
     'addSite': () => {
         toggleInput('addSite');
         initializeOverlay();
         state = 'addSite';
+
+        svg.on('mouseenter', () => {
+            overlay.append('circle')
+                    .attr('r', 13)
+                    .style('fill', 'none')
+                    .style('stroke', 'black')
+                    .style('fill', colorsite)
+                    .style('opacity', 0.5)
+                    .style('stroke-dasharray', '8 4')
+                    .style('pointer-events', 'none')
+        })
+        svg.on('mousemove', () => {
+            let e = d3.event
+            //console.log(e.pageX, e.pageY)
+            overlay.select('circle') 
+                    .attr('cx', e.pageX - sidebarW)
+                    .attr('cy', e.pageY - headerH)
+        })
+        svg.on('mouseleave', () => {
+            clearOverlay();
+        })
+    
+        svg.on('click', () => {
+            console.log('canvas touched')
+            console.log('site added');
+    
+            // let inputValue = document.getElementById('addAgentInput').value;
+            // if (inputValue === '') {
+            //     inputValue = 'Agent A';
+            // }
+    
+            // let p = d3.event
+            // rule.addAgent(inputValue, p.x, p.y)
+    
+            // clearExpressions()
+            // visualizeExpression(rule, svgGroups)
+    
+            // inputBox.node().value = rule.toString()
+    
+            // actionHandler['addAgent']();
+    
+        })
     },
     'addLink': () => {
         alert("add link");
@@ -206,12 +257,14 @@ for (var i = 0; i < guiButtons.length; i++) {
     console.log(parentDivID)
 
     guiButtons[i].addEventListener('click', () => {
+        clearOverlay();
         actionHandler[parentDivID]()
+        
     });
 }
 
 
-// Action associated w/ Download JSON Button
+// Action associated w/ Download JSON Button 
 function downloadJSON(data) {
 
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
@@ -282,11 +335,13 @@ function clearExpressions() {
 }
 function initializeOverlay() {    
     // ASSUME agent placement for now
-
-    // Need this for this function, other handlers are action-specific in functions
     overlay = svg.append('g')
                 .attr('id', 'overlay');
+}
 
+function clearOverlay() {
+    overlay.selectAll('circle')
+                .remove()
 }
 
 // simulation stores
