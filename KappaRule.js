@@ -238,13 +238,54 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         u.name = name
         u.siteCount = 0
         this.agents.push(
-            {id: u.id, label: true,
+            {id: u.id, // label: true,
              lhs: u, rhs: {...u}, // addition to both sides of rule
              isAgent: true,
              siteCount: u.siteCount,
              x: x, y: y // FIXME
         })
-        // this.setBonds() // FIXME
+    },
+    addSite: function (parent, name, x=0, y=0) {
+        let u = this.agents.find(u => u.id == parent)
+        if (u) {
+            let v = new Site(parent, u.siteCount)
+            v.name = name
+
+            this.sites.push(
+                {id: v.id,
+                lhs: u.lhs.name ? v : undefined,
+                rhs: u.rhs.name ? {...v} : undefined,
+                x: x, y: y
+                })
+            u.siteCount += 1
+
+            this.parents.push(
+                {'source': u.id,
+                'target': this.getIndex(v.id),
+                'isParent': true,
+                'sibCount': u.siteCount
+            })
+            this.parents.filter(w => w.source == u.id)
+                        .forEach(w => w.sibCount += 1)
+        }
+    },
+    addBond: function (a, b) {
+        let u = this.sites.find(v => v.id[0] == a[0] && v.id[1] == a[1]),
+            w = this.sites.find(v => v.id[0] == b[0] && v.id[1] == b[1])
+        if (u && w) {
+            this.bonds.push(
+                {lhs: u.lhs && w.lhs ? {'side': 'lhs', source: this.getIndex(a),
+                                            target: this.getIndex(b)} : undefined,
+                 rhs: u.rhs && w.rhs ? {'side': 'rhs', source: this.getIndex(a),
+                                            target: this.getIndex(b)} : undefined,
+                 })
+            let tmp = this.sites.map(v => Math.max(v.lhs ? v.lhs.port : 0,
+                                                  v.rhs ? v.rhs.port : 0)),
+                k = Math.max(...tmp, 0) + 1 // claim an unused port id
+
+            if (u.lhs && w.lhs) {u.lhs.port = k; w.lhs.port = k}
+            if (u.rhs && w.rhs) {u.rhs.port = k; w.rhs.port = k}
+        }
     },
     deleteNode: function (agentIdx, siteIdx) {
         // TODO
