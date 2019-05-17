@@ -141,6 +141,7 @@ let actionHandler = {
                         .style('fill', coloragent)
                         .style('opacity', 0.5)
                         .style('stroke-dasharray', '8 4')
+                        .style('pointer-events', 'none')
             })
             svg.on('mousemove', () => {
                 let e = d3.event
@@ -338,6 +339,7 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
+                            .on("mouseenter", d => console.log(d))
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
