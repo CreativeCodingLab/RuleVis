@@ -59,9 +59,7 @@ let handleMenuClick = function(e) {
 
         // If switching to a non-GUI tab, remove SVG mouse interactions and overlay
         if (currOption.id !== 'gui') {
-            state = 'noEdit';
-            clearSVGListeners();
-            clearOverlay();
+            actionHandler['noEdit']();
         }
     }
 }
@@ -73,19 +71,22 @@ for (let i = 0; i < menuOptions.length; i++) {
 
 
 // Reveals an input field if user clicks on a gui editor button
-// TODO: first, style all input elements to be hidden, then reveal appropriate one
 function toggleInput(parentDivID) {
     console.log("parentDivID = " + parentDivID);
 
     let inputID = parentDivID + "Input";
     let inputElement = document.getElementById(inputID);
-    
-    if (inputElement.style.display == 'block') {
-        console.log("hide");
-        inputElement.style.display = 'none';
-    } else {
-        inputElement.style.display = 'block';
-        console.log('show');
+    closeInputs();
+    inputElement.style.display = 'block';
+}
+
+// Closes all input tabs
+function closeInputs() {
+    let allInputs = document.getElementsByClassName('gui-input');
+
+    for (var i = 0; i < allInputs.length; i++) {
+        allInputs[i].style.display = 'none';
+        allInputs[i].value = '';
     }
 }
 
@@ -98,6 +99,13 @@ var state = 'noEdit';
 
 // Directs to appropriate gui function based on button
 let actionHandler = {
+    // Move button calls noEdit but is not a true move; if add another site, moves back to original position
+    'noEdit': () => {
+        state = 'noEdit';
+        clearSVGListeners();
+        closeInputs();
+        clearOverlay();
+    },
     'addAgent': () => {
         // If the user *just* clicked on addAgent button, open the input div
         // Else, the div is already open and they are adding another agent
