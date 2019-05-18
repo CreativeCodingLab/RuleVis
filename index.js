@@ -114,7 +114,6 @@ let actionHandler = {
 
         state = 'addAgent';
         
-        
         svg.on('mouseenter', () => {
             overlay.append('circle')
                     .attr('r', 27)
@@ -131,6 +130,7 @@ let actionHandler = {
             overlay.select('circle') 
                     .attr('cx', e.pageX - sidebarW)
                     .attr('cy', e.pageY - headerH)
+                    .style('pointer-events', 'none')
                     
         })
         svg.on('mouseleave', () => {
@@ -163,8 +163,6 @@ let actionHandler = {
         initializeOverlay();
         state = 'addSite';
 
-        // only show circle on mousemove if p.x and p.y are over an agent
-
         svg.on('mouseenter', () => {
             overlay.append('circle')
                     .attr('r', 13)
@@ -179,7 +177,6 @@ let actionHandler = {
             let e = d3.event  
 
             let res = isHoveringOverAgent((e.pageX - sidebarW), (e.pageY - headerH));
-            console.log(res)
             
             if (res.withinDist === true) {
                 overlay.select('circle') 
@@ -191,19 +188,13 @@ let actionHandler = {
 
             overlay.select('circle')
                     .attr('cx', e.pageX - sidebarW)
-                    .attr('cy', e.pageY - headerH)
-                    .style('pointer-events', 'none')
-
-            
+                    .attr('cy', e.pageY - headerH) 
         })
         svg.on('mouseleave', () => {
             clearOverlay();
         })
-    
         svg.on('click', () => {
             console.log('canvas touched')
-            console.log('site added');
-
             let inputValue = document.getElementById('addSiteInput').value;
             if (inputValue === '') {
                 inputValue = 'Site X';
@@ -218,16 +209,13 @@ let actionHandler = {
             if (res.withinDist && res.closestAgent.agentID !== null) {
                 rule.addSite(res.closestAgent.agentID, inputValue, x, y)
             }
-            
-            
-    
+        
             clearExpressions()
             visualizeExpression(rule, svgGroups)
     
             inputBox.node().value = rule.toString()
     
             actionHandler['addSite']();
-    
         })
     },
     'addLink': () => {
@@ -247,7 +235,7 @@ let actionHandler = {
     },
 }
 
-// Returns the distance between two points (x1, y1) and (x2, y2)
+// Calculates the distance between two points (x1, y1) and (x2, y2)
 function findDistance(x1, y1, x2, y2) {
     let xDist = x1 - x2;
     let yDist = y1 - y2;
@@ -256,11 +244,8 @@ function findDistance(x1, y1, x2, y2) {
     return dist;
 }
 
-// Need: is cursor over an agent
-// If yes, are there overlapping ones?
-    // If yes, which one is it closest to?
-// Returns:
-// withinDist: true if pointer is within distance of at least one agent in a group of overlapping agents
+// Looks through all agents to see if pointer overlaps with one; returns closest overlapping agent
+// withinDist: true if pointer is within distance of at least one agent in a group of overlapping agents; 
 // closestAgent: id of agent closest to pointer; distance to that agent
 function isHoveringOverAgent(x, y) {
     let response = {
@@ -271,24 +256,21 @@ function isHoveringOverAgent(x, y) {
         }
     };
 
+    // Look through all existing agents to see if pointer is overlapping with an agent and 
     for (var i = 0; i < rule.agents.length; i++) {
         let agent = rule.agents[i];
         let dist = findDistance(agent.x, agent.y, x, y);
-        console.log("dist[" + agent.id + "] = " + dist)
 
         // If you are hovering over an agent
         if (dist < 38) {
             response.withinDist = true;
-
             // Guards against agents that are overlapping
             if (dist < response.closestAgent.distToPointer) {
                 response.closestAgent.agentID = agent.id;
                 response.closestAgent.distToPointer = dist;
             }
-            
         }
     }
-
     return response;
 }
 
