@@ -94,8 +94,8 @@ function closeInputs() {
 
 var overlay;
 var state = 'noEdit';
-
-
+var linkClicks = 0;       // Keeps track of how many times 
+var linkSiteIDs = [];         // Stores IDs of coordinates of a new link
 
 // Directs to appropriate gui function based on button
 let actionHandler = {
@@ -176,7 +176,7 @@ let actionHandler = {
         svg.on('mousemove', () => {
             let e = d3.event  
 
-            let res = isHoveringOverAgent((e.pageX - sidebarW), (e.pageY - headerH));
+            let res = isHoveringOverEl('agents', (e.pageX - sidebarW), (e.pageY - headerH));
             
             if (res.withinDist === true) {
                 overlay.select('circle') 
@@ -203,11 +203,11 @@ let actionHandler = {
             let p = d3.event
             let x = p.pageX - sidebarW;
             let y = p.pageY - headerH;
-            let res = isHoveringOverAgent(x, y);
+            let res = isHoveringOverEl('agents', x, y);
 
             // check if it is hovering over an agent
-            if (res.withinDist && res.closestAgent.agentID !== null) {
-                rule.addSite(res.closestAgent.agentID, inputValue, x, y)
+            if (res.withinDist && res.closestEl.elID !== null) {
+                rule.addSite(res.closestEl.elID, inputValue, x, y)
             }
         
             clearExpressions()
@@ -219,7 +219,31 @@ let actionHandler = {
         })
     },
     'addLink': () => {
-        alert("add link");
+        svg.on('mouseenter', () => {
+
+        })
+
+        svg.on('mousemove', () => {
+            // Only do this if they are hovering over a site
+            document.getElementById('svgDiv').style.cursor = 'crosshair';
+
+            // On first click
+            if (linkClicks === 0) {
+                
+            }
+        })
+       
+        svg.on('click', () => {
+            if (linkClicks < 2) {
+
+            } else {
+                // The user has clicked two sites, so add site to rule
+                // Then clear linkClicks
+                linkClicks = 0;
+            }
+        })
+            
+
     },
     'editAgent': () => {
         toggleInput('editAgent');
@@ -247,27 +271,35 @@ function findDistance(x1, y1, x2, y2) {
 // Looks through all agents to see if pointer overlaps with one; returns closest overlapping agent
 // withinDist: true if pointer is within distance of at least one agent in a group of overlapping agents; 
 // closestAgent: id of agent closest to pointer; distance to that agent
-function isHoveringOverAgent(x, y) {
+function isHoveringOverEl(elType, x, y) {
     let response = {
         withinDist: false,
-        closestAgent: {
-            agentID: null,
+        closestEl: {
+            elID: null,
             distToPointer: Number.MAX_SAFE_INTEGER
         }
     };
 
-    // Look through all existing agents to see if pointer is overlapping with an agent and 
-    for (var i = 0; i < rule.agents.length; i++) {
-        let agent = rule.agents[i];
-        let dist = findDistance(agent.x, agent.y, x, y);
+    let elSet;
+
+    if (elType === 'agents') {
+        elSet = rule.agents;
+    } else if (elType === 'sites') {
+        elSet = rule.sites;
+    }
+
+    // Look through all existing agents to see if pointer is overlapping with an element 
+    for (var i = 0; i < elSet.length; i++) {
+        let el = elSet[i];
+        let dist = findDistance(el.x, el.y, x, y);
 
         // If you are hovering over an agent
         if (dist < 38) {
             response.withinDist = true;
             // Guards against agents that are overlapping
-            if (dist < response.closestAgent.distToPointer) {
-                response.closestAgent.agentID = agent.id;
-                response.closestAgent.distToPointer = dist;
+            if (dist < response.closestEl.distToPointer) {
+                response.closestEl.elID = el.id;
+                response.closestEl.distToPointer = dist;
             }
         }
     }
