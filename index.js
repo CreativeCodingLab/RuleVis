@@ -95,7 +95,18 @@ function closeInputs() {
 var overlay;
 var state = 'noEdit';
 var linkClicks = 0;       // Keeps track of how many times 
-var linkSiteIDs = [];         // Stores IDs of coordinates of a new link
+var linkSiteIDs = {       // Stores sites for adding link
+    first: {
+        id: null,
+        x: null,
+        y: null
+    },
+    second: {
+        id: null,
+        x: null,
+        y: null
+    }
+};         // Stores IDs and coordinates of a new link
 
 // Directs to appropriate gui function based on button
 let actionHandler = {
@@ -178,7 +189,7 @@ let actionHandler = {
 
             let res = isHoveringOverEl('agents', (e.pageX - sidebarW), (e.pageY - headerH));
             
-            if (res.withinDist === true) {
+            if (res.withinDist) {
                 overlay.select('circle') 
                     .style('opacity', 0.5);
             } else {
@@ -219,23 +230,84 @@ let actionHandler = {
         })
     },
     'addLink': () => {
-        svg.on('mouseenter', () => {
+        closeInputs();
+        initializeOverlay();
+        state = 'addLink';
 
+        svg.on('mouseenter', () => {
+            overlay.append('line')
+            .style('stroke-width', '2px')
+            .style('opacity', 0.5)
+            .style('pointer-events', 'none');
         })
 
         svg.on('mousemove', () => {
-            // Only do this if they are hovering over a site
+            let e = d3.event;
+            let res = isHoveringOverEl('sites', (e.pageX - sidebarW), (e.pageY - headerH));
+
             document.getElementById('svgDiv').style.cursor = 'crosshair';
 
-            // On first click
-            if (linkClicks === 0) {
+            // If they already selected first site, show a line extending from first point to current cursor
+            // Color = red if not over valid site
+            // Color = gray or green if over valid site
+            if (linkClicks === 1) {
+                
+                overlay.select('line')
+                            .attr('x1', linkSiteIDs.first.x)
+                            .attr('y1', linkSiteIDs.first.y)
+                            .attr('x2', e.pageX - sidebarW)
+                            .attr('y2', e.pageY - headerH)
+                            .style('stroke', res.withinDist ? 'gray' : 'red')
+                            .style('stroke-width', '5px')
+                            .style('opacity', res.withinDist ? 0.5: 0.3);
+
                 
             }
         })
+
+        svg.on('mouseleave', () => {
+            document.getElementById('svgDiv').style.cursor = 'auto';
+            clearOverlay();
+        })
        
         svg.on('click', () => {
-            if (linkClicks < 2) {
+            let e = d3.event;
 
+            if (linkClicks < 2) {
+                let res = isHoveringOverEl('sites', (e.pageX-sidebarW), (e.pageY-headerH));
+                console.log(res);
+
+                if (res.withinDist) {
+                    console.log(linkClicks);
+                    if (linkClicks === 0) {
+                        linkSiteIDs.first.id = res.closestEl.elID;
+                        linkSiteIDs.first.x = res.closestEl.x;
+                        linkSiteIDs.first.y = res.closestEl.y;
+                        linkClicks++;
+                    } 
+                    else if (linkClicks === 1) {
+                        linkSiteIDs.second.id = res.closestEl.elID;
+                        linkSiteIDs.second.x = res.closestEl.x;
+                        linkSiteIDs.second.y = res.closestEl.y;
+
+                        // Add a bond to the rule
+                        rule.addBond(linkSiteIDs.first.id, linkSiteIDs.second.id);
+
+                        // Then reset everything
+                        linkClicks = 0;
+                        for (var key in linkSiteIDs) {
+                            linkSiteIDs[key] = null;
+                        }
+
+                        clearExpressions()
+                        visualizeExpression(rule, svgGroups)
+                
+                        inputBox.node().value = rule.toString()
+                
+                        actionHandler['addLink']();
+                    }
+                }
+            
             } else {
                 // The user has clicked two sites, so add site to rule
                 // Then clear linkClicks
@@ -276,11 +348,14 @@ function isHoveringOverEl(elType, x, y) {
         withinDist: false,
         closestEl: {
             elID: null,
-            distToPointer: Number.MAX_SAFE_INTEGER
+            distToPointer: Number.MAX_SAFE_INTEGER,
+            x: 0,
+            y: 0
         }
     };
 
     let elSet;
+    let minDist = (elType === 'agents' ? 38 : 24);
 
     if (elType === 'agents') {
         elSet = rule.agents;
@@ -294,12 +369,14 @@ function isHoveringOverEl(elType, x, y) {
         let dist = findDistance(el.x, el.y, x, y);
 
         // If you are hovering over an agent
-        if (dist < 38) {
+        if (dist < minDist) {
             response.withinDist = true;
             // Guards against agents that are overlapping
             if (dist < response.closestEl.distToPointer) {
-                response.closestEl.elID = el.id;
+                response.closestEl.elID = el.id;        // DOesn't work w/ sites because sites are an array
                 response.closestEl.distToPointer = dist;
+                response.closestEl.x = el.x;
+                response.closestEl.y = el.y;
             }
         }
     }
@@ -400,6 +477,9 @@ function initializeOverlay() {
 function clearOverlay() {
     overlay.selectAll('circle')
                 .remove()
+
+    overlay.selectAll('line')
+                .remove();
 }
 
 function clearSVGListeners() {
