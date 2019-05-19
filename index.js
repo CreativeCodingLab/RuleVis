@@ -268,6 +268,7 @@ let actionHandler = {
         svg.on('mouseleave', () => {
             document.getElementById('svgDiv').style.cursor = 'auto';
             clearOverlay();
+            linkClicks = 0;
         })
        
         svg.on('click', () => {
@@ -295,9 +296,9 @@ let actionHandler = {
 
                         // Then reset everything
                         linkClicks = 0;
-                        for (var key in linkSiteIDs) {
-                            linkSiteIDs[key] = null;
-                        }
+                        // for (var key in linkSiteIDs) {
+                        //     if (linkSiteIDs[key].value === null) { linkSiteIDs[key] = null; }
+                        // }
 
                         clearExpressions()
                         visualizeExpression(rule, svgGroups)
@@ -306,12 +307,8 @@ let actionHandler = {
                 
                         actionHandler['addLink']();
                     }
-                }
+                } 
             
-            } else {
-                // The user has clicked two sites, so add site to rule
-                // Then clear linkClicks
-                linkClicks = 0;
             }
         })
             
