@@ -289,6 +289,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         }
     },
     deleteNode: function (agentIdx, siteIdx=-1) {
+        console.log("deleteNode "+ agentIdx);
         if (siteIdx == -1) {
             // delete agent by:
 
@@ -305,6 +306,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         }
     },
     deleteEdge: function (linkIdx) {
+        console.log('deleteEdge' + linkIdx);
         // VERIFY: assume link indexes are preserved on lhs, rhs of rule
         
         // find sites whose port has this link

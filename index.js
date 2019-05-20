@@ -214,7 +214,7 @@ let actionHandler = {
             let p = d3.event
             let x = p.pageX - sidebarW;
             let y = p.pageY - headerH;
-            let res = isHoveringOverEl('agents', x, y);
+            let res = isHoveringOverEl();
 
             // check if it is hovering over an agent
             console.log(res)
@@ -244,7 +244,7 @@ let actionHandler = {
 
         svg.on('mousemove', () => {
             let e = d3.event;
-            let res = isHoveringOverEl('sites', (e.pageX - sidebarW), (e.pageY - headerH));
+            let res = isHoveringOverEl();
 
             document.getElementById('svgDiv').style.cursor = 'crosshair';
 
@@ -276,7 +276,7 @@ let actionHandler = {
             let e = d3.event;
 
             if (linkClicks < 2) {
-                let res = isHoveringOverEl('sites', (e.pageX-sidebarW), (e.pageY-headerH));
+                let res = isHoveringOverEl();
                 console.log(res);
 
                 if (res.withinDist) {
@@ -325,11 +325,33 @@ let actionHandler = {
         toggleInput('editState');
     },
     'deleteItem': (data) => {
+        closeInputs();
+        initializeOverlay();
+
         state = 'delete';
 
-        // svg.on('click', () => {
-        //     if (d3.event.srcElement.tagName == "line")
-        // })
+        svg.on('mouseenter', () => {
+            overlay.style('pointer-events', 'none');
+        })
+
+        svg.on('mouseleave', () => {
+            clearOverlay();
+        })
+
+        svg.on('click', () => {
+             let res = isHoveringOverEl();
+             if (res.withinDist) {
+                // Call appropriate backend function whether it's a link or node 
+                if (hovered[0] === 'link') {
+                    //rule.deleteEdge(hovered[1].id, hovered[2])
+                    rule.deleteEdge(hovered[1].id)  // Line above passes side to function 
+                    
+                } else {
+                    //rule.deleteNode(hovered[1].id, hovered[2])
+                    rule.deleteNode(hovered[1].id)
+                }
+             }
+        })
     },
 }
 
@@ -347,12 +369,12 @@ function findDistance(x1, y1, x2, y2) {
 // Looks through all agents to see if pointer overlaps with one; returns closest overlapping agent
 // withinDist: true if pointer is within distance of at least one agent in a group of overlapping agents; 
 // closestAgent: id of agent closest to pointer; distance to that agent
-function isHoveringOverEl(elType, x, y) {
+function isHoveringOverEl() {
     let response = {
         withinDist: false,
         closestEl: {
             elID: null,
-            distToPointer: Number.MAX_SAFE_INTEGER,
+            //distToPointer: Number.MAX_SAFE_INTEGER,
             x: 0,
             y: 0
         }
@@ -385,7 +407,10 @@ function isHoveringOverEl(elType, x, y) {
     } */
     response.withinDist = Boolean(hovered)
     if (hovered) {
-        response.closestEl.elID = hovered[1].id
+        response.closestEl.elID = hovered[1].id;
+        response.closestEl.x = hovered[1].x;
+        response.closestEl.y = hovered[1].y;
+        
     }
     return response;
 }
@@ -548,18 +573,10 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
-<<<<<<< HEAD
-                            .on("mouseenter", function (d) {
-                                console.log(side[i]);
-                                currSide = side[i];
-                                console.log(d);
-                            })
-=======
                             .on("mouseenter", d => {
                                 hovered = ['link', d, side[i]]
                             })
                             .on("mouseleave", () => {hovered = undefined})
->>>>>>> jasmine
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
@@ -576,14 +593,10 @@ function visualizeExpression(rule, group) {
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-<<<<<<< HEAD
-                            .on("mouseenter", function () { console.log(side[i]);currSide = side[i]; } );
-=======
                             .on("mouseenter", d => {
                                 hovered = [d.isAgent ? 'agent': 'site', d, side[i]]
                             })
                             .on("mouseleave", () => {hovered = undefined})
->>>>>>> jasmine
 
         // node annotations
         freeNode[i] = root.append("g")
