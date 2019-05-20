@@ -213,7 +213,6 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                     if (v[w] && v[w].state) res += `{${v[w].state}}`
                     if (res !== '.') siteStrings.push(res)
                 })
-                console.log(siteStrings)
                 // if (siteStrings.length == 0) siteStrings = ['.']
 
                 let name = u[w].name || '.'
@@ -247,7 +246,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         })
     },
     addSite: function (parent, name, x=0, y=0) {
-        let u = this.agents.find(u => u.id == parent)
+        let u = this.agents.find(u => u.id == parent) // TODO: take reference itself as arg
         if (u) {
             let v = new Site(parent, u.siteCount)
             v.name = name
@@ -288,23 +287,46 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             if (u.rhs && w.rhs) {u.rhs.port = k; w.rhs.port = k}
         }
     },
-    deleteNode: function (agentIdx, siteIdx=-1) {
+    deleteNode: function (side, agentIdx, siteIdx=-1) {
         if (siteIdx == -1) {
             // delete agent by:
+            let u = this.agents.find(u => u.id == agentIdx)
 
-            // delete children sites
+            if (u && u.siteCount > 0) {
+                // delete children sites
+                d3.range(u.siteCount).forEach(i =>
+                    this.deleteNode(side, agentIdx, i))
+            }
             // delete self
+            u[side] = new Agent(agentIdx)
+            if (!u.lhs.name && !u.rhs.name)
+                this.agents.splice(agentIdx, 1) // VERIFY
         }
         else {
             // delete sites by:
+            let idx = this.sites.findIndex(v => v.id[0] == agentIdx && v.id[1] == siteIdx),
+                v = this.sites[idx]
 
-            // unbind port
-            // (delete virtual site)
-            // unbind from parents
-            // delete self
+            if (v[side]) {
+                // unbind port
+                let p = v[side].port
+                if (typeof p === 'number') {
+                    this.deleteEdge(side, p)
+                }
+                // (TODO: delete virtual site)
+
+                // unbind from parents
+                rule.parents = rule.parents.filter((({target: tar}) =>
+                    tar.id[0] != v.id[0] || tar.id[1] != v.id[1] ))
+
+                // delete self
+                v[side] = undefined
+                if (!v.lhs && !v.rhs)
+                    this.sites.splice(idx, 1) // VERIFY
+            }
         }
     },
-    deleteEdge: function (linkIdx) {
+    deleteEdge: function (side, linkIdx) {
         // VERIFY: assume link indexes are preserved on lhs, rhs of rule
         
         // find sites whose port has this link

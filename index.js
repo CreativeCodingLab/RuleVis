@@ -516,18 +516,18 @@ function visualizeExpression(rule, group) {
     links = [...rule.bonds.map(u => u.lhs).filter(u => u),
              ...rule.bonds.map(u => u.rhs).filter(u => u),
              ...rule.parents]
-    let noOverlap = d3.range(rule.agents.length - 1)
-                        .map((i) => ({source: i, target: i+1, isLayout: true}))
-                        // HACK - workaround for webcola failing to lay out disconnected graphs
-    console.log(noOverlap)
+    /* let noOverlap = d3.range(rule.agents.length)
+                        .map(i => d3.range(i).map(
+                                    j => ({source: i, target: j, isLayout: true}))  
+                        ).flat() */
+                        // HACK: a poor workaround for webcola failing to lay out disconnected graphs
 
     simulation = cola
         .d3adaptor(d3)
             .size([w/2,h])
             .nodes(nodes)
-            .links([...links, ...noOverlap])
-            .linkDistance(d => d.isLayout ? 80 :
-                               d.isParent ? d.sibCount > 6 ? 45 : d.sibCount > 3 ? 35 : 30 :
+            .links(links) // [...links, ...noOverlap]
+            .linkDistance(d => d.isParent ? d.sibCount > 6 ? 45 : d.sibCount > 3 ? 35 : 30 :
                                80)
             .avoidOverlaps(true)
 
