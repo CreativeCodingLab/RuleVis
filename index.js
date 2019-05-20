@@ -328,6 +328,8 @@ let actionHandler = {
     },
 }
 
+let lastHovered = undefined;
+
 // Calculates the distance between two points (x1, y1) and (x2, y2)
 function findDistance(x1, y1, x2, y2) {
     let xDist = x1 - x2;
@@ -536,7 +538,7 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
-                            .on("mouseenter", d => console.log(d))
+                            .on("mouseenter", (d,j) => {lastHovered = ['link', j, side[i]]})
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
