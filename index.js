@@ -43,7 +43,7 @@ let handleMenuClick = function(e) {
     for (let option = 0; option < menuOptions.length; option++) {
         // id of the menu option clicked
         let currOption = menuOptions[option];
-        // div associated with the id        
+        // div associated with the id
         let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
 
         // If we find the current element, add active class and display associated div
@@ -59,15 +59,15 @@ let handleMenuClick = function(e) {
     }
 }
 for (let i = 0; i < menuOptions.length; i++) {
-    menuOptions[i].addEventListener('click', 
-        function() { handleMenuClick(menuOptions[i]) } 
+    menuOptions[i].addEventListener('click',
+        function() { handleMenuClick(menuOptions[i]) }
     );
 }
 
 // Input:   elementID = id of element to be turned on
 //          type = querySelector string that returns set of elements containing elementID, to be turned off
 // Result:  1) Turns on the visibility of element specified by supplied ID
-//          2) Turns off visibility of other elements of other 
+//          2) Turns off visibility of other elements of other
 /* function toggleVisibility(elementID, typeSelector) {
     let element = document.getElementById(elementID);
     let type = document.querySelectorAll(typeSelector);
@@ -77,7 +77,7 @@ for (let i = 0; i < menuOptions.length; i++) {
         type[i].style.display = 'none';
     }
 
-    // Show input element 
+    // Show input element
     element.style.display = 'block';
 }
 
@@ -109,7 +109,7 @@ function toggleInput(parentDivID) {
 
     let inputID = parentDivID + "Input";
     let inputElement = document.getElementById(inputID);
-    
+
     if (inputElement.style.display == 'block') {
         console.log("hide");
         inputElement.style.display = 'none';
@@ -128,10 +128,10 @@ let actionHandler = {
     'addAgent': () => {
         if (state !== 'addAgent') { toggleInput('addAgent'); }
         //clearExpressions();
-        initializeOverlay();     
+        initializeOverlay();
 
         state = 'addAgent';
-        
+
         if (state === 'addAgent') {
             svg.on('mouseenter', () => {
                 overlay.append('circle')
@@ -145,7 +145,7 @@ let actionHandler = {
             svg.on('mousemove', () => {
                 let e = d3.event
                 //console.log(e.pageX, e.pageY)
-                overlay.select('circle') 
+                overlay.select('circle')
                         .attr('cx', e.pageX - sidebarW)
                         .attr('cy', e.pageY - headerH)
             })
@@ -153,28 +153,28 @@ let actionHandler = {
                 overlay.selectAll('circle')
                         .remove()
             })
-        
+
             svg.on('click', () => {
                 console.log('canvas touched')
-        
+
                 let inputValue = document.getElementById('addAgentInput').value;
                 if (inputValue === '') {
                     inputValue = 'Agent A';
                 }
-        
+
                 let p = d3.event
                 rule.addAgent(inputValue, p.x, p.y)
-        
+
                 clearExpressions()
                 visualizeExpression(rule, svgGroups)
-        
+
                 inputBox.node().value = rule.toString()
 
                 actionHandler['addAgent']();
-        
+
             })
         }
-        
+
     },
     'addSite': () => {
         toggleInput('addSite');
@@ -209,11 +209,10 @@ for (var i = 0; i < guiButtons.length; i++) {
     });
 }
 
-
 // Action associated w/ Download JSON Button
 function downloadJSON(data) {
 
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(CircularJSON.stringify(data));
   var dlAnchorElem = document.getElementById('downloadAnchorElem');
   dlAnchorElem.setAttribute("href", dataStr);
   dlAnchorElem.setAttribute("download", "expression.json");
@@ -234,9 +233,6 @@ uploadBox.on('input', function() {
             svg.append('g').attr('transform', `translate(${w/2},0)`)])
 
 });
-
-
-
 
 
 var svg, svgGroups
@@ -279,7 +275,7 @@ function clearExpressions() {
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
 }
-function initializeOverlay() {    
+function initializeOverlay() {
     // ASSUME agent placement for now
 
     // Need this for this function, other handlers are action-specific in functions
@@ -299,8 +295,8 @@ function visualizeExpression(rule, group) {
     // d3.selectAll("svg > *").remove();
     // subheading.text(JSON.stringify(expression)) // DEBUG
 
-    
-  
+
+
     nodes = [...rule.agents, ...rule.sites]
     nodes.forEach((d) => {
         d.label = d.isAgent ? true :
@@ -427,7 +423,13 @@ function visualizeExpression(rule, group) {
         });
 
     // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
-    jsonBlob = {...rule, text: inputBox.property('value')}
+    // console.log(inputBox.property('value')); -> this is fine
+    // console.log(rule.agents);
+    // console.log(rule.sites)
+    // agents bonds parents sites
+    jsonBlob = {agents: rule.agents, parents: rule.parents, bonds: rule.bonds, sites: rule.sites, text: inputBox.property('value')};
+    console.log(typeof(jsonBlob));
+    console.log(jsonBlob);
     downloadButton.on('click', function() {
       downloadJSON(jsonBlob);
     })
@@ -454,19 +456,9 @@ function addActiveStyle(divID) {
         prevActive[i].classList.remove('gui-button-div-active');
     }
 
-    // Once all active classes are remove, re-add the active class to the divID 
+    // Once all active classes are remove, re-add the active class to the divID
     document.getElementById(divID).classList.add('gui-button-div-active');
     document.getElementById(divID + "Button").classList.add('gui-button-div-active');
-}
-
-// Action associated w/ Download JSON Button
-function downloadJSON(data) {
-
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-  var dlAnchorElem = document.getElementById('downloadAnchorElem');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "expression.json");
-  dlAnchorElem.click();
 }
 
 var uploadBox = exportDiv.append('textarea')
