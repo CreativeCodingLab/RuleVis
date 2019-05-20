@@ -153,7 +153,7 @@ let actionHandler = {
     
             let inputValue = document.getElementById('addAgentInput').value;
             if (inputValue === '') {
-                inputValue = 'Agent A';
+                inputValue = 'A';
             }
     
             let p = d3.event
@@ -208,7 +208,7 @@ let actionHandler = {
             console.log('canvas touched')
             let inputValue = document.getElementById('addSiteInput').value;
             if (inputValue === '') {
-                inputValue = 'Site X';
+                inputValue = 'x';
             }
     
             let p = d3.event
@@ -217,6 +217,7 @@ let actionHandler = {
             let res = isHoveringOverEl('agents', x, y);
 
             // check if it is hovering over an agent
+            console.log(res)
             if (res.withinDist && res.closestEl.elID !== null) {
                 rule.addSite(res.closestEl.elID, inputValue, x, y)
             }
@@ -332,6 +333,8 @@ let actionHandler = {
     },
 }
 
+let hovered = undefined;
+
 // Calculates the distance between two points (x1, y1) and (x2, y2)
 function findDistance(x1, y1, x2, y2) {
     let xDist = x1 - x2;
@@ -354,8 +357,7 @@ function isHoveringOverEl(elType, x, y) {
             y: 0
         }
     };
-
-    let elSet;
+    /* let elSet;
     let minDist = (elType === 'agents' ? 38 : 24);
 
     if (elType === 'agents') {
@@ -380,6 +382,10 @@ function isHoveringOverEl(elType, x, y) {
                 response.closestEl.y = el.y;
             }
         }
+    } */
+    response.withinDist = Boolean(hovered)
+    if (hovered) {
+        response.closestEl.elID = hovered[1].id
     }
     return response;
 }
@@ -542,11 +548,18 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
+<<<<<<< HEAD
                             .on("mouseenter", function (d) {
                                 console.log(side[i]);
                                 currSide = side[i];
                                 console.log(d);
                             })
+=======
+                            .on("mouseenter", d => {
+                                hovered = ['link', d, side[i]]
+                            })
+                            .on("mouseleave", () => {hovered = undefined})
+>>>>>>> jasmine
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
@@ -563,7 +576,14 @@ function visualizeExpression(rule, group) {
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
+<<<<<<< HEAD
                             .on("mouseenter", function () { console.log(side[i]);currSide = side[i]; } );
+=======
+                            .on("mouseenter", d => {
+                                hovered = [d.isAgent ? 'agent': 'site', d, side[i]]
+                            })
+                            .on("mouseleave", () => {hovered = undefined})
+>>>>>>> jasmine
 
         // node annotations
         freeNode[i] = root.append("g")

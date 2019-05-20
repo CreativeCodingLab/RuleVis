@@ -3,7 +3,7 @@ const pattern = new tinynlp.Grammar([
     'pattern -> agent more-pattern | agent',
     'more-pattern -> , pattern',
     
-    'agent -> agent-name ( interface ) | . ( interface ) | agent-name | .', // VERIFY
+    'agent -> agent-name ( interface ) | . ( interface ) | agent-name ( ) | . ( ) | agent-name | .',
     'interface -> site more-interface | site',
     'more-interface -> , interface',
     
@@ -96,24 +96,24 @@ function KappaRule(lhs, rhs) {
                                                 'side': 'lhs'},
                                       'rhs': undefined})
     )
+    console.log(e.map(ei => ei.bonds))
     if (e[1])
-        e[1].bonds.forEach( (raw) => {
+        e[1].bonds.forEach( ([src, tar]) => {
             // merge named bonds only
-            let v = [this.getIndex(raw[0]),
-                     this.getIndex(raw[1])]
+            if (src && tar) { // ignore half-bonds
+                let u = this.bonds.filter(u => u.lhs)
+                                .find((u) => u.lhs.source[0] == src[0] && u.lhs.source[1] == src[1] &&
+                                                u.lhs.target[0] == tar[0] && u.lhs.target[1] == tar[1])
 
-            let u = this.bonds.find((u) => u.lhs.source == v[0] &&
-                                            u.lhs.target == v[1])
-            console.log("merge bonds", u, v)
-
-            let res = {'source': v[0],
-                        'target': v[1],
-                        'side': 'rhs'}
-            if (u === undefined)
-                this.bonds.push({'lhs': undefined,
-                                'rhs': res})
-            else
-                u.rhs = res
+                let res = {'source': this.getIndex(src),
+                            'target':this.getIndex(tar),
+                            'side': 'rhs'}
+                if (u === undefined)
+                    this.bonds.push({'lhs': undefined,
+                                    'rhs': res})
+                else
+                    u.rhs = res
+            }
         })
 
     // generate anonymous agents as needed (TODO: for bonds, too)
@@ -180,7 +180,8 @@ function KappaRule(lhs, rhs) {
 KappaRule.prototype = { // n.b. arrow notation on helper functions would discard 'this' context
     getIndex: function(siteId) {
         // helper function to create links  
-        if (!siteId) throw new Error("expression merger cannot look up a site without its index")
+        if (siteId === undefined)
+            throw new Error("expression merger cannot look up a site without its index")
     
         let [a,b] = siteId
         return this.agents.length +
