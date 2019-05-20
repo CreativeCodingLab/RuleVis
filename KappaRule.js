@@ -281,7 +281,8 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                 k = Math.max(...tmp, 0) + 1 // claim an unused port id */
 
             let ks = d3.range(this.bonds.length).filter(k => !this.bonds[k+1]),
-                k = ks[0] ? ks[0] + 1 : 1
+                k = ks.length > 0 ? ks[0]+2 : 1
+            console.log(ks)
             this.bonds.push(
                 {lhs: u.lhs && w.lhs ? {id: k, 'side': 'lhs',
                                         source: this.getIndex(a), target: this.getIndex(b)} : undefined,
