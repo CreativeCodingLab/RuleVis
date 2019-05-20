@@ -549,7 +549,7 @@ function visualizeExpression(rule, group) {
                             .on("mouseenter", (d,j) => {
                                 hovered = ['link', j, side[i]]
                             })
-                            .on("mouseexit", () => {hovered = undefined})
+                            .on("mouseleave", () => {hovered = undefined})
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
@@ -569,7 +569,7 @@ function visualizeExpression(rule, group) {
                             .on("mouseenter", (d,j) => {
                                 hovered = [d.isAgent ? 'agent': 'site', j, side[i]]
                             })
-                            .on("mouseexit", () => {hovered = undefined})
+                            .on("mouseleave", () => {hovered = undefined})
 
         // node annotations
         freeNode[i] = root.append("g")
