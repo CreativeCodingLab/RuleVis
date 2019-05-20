@@ -280,7 +280,8 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                                                   v.rhs ? v.rhs.port : 0)),
                 k = Math.max(...tmp, 0) + 1 // claim an unused port id */
 
-            let k = d3.range(this.bonds.length).filter(k => !this.bonds[k+1])[0] + 1
+            let ks = d3.range(this.bonds.length).filter(k => !this.bonds[k+1]),
+                k = ks[0] ? ks[0] + 1 : 1
             this.bonds.push(
                 {lhs: u.lhs && w.lhs ? {id: k, 'side': 'lhs',
                                         source: this.getIndex(a), target: this.getIndex(b)} : undefined,
@@ -337,7 +338,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         // find sites whose port has this link
         let friends = this.sites.filter(v => v[side] && v[side].port == index)
         // unbind them
-        friends.forEach(v => v.port = undefined)
+        friends.forEach(v => v[side].port = undefined)
 
         let idx = this.bonds.findIndex(bnd => bnd[side] && bnd[side].id == index ),
             bnd = idx != -1 ? this.bonds[idx] : undefined
