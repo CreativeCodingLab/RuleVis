@@ -323,8 +323,12 @@ let actionHandler = {
     'editState': () => {
         toggleInput('editState');
     },
-    'deleteItem': () => {
-        alert("delete");
+    'deleteItem': (data) => {
+        state = 'delete';
+
+        // svg.on('click', () => {
+        //     if (d3.event.srcElement.tagName == "line")
+        // })
     },
 }
 
@@ -521,6 +525,8 @@ function visualizeExpression(rule, group) {
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
+    let currSide;
+    let currLink = null;        // Stores index of current link; null if not over it
 
     // visualization stores
     let link = [], node = [], freeNode = [],
@@ -536,7 +542,11 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
-                            .on("mouseenter", d => console.log(d))
+                            .on("mouseenter", function (d) {
+                                console.log(side[i]);
+                                currSide = side[i];
+                                console.log(d);
+                            })
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
@@ -552,7 +562,8 @@ function visualizeExpression(rule, group) {
                                                d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
-                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
+                            .on("mouseenter", function () { console.log(side[i]);currSide = side[i]; } );
 
         // node annotations
         freeNode[i] = root.append("g")
@@ -563,7 +574,8 @@ function visualizeExpression(rule, group) {
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black")
-                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
+                            .on("mouseenter", function () { currSide = side[i]; } );
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)
@@ -600,6 +612,12 @@ function visualizeExpression(rule, group) {
                 d3.select(this).selectAll('text').style('opacity', 0);
             }
         });
+        link[i].on("click", function (d, i) {
+            if (state === 'delete') {
+                console.log(d);
+                //actionHandler['deleteItem'](d);
+            }
+        })
     })
 
     simulation.on("tick", () => {
