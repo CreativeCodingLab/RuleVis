@@ -153,7 +153,7 @@ let actionHandler = {
     
             let inputValue = document.getElementById('addAgentInput').value;
             if (inputValue === '') {
-                inputValue = 'Agent A';
+                inputValue = 'A';
             }
     
             let p = d3.event
@@ -208,7 +208,7 @@ let actionHandler = {
             console.log('canvas touched')
             let inputValue = document.getElementById('addSiteInput').value;
             if (inputValue === '') {
-                inputValue = 'Site X';
+                inputValue = 'x';
             }
     
             let p = d3.event
@@ -328,7 +328,7 @@ let actionHandler = {
     },
 }
 
-let lastHovered = undefined;
+let hovered = undefined;
 
 // Calculates the distance between two points (x1, y1) and (x2, y2)
 function findDistance(x1, y1, x2, y2) {
@@ -379,6 +379,14 @@ function isHoveringOverEl(elType, x, y) {
             }
         }
     }
+    /* response.withinDist = Boolean(hovered)
+    if (hovered) {
+        response.closestEl.elId = {
+            site: rule.sites[hovered[1]],
+            agent: rule.agents[hovered[1]],
+            link: rule.bonds[hovered[1]]
+        }[hovered[0]]
+    } */
     return response;
 }
 
@@ -538,7 +546,10 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
-                            .on("mouseenter", (d,j) => {lastHovered = ['link', j, side[i]]})
+                            .on("mouseenter", (d,j) => {
+                                hovered = ['link', j, side[i]]
+                            })
+                            .on("mouseexit", () => {hovered = undefined})
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
@@ -554,7 +565,11 @@ function visualizeExpression(rule, group) {
                                                d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
-                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
+                            .on("mouseenter", (d,j) => {
+                                hovered = [d.isAgent ? 'agent': 'site', j, side[i]]
+                            })
+                            .on("mouseexit", () => {hovered = undefined})
 
         // node annotations
         freeNode[i] = root.append("g")

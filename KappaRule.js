@@ -101,7 +101,8 @@ function KappaRule(lhs, rhs) {
         e[1].bonds.forEach( ([src, tar]) => {
             // merge named bonds only
             if (src && tar) { // ignore half-bonds
-                let u = this.bonds.find((u) => u.lhs.source[0] == src[0] && u.lhs.source[1] == src[1] &&
+                let u = this.bonds.filter(u => u.lhs)
+                                .find((u) => u.lhs.source[0] == src[0] && u.lhs.source[1] == src[1] &&
                                                 u.lhs.target[0] == tar[0] && u.lhs.target[1] == tar[1])
 
                 let res = {'source': this.getIndex(src),
