@@ -34,79 +34,16 @@ window.addEventListener('resize', onWindowResize, false)
 window.addEventListener('load', function() {
     onWindowResize() // initialize metrics
     clearExpressions() // initialize canvas
+
+    trace = localStorage.getItem('trace')
+    trace = trace ? trace.split(';') : []
+
+    let res = trace.slice(-1)[0]
+    rule = new KappaRule(...res.split('->'))
+
+    inputBox.node().value = rule.toString()
+    updateExpression(res)
 })
-
-let handleMenuClick = function(e) {
-    // Id of newly clicked element
-    let itemID = e.id;
-
-    for (let option = 0; option < menuOptions.length; option++) {
-        // id of the menu option clicked
-        let currOption = menuOptions[option];
-        // div associated with the id        
-        let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
-
-        // If we find the current element, add active class and display associated div
-        if (currOption.id === itemID) {
-            currOption.classList.add('active');
-            currOptionDiv.style.display = 'block';
-        } else {
-            if (currOption.classList.contains('active')) {
-                currOption.classList.remove('active');
-            }
-            currOptionDiv.style.display = 'none';
-        }
-
-        // If switching to a non-GUI tab, remove SVG mouse interactions and overlay
-        if (currOption.id !== 'gui') {
-            actionHandler['noEdit']();
-        }
-    }
-}
-for (let i = 0; i < menuOptions.length; i++) {
-    menuOptions[i].addEventListener('click', 
-        function() { handleMenuClick(menuOptions[i]) } 
-    );
-}
-
-
-// Reveals an input field if user clicks on a gui editor button
-function toggleInput(parentDivID) {
-    console.log("parentDivID = " + parentDivID);
-
-    let inputID = parentDivID + "Input";
-    let inputElement = document.getElementById(inputID);
-    closeInputs();
-    inputElement.style.display = 'block';
-}
-
-// Closes all input tabs
-function closeInputs() {
-    let allInputs = document.getElementsByClassName('gui-input');
-
-    for (var i = 0; i < allInputs.length; i++) {
-        allInputs[i].style.display = 'none';
-        allInputs[i].value = '';
-    }
-}
-
-
-
-var overlay;
-var state = 'noEdit';
-var linkClicks = 0;       // Keeps track of how many times 
-var linkSiteIDs = {       // Stores sites for adding link
-    first: {
-        id: null,
-        x: null,
-        y: null
-    },
-    second: {
-        id: null,
-        x: null,
-        y: null
-    }
-};         // Stores IDs and coordinates of a new link
 
 // Directs to appropriate gui function based on button
 let actionHandler = {
@@ -222,10 +159,8 @@ let actionHandler = {
                 rule.addSite(res.closestEl.elID, inputValue, x, y)
             }
         
-            clearExpressions()
-            visualizeExpression(rule, svgGroups)
-    
             inputBox.node().value = rule.toString()
+            updateExpression(inputBox.node().value)
     
             actionHandler['addSite']();
         })
@@ -301,11 +236,9 @@ let actionHandler = {
                         //     if (linkSiteIDs[key].value === null) { linkSiteIDs[key] = null; }
                         // }
 
-                        clearExpressions()
-                        visualizeExpression(rule, svgGroups)
-                
                         inputBox.node().value = rule.toString()
-                
+                        updateExpression(inputBox.node().value)
+
                         actionHandler['addLink']();
                     }
                 } 
@@ -350,13 +283,87 @@ let actionHandler = {
                 }
              }
 
-             // VERIFY: is this consistent with our update pattern?
-             clearExpressions()
-             visualizeExpression(rule, svgGroups)
              inputBox.node().value = rule.toString()
+             updateExpression(inputBox.node().value)
+
+             actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
     },
 }
+
+let handleMenuClick = function(e) {
+    // Id of newly clicked element
+    let itemID = e.id;
+
+    for (let option = 0; option < menuOptions.length; option++) {
+        // id of the menu option clicked
+        let currOption = menuOptions[option];
+        // div associated with the id        
+        let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
+
+        // If we find the current element, add active class and display associated div
+        if (currOption.id === itemID) {
+            currOption.classList.add('active');
+            currOptionDiv.style.display = 'block';
+        } else {
+            if (currOption.classList.contains('active')) {
+                currOption.classList.remove('active');
+            }
+            currOptionDiv.style.display = 'none';
+        }
+
+        // If switching to a non-GUI tab, remove SVG mouse interactions and overlay
+        if (currOption.id !== 'gui') {
+            actionHandler['noEdit']();
+        }
+    }
+}
+for (let i = 0; i < menuOptions.length; i++) {
+    menuOptions[i].addEventListener('click', 
+        function() { handleMenuClick(menuOptions[i]) } 
+    );
+}
+
+
+// Reveals an input field if user clicks on a gui editor button
+function toggleInput(parentDivID) {
+    console.log("parentDivID = " + parentDivID);
+
+    let inputID = parentDivID + "Input";
+    let inputElement = document.getElementById(inputID);
+    closeInputs();
+    inputElement.style.display = 'block';
+}
+
+// Closes all input tabs
+function closeInputs() {
+    let allInputs = document.getElementsByClassName('gui-input');
+
+    for (var i = 0; i < allInputs.length; i++) {
+        allInputs[i].style.display = 'none';
+        allInputs[i].value = '';
+    }
+}
+
+// record of strings explored this session
+let trace = []
+
+var overlay;
+var state = 'noEdit';
+var linkClicks = 0;       // Keeps track of how many times 
+var linkSiteIDs = {       // Stores sites for adding link
+    first: {
+        id: null,
+        x: null,
+        y: null
+    },
+    second: {
+        id: null,
+        x: null,
+        y: null
+    }
+};         // Stores IDs and coordinates of a new link
+
 
 let hovered = undefined;
 
@@ -472,13 +479,24 @@ function downloadSVG() {
     d3_save_svg.save(d3.select('#svg').node(), config);
 }
 
+function updateExpression(str) {
+    console.log('store ' + str)
+
+    trace.push(str)
+    localStorage.setItem('trace', trace.join(';'))
+
+    clearExpressions()
+    visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
+}
+
+
 let rule = new KappaRule('') // TODO: handle empty string gracefully
 
 inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
-    clearExpressions()
 
-    visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
+    // HACK: implicitly fails if the KappaRule is invalid.
+    updateExpression(inputBox.property('value'))
 });
 
 function clearExpressions() {
@@ -533,9 +551,7 @@ var colorsite = '#fcc84e';
 
 function visualizeExpression(rule, group) {
     // d3.selectAll("svg > *").remove();
-    // subheading.text(JSON.stringify(expression)) // DEBUG
-
-    
+    // subheading.text(JSON.stringify(expression))
   
     nodes = [...rule.agents, ...rule.sites]
     nodes.forEach((d) => {
@@ -598,8 +614,7 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", d => d.isAgent ? 27 : 13)
-                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
-                                               d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
