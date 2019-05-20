@@ -90,15 +90,17 @@ function KappaRule(lhs, rhs) {
                                 }))
     // treat bonds (site-site links)
     this.bonds = e[0].bonds
-                .filter(bnd => bnd && bnd[1])
-                .map(([src,tar]) => ({'lhs': {'source': this.getIndex(src),
+                .map((u,k) => [u,k]) // enumerate
+                .filter(bnd => bnd[0] && bnd[0][1])
+                .map(([[src,tar],k]) => ({'lhs': {'source': this.getIndex(src),
                                                 'target': this.getIndex(tar),
-                                                'side': 'lhs'},
-                                      'rhs': undefined})
+                                                'side': 'lhs',
+                                                'id': k},
+                                          'rhs': undefined})
     )
     console.log(e.map(ei => ei.bonds))
     if (e[1])
-        e[1].bonds.forEach( ([src, tar]) => {
+        e[1].bonds.forEach( ([src, tar], k) => {
             // merge named bonds only
             if (src && tar) { // ignore half-bonds
                 let u = this.bonds.filter(u => u.lhs)
@@ -107,7 +109,8 @@ function KappaRule(lhs, rhs) {
 
                 let res = {'source': this.getIndex(src),
                             'target':this.getIndex(tar),
-                            'side': 'rhs'}
+                            'side': 'rhs',
+                            'id': k}
                 if (u === undefined)
                     this.bonds.push({'lhs': undefined,
                                     'rhs': res})
@@ -273,41 +276,41 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         let u = this.sites.find(v => v.id[0] == a[0] && v.id[1] == a[1]),
             w = this.sites.find(v => v.id[0] == b[0] && v.id[1] == b[1])
         if (u && w) {
-            this.bonds.push(
-                {lhs: u.lhs && w.lhs ? {'side': 'lhs', source: this.getIndex(a),
-                                            target: this.getIndex(b)} : undefined,
-                 rhs: u.rhs && w.rhs ? {'side': 'rhs', source: this.getIndex(a),
-                                            target: this.getIndex(b)} : undefined,
-                 })
             let tmp = this.sites.map(v => Math.max(v.lhs ? v.lhs.port : 0,
                                                   v.rhs ? v.rhs.port : 0)),
                 k = Math.max(...tmp, 0) + 1 // claim an unused port id
+            this.bonds.push(
+                {lhs: u.lhs && w.lhs ? {id: k, 'side': 'lhs',
+                                        source: this.getIndex(a), target: this.getIndex(b)} : undefined,
+                 rhs: u.rhs && w.rhs ? {id: k, 'side': 'rhs',
+                                        source: this.getIndex(a), target: this.getIndex(b)} : undefined,
+                 })
 
             if (u.lhs && w.lhs) {u.lhs.port = k; w.lhs.port = k}
             if (u.rhs && w.rhs) {u.rhs.port = k; w.rhs.port = k}
         }
     },
-    deleteNode: function (side, agentIdx, siteIdx=-1) {
-        if (siteIdx == -1) {
+    deleteNode: function (side, index) {
+        if (index.length != 2) {
             // delete agent by:
-            let u = this.agents.find(u => u.id == agentIdx)
+            let u = this.agents.find(u => u.id == index)
 
             if (u && u.siteCount > 0) {
                 // delete children sites
                 d3.range(u.siteCount).forEach(i =>
-                    this.deleteNode(side, agentIdx, i))
+                    this.deleteNode(side, [index, i]))
             }
             // delete self
-            u[side] = new Agent(agentIdx)
+            u[side] = new Agent(index)
             if (!u.lhs.name && !u.rhs.name)
-                this.agents.splice(agentIdx, 1) // VERIFY
+                this.agents.splice(index, 1) // VERIFY
         }
         else {
             // delete sites by:
-            let idx = this.sites.findIndex(v => v.id[0] == agentIdx && v.id[1] == siteIdx),
-                v = this.sites[idx]
+            let idx = this.sites.findIndex(v => v.id[0] == index[0] && v.id[1] == index[1]),
+                v = idx != -1 ? this.sites[idx] : undefined
 
-            if (v[side]) {
+            if (v && v[side]) {
                 // unbind port
                 let p = v[side].port
                 if (typeof p === 'number') {
@@ -326,11 +329,22 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             }
         }
     },
-    deleteEdge: function (side, linkIdx) {
+    deleteEdge: function (side, index) {
         // VERIFY: assume link indexes are preserved on lhs, rhs of rule
         
         // find sites whose port has this link
+        let friends = this.sites.filter(v => v[side] && v[side].port == index)
         // unbind them
+        friends.forEach(v => v.port = undefined)
+
+        let idx = this.bonds.findIndex(bnd => bnd[side] && bnd[side].id == index ),
+            bnd = idx != -1 ? this.bonds[idx] : undefined
+
+        if (bnd) {
+            bnd[side] = undefined
+            if (!bnd.lhs && !bnd.rhs)
+                this.bonds.splice(idx, 1)
+        }
     }
 }
 

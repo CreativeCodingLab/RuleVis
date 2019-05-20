@@ -214,7 +214,7 @@ let actionHandler = {
             let p = d3.event
             let x = p.pageX - sidebarW;
             let y = p.pageY - headerH;
-            let res = isHoveringOverEl('agents', x, y);
+            let res = isHoveringOverEl();
 
             // check if it is hovering over an agent
             console.log(res)
@@ -244,7 +244,7 @@ let actionHandler = {
 
         svg.on('mousemove', () => {
             let e = d3.event;
-            let res = isHoveringOverEl('sites', (e.pageX - sidebarW), (e.pageY - headerH));
+            let res = isHoveringOverEl();
 
             document.getElementById('svgDiv').style.cursor = 'crosshair';
 
@@ -276,7 +276,7 @@ let actionHandler = {
             let e = d3.event;
 
             if (linkClicks < 2) {
-                let res = isHoveringOverEl('sites', (e.pageX-sidebarW), (e.pageY-headerH));
+                let res = isHoveringOverEl();
                 console.log(res);
 
                 if (res.withinDist) {
@@ -324,8 +324,37 @@ let actionHandler = {
     'editState': () => {
         toggleInput('editState');
     },
-    'deleteItem': () => {
-        alert("delete");
+    'deleteItem': (data) => {
+        closeInputs();
+        initializeOverlay();
+
+        state = 'delete';
+
+        svg.on('mouseenter', () => {
+            overlay.style('pointer-events', 'none');
+        })
+
+        svg.on('mouseleave', () => {
+            clearOverlay();
+        })
+
+        svg.on('click', () => {
+             let res = isHoveringOverEl();
+             if (res.withinDist) {
+                // Call appropriate backend function whether it's a link or node 
+                if (hovered[0] === 'link') {
+                    rule.deleteEdge(hovered[2], hovered[1].id)  // Line above passes side to function 
+                    
+                } else {
+                    rule.deleteNode(hovered[2], hovered[1].id)
+                }
+             }
+
+             // VERIFY: is this consistent with our update pattern?
+             clearExpressions()
+             visualizeExpression(rule, svgGroups)
+             inputBox.node().value = rule.toString()
+        })
     },
 }
 
@@ -343,12 +372,12 @@ function findDistance(x1, y1, x2, y2) {
 // Looks through all agents to see if pointer overlaps with one; returns closest overlapping agent
 // withinDist: true if pointer is within distance of at least one agent in a group of overlapping agents; 
 // closestAgent: id of agent closest to pointer; distance to that agent
-function isHoveringOverEl(elType, x, y) {
+function isHoveringOverEl() {
     let response = {
         withinDist: false,
         closestEl: {
             elID: null,
-            distToPointer: Number.MAX_SAFE_INTEGER,
+            //distToPointer: Number.MAX_SAFE_INTEGER,
             x: 0,
             y: 0
         }
@@ -381,7 +410,10 @@ function isHoveringOverEl(elType, x, y) {
     } */
     response.withinDist = Boolean(hovered)
     if (hovered) {
-        response.closestEl.elID = hovered[1].id
+        response.closestEl.elID = hovered[1].id;
+        response.closestEl.x = hovered[1].x;
+        response.closestEl.y = hovered[1].y;
+        
     }
     return response;
 }
@@ -534,6 +566,8 @@ function visualizeExpression(rule, group) {
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
+    let currSide;
+    let currLink = null;        // Stores index of current link; null if not over it
 
     // visualization stores
     let link = [], node = [], freeNode = [],
@@ -583,7 +617,8 @@ function visualizeExpression(rule, group) {
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black")
-                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
+                            .on("mouseenter", function () { currSide = side[i]; } );
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)
@@ -620,6 +655,12 @@ function visualizeExpression(rule, group) {
                 d3.select(this).selectAll('text').style('opacity', 0);
             }
         });
+        link[i].on("click", function (d, i) {
+            if (state === 'delete') {
+                console.log(d);
+                //actionHandler['deleteItem'](d);
+            }
+        })
     })
 
     simulation.on("tick", () => {
