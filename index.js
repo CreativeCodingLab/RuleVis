@@ -516,14 +516,21 @@ function visualizeExpression(rule, group) {
     links = [...rule.bonds.map(u => u.lhs).filter(u => u),
              ...rule.bonds.map(u => u.rhs).filter(u => u),
              ...rule.parents]
-    simulation = cola.d3adaptor(d3)
-        .size([w/2,h])
-        .nodes(nodes)
-        .links(links)
-        .linkDistance(d => !d.isParent ? 80 :
-                            d.sibCount > 6 ? 45 :
-                            d.sibCount > 3 ? 35 : 30)
-        .avoidOverlaps(true);
+    let noOverlap = d3.range(rule.agents.length - 1)
+                        .map((i) => ({source: i, target: i+1, isLayout: true}))
+                        // HACK - workaround for webcola failing to lay out disconnected graphs
+    console.log(noOverlap)
+
+    simulation = cola
+        .d3adaptor(d3)
+            .size([w/2,h])
+            .nodes(nodes)
+            .links([...links, ...noOverlap])
+            .linkDistance(d => d.isLayout ? 80 :
+                               d.isParent ? d.sibCount > 6 ? 45 : d.sibCount > 3 ? 35 : 30 :
+                               80)
+            .avoidOverlaps(true)
+
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
