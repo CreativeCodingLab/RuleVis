@@ -3,7 +3,7 @@ const pattern = new tinynlp.Grammar([
     'pattern -> agent more-pattern | agent',
     'more-pattern -> , pattern',
     
-    'agent -> agent-name ( interface ) | . ( interface ) | agent-name | .', // VERIFY
+    'agent -> agent-name ( interface ) | . ( interface ) | agent-name ( ) | . ( ) | agent-name | .',
     'interface -> site more-interface | site',
     'more-interface -> , interface',
     
