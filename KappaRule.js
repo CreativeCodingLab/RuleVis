@@ -276,9 +276,11 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         let u = this.sites.find(v => v.id[0] == a[0] && v.id[1] == a[1]),
             w = this.sites.find(v => v.id[0] == b[0] && v.id[1] == b[1])
         if (u && w) {
-            let tmp = this.sites.map(v => Math.max(v.lhs ? v.lhs.port : 0,
+            /* let tmp = this.sites.map(v => Math.max(v.lhs ? v.lhs.port : 0,
                                                   v.rhs ? v.rhs.port : 0)),
-                k = Math.max(...tmp, 0) + 1 // claim an unused port id
+                k = Math.max(...tmp, 0) + 1 // claim an unused port id */
+
+            let k = d3.range(this.bonds.length).filter(k => !this.bonds[k+1])[0] + 1
             this.bonds.push(
                 {lhs: u.lhs && w.lhs ? {id: k, 'side': 'lhs',
                                         source: this.getIndex(a), target: this.getIndex(b)} : undefined,
