@@ -217,6 +217,7 @@ let actionHandler = {
             let res = isHoveringOverEl('agents', x, y);
 
             // check if it is hovering over an agent
+            console.log(res)
             if (res.withinDist && res.closestEl.elID !== null) {
                 rule.addSite(res.closestEl.elID, inputValue, x, y)
             }
@@ -352,8 +353,7 @@ function isHoveringOverEl(elType, x, y) {
             y: 0
         }
     };
-
-    let elSet;
+    /* let elSet;
     let minDist = (elType === 'agents' ? 38 : 24);
 
     if (elType === 'agents') {
@@ -378,15 +378,11 @@ function isHoveringOverEl(elType, x, y) {
                 response.closestEl.y = el.y;
             }
         }
-    }
-    /* response.withinDist = Boolean(hovered)
-    if (hovered) {
-        response.closestEl.elId = {
-            site: rule.sites[hovered[1]],
-            agent: rule.agents[hovered[1]],
-            link: rule.bonds[hovered[1]]
-        }[hovered[0]]
     } */
+    response.withinDist = Boolean(hovered)
+    if (hovered) {
+        response.closestEl.elID = hovered[1].id
+    }
     return response;
 }
 
@@ -546,8 +542,8 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
-                            .on("mouseenter", (d,j) => {
-                                hovered = ['link', j, side[i]]
+                            .on("mouseenter", d => {
+                                hovered = ['link', d, side[i]]
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
@@ -566,8 +562,8 @@ function visualizeExpression(rule, group) {
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            .on("mouseenter", (d,j) => {
-                                hovered = [d.isAgent ? 'agent': 'site', j, side[i]]
+                            .on("mouseenter", d => {
+                                hovered = [d.isAgent ? 'agent': 'site', d, side[i]]
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
