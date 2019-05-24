@@ -163,6 +163,7 @@ let actionHandler = {
             visualizeExpression(rule, svgGroups)
     
             inputBox.node().value = rule.toString()
+            updateTrace();
     
             actionHandler['addAgent']();
     
@@ -227,6 +228,7 @@ let actionHandler = {
     
             inputBox.node().value = rule.toString()
             trace.push(inputBox.node().value)
+            updateTrace();
     
             actionHandler['addSite']();
         })
@@ -307,6 +309,7 @@ let actionHandler = {
                 
                         inputBox.node().value = rule.toString()
                         trace.push(inputBox.node().value)
+                        updateTrace();
 
                         actionHandler['addLink']();
                     }
@@ -352,6 +355,7 @@ let actionHandler = {
 
              inputBox.node().value = rule.toString()
              trace.push(inputBox.node().value)
+             updateTrace();
 
              actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
@@ -365,6 +369,33 @@ let actionHandler = {
     'editState': () => {
         toggleInput('editState');
     }, */
+}
+
+function updateTrace() {
+    // Iterate backwards over trace for five steps
+    // In menu, most recent changes will be shown first
+    for (var i = 0; i < 5; i++) {
+        let currID = 'trace' + i;
+        console.log(currID);
+        
+        let option = document.getElementById(currID);
+        console.log(option);
+
+        // if the option doesn't exist yet, create it by appending to gui div
+        if (option === null) {
+            let guiDiv = document.getElementById('guiDiv');
+            let div = document.createElement("div");
+            div.id = currID;
+            div.className = 'undo-options';
+            guiDiv.appendChild(div);
+            option = div;
+        }
+        // if there is another element 
+        if (trace[trace.length - i - 1]) {
+            console.log(trace[trace.length-i-1]);
+            option.innerHTML = trace[trace.length - i - 1];
+        }
+    }
 }
 
 let hovered = undefined;
@@ -391,32 +422,6 @@ function isHoveringOverEl() {
             y: 0
         }
     };
-    /* let elSet;
-    let minDist = (elType === 'agents' ? 38 : 24);
-
-    if (elType === 'agents') {
-        elSet = rule.agents;
-    } else if (elType === 'sites') {
-        elSet = rule.sites;
-    }
-
-    // Look through all existing agents to see if pointer is overlapping with an element 
-    for (var i = 0; i < elSet.length; i++) {
-        let el = elSet[i];
-        let dist = findDistance(el.x, el.y, x, y);
-
-        // If you are hovering over an agent
-        if (dist < minDist) {
-            response.withinDist = true;
-            // Guards against agents that are overlapping
-            if (dist < response.closestEl.distToPointer) {
-                response.closestEl.elID = el.id;        // DOesn't work w/ sites because sites are an array
-                response.closestEl.distToPointer = dist;
-                response.closestEl.x = el.x;
-                response.closestEl.y = el.y;
-            }
-        }
-    } */
     response.withinDist = Boolean(hovered)
     if (hovered) {
         response.closestEl.elID = hovered[1].id;
