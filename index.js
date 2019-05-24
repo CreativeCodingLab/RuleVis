@@ -589,7 +589,7 @@ function visualizeExpression(rule, group) {
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", d => d.isAgent ? 27 : 13)
                             .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
-                                               d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
+                                               d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
