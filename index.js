@@ -572,15 +572,21 @@ function visualizeExpression(rule, group) {
                                     j => ({source: i, target: j, isLayout: true}))  
                         ).flat() */
                         // HACK: a poor workaround for webcola failing to lay out disconnected graphs
+    let nodesAndBounds = [...nodes,
+        {x: 0, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'left'}},
+        {x: w/2, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'right'}}]
 
     simulation = cola
         .d3adaptor(d3)
             .size([w/2,h])
-            .nodes(nodes)
+            .nodes(nodesAndBounds)
             .links(links) // [...links, ...noOverlap]
-            .linkDistance(d => d.isParent ? d.sibCount > 6 ? 45 : d.sibCount > 3 ? 35 : 30 :
-                               80)
+            .linkDistance(d => d.isParent ? d.sibCount > 6 ? 45 : d.sibCount > 3 ? 35 : 30 : 80)
             .avoidOverlaps(true)
+            .constraints(d3.range(nodes.length-1).map( i =>
+                [{axis: 'x', type: 'separation', right: i, left: nodes.length, gap: 27},
+                 {axis: 'x', type: 'separation', left: i, right: nodes.length+1, gap: 27}] )
+                .flat())
 
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
