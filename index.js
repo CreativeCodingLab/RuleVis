@@ -162,8 +162,9 @@ let actionHandler = {
             clearExpressions()
             visualizeExpression(rule, svgGroups)
     
-            inputBox.node().value = rule.toString()
-            updateTrace();
+            inputBox.node().value = rule.toString();
+            trace.push(inputBox.node().value);
+            updateTraceGUI();
     
             actionHandler['addAgent']();
     
@@ -228,7 +229,7 @@ let actionHandler = {
     
             inputBox.node().value = rule.toString()
             trace.push(inputBox.node().value)
-            updateTrace();
+            updateTraceGUI();
     
             actionHandler['addSite']();
         })
@@ -309,7 +310,7 @@ let actionHandler = {
                 
                         inputBox.node().value = rule.toString()
                         trace.push(inputBox.node().value)
-                        updateTrace();
+                        updateTraceGUI();
 
                         actionHandler['addLink']();
                     }
@@ -355,7 +356,7 @@ let actionHandler = {
 
              inputBox.node().value = rule.toString()
              trace.push(inputBox.node().value)
-             updateTrace();
+             updateTraceGUI();
 
              actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
@@ -375,7 +376,7 @@ function undo(updateString) {
     console.log(updateString);
 }
 
-function updateTrace() {
+function updateTraceGUI() {
     // Iterate backwards over trace for five steps
     // In menu, most recent changes will be shown first
     for (var i = 0; i < 5; i++) {        
@@ -391,7 +392,7 @@ function updateTrace() {
                     div.id = currID;
                     div.className = 'undo-options';
                     div.addEventListener('click', function() {
-                        // Handle undo
+                        // Pass the string to undo function
                         undo(div.innerHTML);
                     })
                 guiDiv.appendChild(div);
@@ -500,6 +501,7 @@ inputBox.on("input", () => {
 
     clearExpressions()
     visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
+    updateTraceGUI();
 });
 
 function clearExpressions() {
