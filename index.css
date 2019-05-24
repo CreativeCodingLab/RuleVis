@@ -31,7 +31,7 @@ p {
     font-size: 20px;
     letter-spacing: 0px;
     line-height: 1;
-    text-align: center;
+    /* text-align: center; */
 }
 
 button {
@@ -46,6 +46,10 @@ button:focus {
 
 button:hover {
     cursor: pointer;
+}
+
+input {
+    padding: 10px;
 }
 
 /*----------------------GENERAL DOM ELEMENTS------------------------*/
@@ -147,15 +151,39 @@ textarea:focus {
     width: 100%;
 }
 
+.gui-button-div p {
+    font-size: 13px;
+    text-align: center;
+}
+
 div.gui-button-div > input[type=text] {
     width: calc(100% - 60px);
     display: none;
-    padding: 10px;
     margin: 15px 20px;
 }
 
 div.gui-button-div > input[type=text]:focus {
     outline: none;
+}
+
+div.gui-button-div > select {
+    width: 100%;
+    border: none;
+}
+
+div.gui-button-div > select:focus {
+    outline: none;
+    
+}
+
+div.gui-button-div > select option {
+    padding: 10px;
+    font-size: 13px;
+}
+
+div.gui-button-div > select option:hover {
+    cursor: pointer;
+    background-color: #eeeeee;
 }
 
 .gui-button-div-active {
