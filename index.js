@@ -248,15 +248,6 @@ let actionHandler = {
             
 
     },
-    'editAgent': () => {
-        toggleInput('editAgent');
-    },
-    'editSite': () => {
-        toggleInput('editSite');
-    },
-    'editState': () => {
-        toggleInput('editState');
-    },
     'deleteItem': (data) => {
         closeInputs();
         initializeOverlay();
@@ -276,10 +267,13 @@ let actionHandler = {
              if (res.withinDist) {
                 // Call appropriate backend function whether it's a link or node 
                 if (hovered[0] === 'link') {
-                    rule.deleteEdge(hovered[2], hovered[1].id)  // Line above passes side to function 
+                    rule.deleteBond(hovered[2], hovered[1].id)  // Line above passes side to function 
                     
-                } else {
-                    rule.deleteNode(hovered[2], hovered[1].id)
+                } else if (hovered[0] === 'agent') {
+                    rule.deleteAgent(hovered[2], hovered[1].id)
+                }
+                else {
+                    rule.deleteSite(hovered[1].id)
                 }
              }
 
@@ -289,6 +283,15 @@ let actionHandler = {
              actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
     },
+    /* 'editAgent': () => {
+        toggleInput('editAgent');
+    },
+    'editSite': () => {
+        toggleInput('editSite');
+    },
+    'editState': () => {
+        toggleInput('editState');
+    }, */
 }
 
 let handleMenuClick = function(e) {
@@ -614,7 +617,7 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", d => d.isAgent ? 27 : 13)
-                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :colorsite)
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" : colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
@@ -633,7 +636,7 @@ function visualizeExpression(rule, group) {
                             .attr("r", 4)
                             .attr("fill", "black")
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            .on("mouseenter", function () { currSide = side[i]; } );
+                            // .on("mouseenter", function () { currSide = side[i]; } );
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)
