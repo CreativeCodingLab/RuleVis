@@ -90,7 +90,7 @@ function closeInputs() {
     }
 }
 
-
+let trace = [] // record of strings explored this session
 
 var overlay;
 var state = 'noEdit';
@@ -226,6 +226,7 @@ let actionHandler = {
             visualizeExpression(rule, svgGroups)
     
             inputBox.node().value = rule.toString()
+            trace.push(inputBox.node().value)
     
             actionHandler['addSite']();
         })
@@ -305,6 +306,8 @@ let actionHandler = {
                         visualizeExpression(rule, svgGroups)
                 
                         inputBox.node().value = rule.toString()
+                        trace.push(inputBox.node().value)
+
                         actionHandler['addLink']();
                     }
                 } 
@@ -348,6 +351,8 @@ let actionHandler = {
              visualizeExpression(rule, svgGroups)
 
              inputBox.node().value = rule.toString()
+             trace.push(inputBox.node().value)
+
              actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
     },
@@ -480,8 +485,9 @@ let rule = new KappaRule('') // TODO: handle empty string gracefully
 
 inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
-    clearExpressions()
+    trace.push(inputBox.property('value')) // HACK: implicitly fails if the KappaRule is invalid.
 
+    clearExpressions()
     visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 });
 
