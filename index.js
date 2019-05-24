@@ -305,7 +305,6 @@ let actionHandler = {
                         visualizeExpression(rule, svgGroups)
                 
                         inputBox.node().value = rule.toString()
-                
                         actionHandler['addLink']();
                     }
                 } 
@@ -314,15 +313,6 @@ let actionHandler = {
         })
             
 
-    },
-    'editAgent': () => {
-        toggleInput('editAgent');
-    },
-    'editSite': () => {
-        toggleInput('editSite');
-    },
-    'editState': () => {
-        toggleInput('editState');
     },
     'deleteItem': (data) => {
         closeInputs();
@@ -345,17 +335,31 @@ let actionHandler = {
                 if (hovered[0] === 'link') {
                     rule.deleteEdge(hovered[2], hovered[1].id)  // Line above passes side to function 
                     
-                } else {
-                    rule.deleteNode(hovered[2], hovered[1].id)
+                } else if (hovered[0] === 'agent') {
+                    rule.deleteAgent(hovered[2], hovered[1].id)
+                }
+                else {
+                    rule.deleteSite(hovered[1].id)
                 }
              }
 
              // VERIFY: is this consistent with our update pattern?
              clearExpressions()
              visualizeExpression(rule, svgGroups)
+
              inputBox.node().value = rule.toString()
+             actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
     },
+    /* 'editAgent': () => {
+        toggleInput('editAgent');
+    },
+    'editSite': () => {
+        toggleInput('editSite');
+    },
+    'editState': () => {
+        toggleInput('editState');
+    }, */
 }
 
 let hovered = undefined;
@@ -598,8 +602,7 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", d => d.isAgent ? 27 : 13)
-                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
-                                               d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? "#fff" : colorsite)
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" : colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
@@ -618,7 +621,7 @@ function visualizeExpression(rule, group) {
                             .attr("r", 4)
                             .attr("fill", "black")
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            .on("mouseenter", function () { currSide = side[i]; } );
+                            // .on("mouseenter", function () { currSide = side[i]; } );
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)

@@ -68,15 +68,15 @@ function KappaRule(lhs, rhs) {
 
     // cannot assume aligned sites
     this.sites = e[0].sites.map( (u) => 
-        ({id: u.id, lhs: u, rhs: undefined })
+        ({id: u.id, lhs: u, rhs: new Site(...u.id) })
     )
     if (e[1])
         e[1].sites.forEach( (v) => {
             let u = this.sites.find((u) => u.id[0] == v.id[0] && u.id[1] == v.id[1])
-            console.log("merge sites", u, v)
+            // console.log("merge sites", u, v)
 
             if (u === undefined)
-                this.sites.push({'id': v.id, 'lhs': undefined, 'rhs': v }) // VERIFY: dummy site? new Site(...u.id)
+                this.sites.push({'id': v.id, 'lhs': new Site(...v.id), 'rhs': v }) // VERIFY: dummy site? new Site(...u.id)
             else
                 u.rhs = v
         })
@@ -197,12 +197,12 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         // return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.ports.lhs[0]}])`
         let agentStrings = {lhs: [], rhs: []}
         this.agents.forEach((u, i) => {
-            let children = this.sites.filter(v => v.id[0] == i) 
+            let children = this.sites.filter(v => v.id[0] == u.id) 
             
             let bake = (w) => {
                 let siteStrings = []
                 children.forEach(v => {
-                    let res = v[w] ? v[w].name : '.'
+                    let res = v[w].name ? v[w].name : '.'
                     if (v[w] && v[w].port) {
                         if (v[w].port.length == 0)
                             res += `[.]`
@@ -273,73 +273,120 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         }
     },
     addBond: function (a, b) {
+        if (a[0] == b[0]) {
+            if (a[1] == b[1]) {
+                // HACK: wiring an EMPTY to itself makes an ANY
+                let u = this.sites.find(v => v.id[0] == a[0] && v.id[1] == a[1])
+                u.lhs.port = undefined
+                u.rhs.port = undefined
+                return
+            }
+            else
+                return // can't have a bond to site on same agent
+        }
+
         let u = this.sites.find(v => v.id[0] == a[0] && v.id[1] == a[1]),
             w = this.sites.find(v => v.id[0] == b[0] && v.id[1] == b[1])
         if (u && w) {
-            /* let tmp = this.sites.map(v => Math.max(v.lhs ? v.lhs.port : 0,
-                                                  v.rhs ? v.rhs.port : 0)),
-                k = Math.max(...tmp, 0) + 1 // claim an unused port id */
-
             let ks = d3.range(this.bonds.length).filter(k => !this.bonds[k+1]),
                 k = ks.length > 0 ? ks[0]+2 : 1
-            console.log(ks)
-            this.bonds.push(
-                {lhs: u.lhs && w.lhs ? {id: k, 'side': 'lhs',
-                                        source: this.getIndex(a), target: this.getIndex(b)} : undefined,
-                 rhs: u.rhs && w.rhs ? {id: k, 'side': 'rhs',
-                                        source: this.getIndex(a), target: this.getIndex(b)} : undefined,
-                 })
 
-            if (u.lhs && w.lhs) {u.lhs.port = k; w.lhs.port = k}
-            if (u.rhs && w.rhs) {u.rhs.port = k; w.rhs.port = k}
+            // let clobber = new Set()
+            let isEmpty = (v) => { // FIXME: ew, side effects
+                if (!v.port || v.port.length == 0) return true
+                if (typeof v.port == 'number') {
+                    console.log('wrangling link ' + v.port)
+
+                    if (this.bonds.find(bnd => (bnd.lhs && bnd.lhs.id == v.port) ||
+                                                (bnd.rhs && bnd.rhs.id == v.port))) // oops, an actual bond is here
+                        return false 
+                    return true
+                }
+                return false 
+            }
+
+            let added = [false, false]
+            if (u.lhs.name && w.lhs.name) {
+                if ( isEmpty(u.lhs) && isEmpty(w.lhs) ) {
+                    u.lhs.port = k; w.lhs.port = k
+                    added[0] = true
+                }
+            }
+            if (u.rhs.name && w.rhs.name) {
+                if ( isEmpty(u.rhs) && isEmpty(w.rhs) ) {
+                    u.rhs.port = k; w.rhs.port = k
+                    added[1] = true
+                }
+            }
+
+            // console.log(k, added)
+            let res = {}
+            if (added[0])
+                res.lhs = {id: k, 'side': 'lhs', source: this.getIndex(a), target: this.getIndex(b)}
+            if (added[1])
+                res.rhs = {id: k, 'side': 'rhs', source: this.getIndex(a), target: this.getIndex(b)}
+
+            this.bonds.push(res)
+            // clobber.forEach(idx => this.bonds.splice(idx, 1))
         }
     },
-    deleteNode: function (side, index) {
-        if (index.length != 2) {
-            // delete agent by:
-            let u = this.agents.find(u => u.id == index)
 
-            if (u && u.siteCount > 0) {
-                // delete children sites
-                d3.range(u.siteCount).forEach(i =>
-                    this.deleteNode(side, [index, i]))
-            }
+    deleteAgent: function (side, index) {
+        let u = this.agents.find(u => u.id == index)
+        if (u) {
             // delete self
             u[side] = new Agent(index)
-            if (!u.lhs.name && !u.rhs.name)
-                this.agents.splice(index, 1) // VERIFY
-        }
-        else {
-            // delete sites by:
-            let idx = this.sites.findIndex(v => v.id[0] == index[0] && v.id[1] == index[1]),
-                v = idx != -1 ? this.sites[idx] : undefined
 
-            if (v && v[side]) {
-                // unbind port
-                let p = v[side].port
-                if (typeof p === 'number') {
-                    this.deleteEdge(side, p)
-                }
-                // (TODO: delete virtual site)
+            // delete children sites & their edges
+            this.sites.filter(v => v.id[0] == index)
+                      .forEach(v => {
+                          if (typeof v[side].port == 'number')
+                            this.deleteEdge(side, v[side].port)
+                          v[side] = new Site(...v[side].id)
+                        })
 
-                // unbind from parents
-                rule.parents = rule.parents.filter((({target: tar}) =>
-                    tar.id[0] != v.id[0] || tar.id[1] != v.id[1] ))
-
-                // delete self
-                v[side] = undefined
-                if (!v.lhs && !v.rhs)
-                    this.sites.splice(idx, 1) // VERIFY
+            if (!u.lhs.name && !u.rhs.name) {
+                // remove children sites
+                d3.range(u.siteCount).forEach(i => {this.deleteSite([index, i])} )
+                this.agents.splice(index, 1) // VERIFY    
             }
+        }
+    },
+    deleteSite: function(index) {
+        // no asymmetry between sites is allowed, because they are part of their agent's signature
+
+        let idx = this.sites.findIndex(v => v.id[0] == index[0] && v.id[1] == index[1]),
+            v = idx != -1 ? this.sites[idx] : undefined
+        if (v) {
+            // unbind port
+            let unbind = (p) => {if (typeof p == 'number') {this.deleteEdge('lhs', p); this.deleteEdge('rhs', p)} }
+            unbind(v.lhs.port)
+            unbind(v.rhs.port)
+            // (TODO: delete virtual site, if my port is _)
+
+            // delete self
+            
+            // unbind from parent
+            this.agents[index[0]].siteCount -= 1
+            rule.parents = rule.parents.filter((({target: tar}) =>
+                tar.id[0] != v.id[0] || tar.id[1] != v.id[1] ))
+
+            // reindex siblings
+            this.sites.splice(idx, 1)
+            this.sites.filter(v => v.id[0] == index[0] && v.id[1] > index[1])
+                      .forEach(v => { v.id[1] -= 1 }) // VERIFY: GUI'd ids aren't contiguous, but does this at least not break?
         }
     },
     deleteEdge: function (side, index) {
         // VERIFY: assume link indexes are preserved on lhs, rhs of rule
         
         // find sites whose port has this link
+        
+        console.log('unbinding ' + side + ' sites with bond ' + index)
         let friends = this.sites.filter(v => v[side] && v[side].port == index)
-        // unbind them
-        friends.forEach(v => v[side].port = undefined)
+        friends.forEach(v => {
+            v[side].port = [] // unbind them
+        })
 
         let idx = this.bonds.findIndex(bnd => bnd[side] && bnd[side].id == index ),
             bnd = idx != -1 ? this.bonds[idx] : undefined
