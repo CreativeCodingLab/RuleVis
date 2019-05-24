@@ -202,7 +202,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             let bake = (w) => {
                 let siteStrings = []
                 children.forEach(v => {
-                    let res = v[w].name ? v[w].name : '.'
+                    let res = v[w] && v[w].name ? v[w].name : '.'
                     if (v[w] && v[w].port) {
                         if (v[w].port.length == 0)
                             res += `[.]`
@@ -326,7 +326,8 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             if (added[1])
                 res.rhs = {id: k, 'side': 'rhs', source: this.getIndex(a), target: this.getIndex(b)}
 
-            this.bonds.push(res)
+            if (added[0] || added[1])
+                this.bonds.push(res)
             // clobber.forEach(idx => this.bonds.splice(idx, 1))
         }
     },
