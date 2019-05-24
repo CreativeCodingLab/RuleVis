@@ -90,7 +90,7 @@ function closeInputs() {
     }
 }
 
-
+let trace = [] // record of strings explored this session
 
 var overlay;
 var state = 'noEdit';
@@ -226,6 +226,7 @@ let actionHandler = {
             visualizeExpression(rule, svgGroups)
     
             inputBox.node().value = rule.toString()
+            trace.push(inputBox.node().value)
     
             actionHandler['addSite']();
         })
@@ -305,7 +306,8 @@ let actionHandler = {
                         visualizeExpression(rule, svgGroups)
                 
                         inputBox.node().value = rule.toString()
-                
+                        trace.push(inputBox.node().value)
+
                         actionHandler['addLink']();
                     }
                 } 
@@ -314,15 +316,6 @@ let actionHandler = {
         })
             
 
-    },
-    'editAgent': () => {
-        toggleInput('editAgent');
-    },
-    'editSite': () => {
-        toggleInput('editSite');
-    },
-    'editState': () => {
-        toggleInput('editState');
     },
     'deleteItem': (data) => {
         closeInputs();
@@ -343,16 +336,35 @@ let actionHandler = {
              if (res.withinDist) {
                 // Call appropriate backend function whether it's a link or node 
                 if (hovered[0] === 'link') {
-                    //rule.deleteEdge(hovered[1].id, hovered[2])
-                    rule.deleteEdge(hovered[1].id)  // Line above passes side to function 
+                    rule.deleteBond(hovered[2], hovered[1].id)  // Line above passes side to function 
                     
-                } else {
-                    //rule.deleteNode(hovered[1].id, hovered[2])
-                    rule.deleteNode(hovered[1].id)
+                } else if (hovered[0] === 'agent') {
+                    rule.deleteAgent(hovered[2], hovered[1].id)
+                }
+                else {
+                    rule.deleteSite(hovered[1].id)
                 }
              }
+
+             // VERIFY: is this consistent with our update pattern?
+             clearExpressions()
+             visualizeExpression(rule, svgGroups)
+
+             inputBox.node().value = rule.toString()
+             trace.push(inputBox.node().value)
+
+             actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
     },
+    /* 'editAgent': () => {
+        toggleInput('editAgent');
+    },
+    'editSite': () => {
+        toggleInput('editSite');
+    },
+    'editState': () => {
+        toggleInput('editState');
+    }, */
 }
 
 let hovered = undefined;
@@ -473,8 +485,9 @@ let rule = new KappaRule('') // TODO: handle empty string gracefully
 
 inputBox.on("input", () => {
     rule = new KappaRule(...inputBox.property('value').split('->'))
-    clearExpressions()
+    trace.push(inputBox.property('value')) // HACK: implicitly fails if the KappaRule is invalid.
 
+    clearExpressions()
     visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 });
 
@@ -545,14 +558,21 @@ function visualizeExpression(rule, group) {
     links = [...rule.bonds.map(u => u.lhs).filter(u => u),
              ...rule.bonds.map(u => u.rhs).filter(u => u),
              ...rule.parents]
-    simulation = cola.d3adaptor(d3)
-        .size([w/2,h])
-        .nodes(nodes)
-        .links(links)
-        .linkDistance(d => !d.isParent ? 80 :
-                            d.sibCount > 6 ? 45 :
-                            d.sibCount > 3 ? 35 : 30)
-        .avoidOverlaps(true);
+    /* let noOverlap = d3.range(rule.agents.length)
+                        .map(i => d3.range(i).map(
+                                    j => ({source: i, target: j, isLayout: true}))  
+                        ).flat() */
+                        // HACK: a poor workaround for webcola failing to lay out disconnected graphs
+
+    simulation = cola
+        .d3adaptor(d3)
+            .size([w/2,h])
+            .nodes(nodes)
+            .links(links) // [...links, ...noOverlap]
+            .linkDistance(d => d.isParent ? d.sibCount > 6 ? 45 : d.sibCount > 3 ? 35 : 30 :
+                               80)
+            .avoidOverlaps(true)
+
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
@@ -608,7 +628,7 @@ function visualizeExpression(rule, group) {
                             .attr("r", 4)
                             .attr("fill", "black")
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            .on("mouseenter", function () { currSide = side[i]; } );
+                            // .on("mouseenter", function () { currSide = side[i]; } );
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)
