@@ -336,7 +336,7 @@ let actionHandler = {
              if (res.withinDist) {
                 // Call appropriate backend function whether it's a link or node 
                 if (hovered[0] === 'link') {
-                    rule.deleteEdge(hovered[2], hovered[1].id)  // Line above passes side to function 
+                    rule.deleteBond(hovered[2], hovered[1].id)  // Line above passes side to function 
                     
                 } else if (hovered[0] === 'agent') {
                     rule.deleteAgent(hovered[2], hovered[1].id)

@@ -341,7 +341,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             this.sites.filter(v => v.id[0] == index)
                       .forEach(v => {
                           if (typeof v[side].port == 'number')
-                            this.deleteEdge(side, v[side].port)
+                            this.deleteBond(side, v[side].port)
                           v[side] = new Site(...v[side].id)
                         })
 
@@ -359,7 +359,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             v = idx != -1 ? this.sites[idx] : undefined
         if (v) {
             // unbind port
-            let unbind = (p) => {if (typeof p == 'number') {this.deleteEdge('lhs', p); this.deleteEdge('rhs', p)} }
+            let unbind = (p) => {if (typeof p == 'number') {this.deleteBond('lhs', p); this.deleteBond('rhs', p)} }
             unbind(v.lhs.port)
             unbind(v.rhs.port)
             // (TODO: delete virtual site, if my port is _)
@@ -377,7 +377,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                       .forEach(v => { v.id[1] -= 1 }) // VERIFY: GUI'd ids aren't contiguous, but does this at least not break?
         }
     },
-    deleteEdge: function (side, index) {
+    deleteBond: function (side, index) {
         // VERIFY: assume link indexes are preserved on lhs, rhs of rule
         
         // find sites whose port has this link
