@@ -371,30 +371,36 @@ let actionHandler = {
     }, */
 }
 
+function undo(updateString) {
+    console.log(updateString);
+}
+
 function updateTrace() {
     // Iterate backwards over trace for five steps
     // In menu, most recent changes will be shown first
-    for (var i = 0; i < 5; i++) {
-        let currID = 'trace' + i;
-        console.log(currID);
-        
-        let option = document.getElementById(currID);
-        console.log(option);
-
-        // if the option doesn't exist yet, create it by appending to gui div
-        if (option === null) {
-            let guiDiv = document.getElementById('guiDiv');
-            let div = document.createElement("div");
-            div.id = currID;
-            div.className = 'undo-options';
-            guiDiv.appendChild(div);
-            option = div;
-        }
+    for (var i = 0; i < 5; i++) {        
         // if there is another element 
         if (trace[trace.length - i - 1]) {
+            let currID = 'trace' + i;            
+            let option = document.getElementById(currID);
+
+            // if the option doesn't exist yet, create it by appending to gui div
+            if (option === null) {
+                let guiDiv = document.getElementById('guiDiv');
+                let div = document.createElement("div");
+                    div.id = currID;
+                    div.className = 'undo-options';
+                    div.addEventListener('click', function() {
+                        // Handle undo
+                        undo(div.innerHTML);
+                    })
+                guiDiv.appendChild(div);
+                option = div;
+            }
+        
             console.log(trace[trace.length-i-1]);
             option.innerHTML = trace[trace.length - i - 1];
-        }
+        } else { break; }
     }
 }
 
