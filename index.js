@@ -239,6 +239,7 @@ var svg, svgGroups
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
+
     var config = {
         filename: 'kappa_rulevis',
     }
@@ -299,10 +300,11 @@ function visualizeExpression(rule, group) {
 
     nodes = [...rule.agents, ...rule.sites]
     nodes.forEach((d) => {
-        d.label = d.isAgent ? true :
+      d.label = true;
+        /*d.label = d.isAgent ? true :
                      d.lhs && d.rhs &&
                      (d.lhs.name != d.rhs.name || d.lhs.state != d.rhs.state) ?
-                     true : false
+                     true : false*/
     }) // FIXME: don't mutate the KappaRule
 
     links = [...rule.bonds.map(u => u.lhs).filter(u => u),
@@ -391,9 +393,13 @@ function visualizeExpression(rule, group) {
         nodeGroup[i].on("click", function(d,i) {
             if (d.label === false) {
                 d.label = true;
+                console.log(d)
                 d3.select(this).selectAll('text').style('opacity', 1);
+
+                //d.lhs.name != d.rhs.name
             } else {
                 d.label = false;
+                console.log(d)
                 d3.select(this).selectAll('text').style('opacity', 0);
             }
         });
