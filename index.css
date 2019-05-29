@@ -140,6 +140,11 @@ textarea:focus {
     padding: 18px 22px;
     width: 100%;
     font-size: 14px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    font-size: 1.3em;
 }
 
 .gui-button:hover {
@@ -188,6 +193,12 @@ div.gui-button-div > select option:hover {
 
 .gui-button-div-active {
     background-color: #eeeeee;
+}
+
+.icon {
+    height: 30px;
+    width: auto;
+    padding-right: 20px;
 }
 
 /* undo option styling */

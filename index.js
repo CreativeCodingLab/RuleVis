@@ -607,7 +607,8 @@ function visualizeExpression(rule, group) {
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
                             .on("mouseenter", d => {
-                                hovered = ['link', d, side[i]]
+                                hovered = ['link', d, side[i]];
+                                console.log(d);
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
@@ -627,7 +628,8 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
                             .on("mouseenter", d => {
-                                hovered = [d.isAgent ? 'agent': 'site', d, side[i]]
+                                hovered = [d.isAgent ? 'agent': 'site', d, side[i]];
+                                console.log(d);
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
