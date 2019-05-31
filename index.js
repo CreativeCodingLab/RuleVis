@@ -99,12 +99,14 @@ var linkSiteIDs = {       // Stores sites for adding link
     first: {
         id: null,
         x: null,
-        y: null
+        y: null,
+        side: null
     },
     second: {
         id: null,
         x: null,
-        y: null
+        y: null,
+        side: null
     }
 };         // Stores IDs and coordinates of a new link
 
@@ -250,6 +252,8 @@ let actionHandler = {
             let e = d3.event;
             let res = isHoveringOverEl();
 
+            console.log(linkClicks);
+
             document.getElementById('svgDiv').style.cursor = 'crosshair';
 
             // If they already selected first site, show a line extending from first point to current cursor
@@ -258,11 +262,30 @@ let actionHandler = {
             if (linkClicks === 1) {
                 
                 overlay.select('line')
-                            .attr('x1', linkSiteIDs.first.x)
+                            .attr('x1', linkSiteIDs.first.side === 'lhs' ? linkSiteIDs.first.x : linkSiteIDs.first.x + w/2)
                             .attr('y1', linkSiteIDs.first.y)
                             .attr('x2', e.pageX - sidebarW)
                             .attr('y2', e.pageY - headerH)
-                            .style('stroke', res.withinDist ? 'gray' : 'red')
+                            .style('stroke', function() {
+                                if (res.withinDist) {
+                                    console.log("withinDist")
+                                    // Makes sure it's on the same side
+                                    if (linkSiteIDs.first.side === res.closestEl.side) {
+                                        console.log("same side")
+                                        // Makes sure the agents are distinct
+                                        if (linkSiteIDs.first.id[0] !== res.closestEl.elID[0]) {
+                                            console.log("different parent")
+                                            if (res.closestEl.type === 'site') {
+                                                console.log('is hovering over site');
+                                                return 'gray';
+                                            }
+                                        }
+                                    }
+                                } 
+                                
+                                return 'red';
+                            })
+                            // res.withinDist ? linkSiteIDs.first.side === linkSiteIDs.second.side ? 'gray' : 'red' : 'red' )
                             .style('stroke-width', '5px')
                             .style('opacity', res.withinDist ? 0.5: 0.3);
 
@@ -289,12 +312,14 @@ let actionHandler = {
                         linkSiteIDs.first.id = res.closestEl.elID;
                         linkSiteIDs.first.x = res.closestEl.x;
                         linkSiteIDs.first.y = res.closestEl.y;
+                        linkSiteIDs.first.side = res.closestEl.side;
                         linkClicks++;
                     } 
                     else if (linkClicks === 1) {
                         linkSiteIDs.second.id = res.closestEl.elID;
                         linkSiteIDs.second.x = res.closestEl.x;
                         linkSiteIDs.second.y = res.closestEl.y;
+                        linkSiteIDs.second.side = res.closestEl.side;
 
                         // Add a bond to the rule
                         rule.addBond(linkSiteIDs.first.id, linkSiteIDs.second.id);
@@ -424,17 +449,22 @@ function isHoveringOverEl() {
     let response = {
         withinDist: false,
         closestEl: {
+            type: '',
             elID: null,
             //distToPointer: Number.MAX_SAFE_INTEGER,
             x: 0,
-            y: 0
+            y: 0,
+            side: ''
         }
+        
     };
     response.withinDist = Boolean(hovered)
     if (hovered) {
+        response.closestEl.type = hovered[0];
         response.closestEl.elID = hovered[1].id;
         response.closestEl.x = hovered[1].x;
         response.closestEl.y = hovered[1].y;
+        response.closestEl.side = hovered[2];
         
     }
     return response;
@@ -639,7 +669,7 @@ function visualizeExpression(rule, group) {
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
                             .on("mouseenter", d => {
                                 hovered = ['link', d, side[i]];
-                                console.log(d);
+                                console.log(hovered);
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
@@ -660,7 +690,7 @@ function visualizeExpression(rule, group) {
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
                             .on("mouseenter", d => {
                                 hovered = [d.isAgent ? 'agent': 'site', d, side[i]];
-                                console.log(d);
+                                console.log(hovered);
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
