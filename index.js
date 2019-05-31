@@ -247,8 +247,13 @@ let actionHandler = {
                 if (linkSiteIDs.first.side === res.closestEl.side) {
                     // Makes sure the agents are distinct
                     if (linkSiteIDs.first.id[0] !== res.closestEl.elID[0]) {
+                        // Ensures adding to a site
                         if (res.closestEl.type === 'site') {
-                            return true;
+                            let v = hoveredData[hoveredSide].port;
+                            if (!v || v.length === 0) {
+                                return true;
+                            }
+                            
                         }
                     }
                 }
@@ -297,8 +302,8 @@ let actionHandler = {
                 console.log(res);
 
                 if (res.closestEl.type === 'site') {
-                    console.log(linkClicks);
-                    if (linkClicks === 0) {
+                    let v = hoveredData[hoveredSide].port;
+                    if (linkClicks === 0 && (!v || v.length === 0)) {
                         linkSiteIDs.first.id = res.closestEl.elID;
                         linkSiteIDs.first.x = res.closestEl.x;
                         linkSiteIDs.first.y = res.closestEl.y;
@@ -417,7 +422,9 @@ function updateTraceGUI() {
     }
 }
 
-let hovered = undefined;
+let hoveredData = undefined,
+    hoveredSide = '',
+    hoveredType = '';
 
 // Calculates the distance between two points (x1, y1) and (x2, y2)
 function findDistance(x1, y1, x2, y2) {
@@ -645,19 +652,33 @@ function visualizeExpression(rule, group) {
     group.forEach((root, i) => {
         link[i] = root.append("g")
                         .selectAll("line")
-                        .data(links)
+                        .data(links.filter(d => d.isParent || d.side == side[i]))
                         .enter()
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
-                            .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
-                                                         d.side == side[i] ? 0.4 : 0)
-                            .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
-                            .on("mouseenter", d => {
-                                hovered = ['link', d, side[i]];
-                                console.log(hovered);
+                            .attr("stroke", "darkgray")
+                            //.attr("stroke", d => d.isParent ? "darkgray" : "black")
+                            // .attr("stroke-opacity", d => {
+                            //     console.log(d.source)
+                            //     return d.source.side === side[i] ? 1 : 0
+                            // })
+                            .attr("stroke-dasharray", d => {
+                                return d.isAnonymous ? 4 : null 
                             })
-                            .on("mouseleave", () => {hovered = undefined})
+                            .on("mouseenter", function(d) {
+                                hoveredData = d;
+                                hoveredSide = side[i];
+                                hoveredType = 'link';
+                                hovered = ['link', d, side[i]];
+                                d3.select(this).style('stroke', "#d1d1d1");
+                            })
+                            .on("mouseleave", function(d) {
+                                hovered = undefined;
+                                hoveredData = undefined;
+                                hoveredSide = '';
+                                hoveredType = '';
+                                d3.select(this).style('stroke', 'darkgray');
+                            })
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
@@ -674,11 +695,23 @@ function visualizeExpression(rule, group) {
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            .on("mouseenter", d => {
+                            .on("mouseenter", function(d) {
+                                hoveredData = d;
+                                hoveredSide = side[i];
+                                hoveredType = d.isAgent ? 'agent' : 'site';
                                 hovered = [d.isAgent ? 'agent': 'site', d, side[i]];
-                                console.log(hovered);
+                                d3.select(this).style('fill', d.isAgent ? '#49d3a0' : '#ffdb85');
+                                d3.select(this).style('stroke', d.isAgent ? '#49d3a0' : '#ffdb85');
                             })
-                            .on("mouseleave", () => {hovered = undefined})
+                            .on("mouseleave", function(d) {
+                                hoveredData = undefined;
+                                hoveredSide = '';
+                                hoveredType = '';
+                                hovered = undefined;
+                                d3.select(this).style('fill', d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                                                      d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
+                                                      d3.select(this).style('stroke', d.isAgent ? coloragent : colorsite)
+                            })
 
         // node annotations
         freeNode[i] = root.append("g")
