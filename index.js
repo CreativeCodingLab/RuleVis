@@ -241,6 +241,21 @@ let actionHandler = {
         initializeOverlay();
         state = 'addLink';
 
+        let validLink = function(res) {
+            if (res.withinDist) {
+                // Makes sure it's on the same side
+                if (linkSiteIDs.first.side === res.closestEl.side) {
+                    // Makes sure the agents are distinct
+                    if (linkSiteIDs.first.id[0] !== res.closestEl.elID[0]) {
+                        if (res.closestEl.type === 'site') {
+                            return true;
+                        }
+                    }
+                }
+            } 
+            return false;
+        }
+
         svg.on('mouseenter', () => {
             overlay.append('line')
             .style('stroke-width', '2px')
@@ -251,45 +266,20 @@ let actionHandler = {
         svg.on('mousemove', () => {
             let e = d3.event;
             let res = isHoveringOverEl();
-
-            console.log(linkClicks);
-
             document.getElementById('svgDiv').style.cursor = 'crosshair';
 
             // If they already selected first site, show a line extending from first point to current cursor
             // Color = red if not over valid site
             // Color = gray or green if over valid site
             if (linkClicks === 1) {
-                
                 overlay.select('line')
                             .attr('x1', linkSiteIDs.first.side === 'lhs' ? linkSiteIDs.first.x : linkSiteIDs.first.x + w/2)
                             .attr('y1', linkSiteIDs.first.y)
                             .attr('x2', e.pageX - sidebarW)
                             .attr('y2', e.pageY - headerH)
-                            .style('stroke', function() {
-                                if (res.withinDist) {
-                                    console.log("withinDist")
-                                    // Makes sure it's on the same side
-                                    if (linkSiteIDs.first.side === res.closestEl.side) {
-                                        console.log("same side")
-                                        // Makes sure the agents are distinct
-                                        if (linkSiteIDs.first.id[0] !== res.closestEl.elID[0]) {
-                                            console.log("different parent")
-                                            if (res.closestEl.type === 'site') {
-                                                console.log('is hovering over site');
-                                                return 'gray';
-                                            }
-                                        }
-                                    }
-                                } 
-                                
-                                return 'red';
-                            })
-                            // res.withinDist ? linkSiteIDs.first.side === linkSiteIDs.second.side ? 'gray' : 'red' : 'red' )
+                            .style('stroke', validLink(res) ? 'gray' : 'red')
                             .style('stroke-width', '5px')
-                            .style('opacity', res.withinDist ? 0.5: 0.3);
-
-                
+                            .style('opacity', 0.5);
             }
         })
 
@@ -306,7 +296,7 @@ let actionHandler = {
                 let res = isHoveringOverEl();
                 console.log(res);
 
-                if (res.withinDist) {
+                if (res.closestEl.type === 'site') {
                     console.log(linkClicks);
                     if (linkClicks === 0) {
                         linkSiteIDs.first.id = res.closestEl.elID;
@@ -315,7 +305,7 @@ let actionHandler = {
                         linkSiteIDs.first.side = res.closestEl.side;
                         linkClicks++;
                     } 
-                    else if (linkClicks === 1) {
+                    else if (linkClicks === 1 && validLink(res)) {
                         linkSiteIDs.second.id = res.closestEl.elID;
                         linkSiteIDs.second.x = res.closestEl.x;
                         linkSiteIDs.second.y = res.closestEl.y;
@@ -326,10 +316,6 @@ let actionHandler = {
 
                         // Then reset everything
                         linkClicks = 0;
-                        // for (var key in linkSiteIDs) {
-                        //     if (linkSiteIDs[key].value === null) { linkSiteIDs[key] = null; }
-                        // }
-
                         clearExpressions()
                         visualizeExpression(rule, svgGroups)
                 
