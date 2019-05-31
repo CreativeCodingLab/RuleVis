@@ -372,6 +372,7 @@ let actionHandler = {
     }, */
 }
 
+// Code for returning to a previous 
 function undo(updateString) {
     console.log(updateString);
 }
@@ -387,7 +388,7 @@ function updateTraceGUI() {
 
             // if the option doesn't exist yet, create it by appending to gui div
             if (option === null) {
-                let guiDiv = document.getElementById('guiDiv');
+                let historyDiv = document.getElementById('history');
                 let div = document.createElement("div");
                     div.id = currID;
                     div.className = 'undo-options';
@@ -395,7 +396,7 @@ function updateTraceGUI() {
                         // Pass the string to undo function
                         undo(div.innerHTML);
                     })
-                guiDiv.appendChild(div);
+                historyDiv.appendChild(div);
                 option = div;
             }
         
@@ -530,6 +531,36 @@ function initializeOverlay() {
     // ASSUME agent placement for now
     overlay = svg.append('g')
                 .attr('id', 'overlay');
+    
+    
+}
+
+function addArrow() {
+    let arrowBase = overlay.append('line')
+                .attr('x1', w/2 - 30)
+                .attr('y1', h/2)
+                .attr('x2', w/2 + 30)
+                .attr('y2', h/2)
+                .style('stroke', '#eeeeee')
+                .style('stroke-width', '5px')
+                .style('stroke-linecap', 'round');
+
+    let arrowHeadTop = overlay.append('line')
+                .attr('x1', w/2 + 5)
+                .attr('y1', h/2 - 10)
+                .attr('x2', w/2 + 30)
+                .attr('y2', h/2)
+                .style('stroke', '#eeeeee')
+                .style('stroke-width', '5px')
+                .style('stroke-linecap', 'round');
+    let arrowHeadBottom = overlay.append('line')
+                .attr('x1', w/2 + 5)
+                .attr('y1', h/2 + 10)
+                .attr('x2', w/2 + 30)
+                .attr('y2', h/2)
+                .style('stroke', '#eeeeee')
+                .style('stroke-width', '5px')
+                .style('stroke-linecap', 'round');
 }
 
 function clearOverlay() {
@@ -710,6 +741,9 @@ function visualizeExpression(rule, group) {
             .attr("x", d => d.x)
             .attr("y", d => d.y+14))
         });
+
+    // add the arrow to the overlay
+    addArrow();
 
     // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
     jsonBlob = {...rule, text: inputBox.property('value')}

@@ -151,7 +151,7 @@ textarea:focus {
     background-color: #eeeeee;
 }
 
-.gui-button-div {
+.gui-button-div:not(:last-child) {
     border-bottom: 1px solid #eeeeee;
     width: 100%;
 }
