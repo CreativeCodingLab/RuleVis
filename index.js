@@ -2,11 +2,7 @@
 let header = d3.select("#header");
 
 var expression;
-
 let hovered = undefined;
-let guiState = 'none';
-let linkClicks = 0;
-let linkSiteIDs = {first: {}, second: {}}
 
 // Create container div for styling purposes
 let main = d3.select('div#main');
@@ -48,6 +44,45 @@ window.addEventListener('load', function() {
     inputBox.node().value = rule.toString()
     updateExpression(res)
 })
+// Reveals an input field if user clicks on a gui editor button
+function toggleInput(parentDivID) {
+    console.log("parentDivID = " + parentDivID);
+
+    let inputID = parentDivID + "Input";
+    let inputElement = document.getElementById(inputID);
+    closeInputs();
+    inputElement.style.display = 'block';
+}
+
+// Closes all input tabs
+function closeInputs() {
+    let allInputs = document.getElementsByClassName('gui-input');
+
+    for (var i = 0; i < allInputs.length; i++) {
+        allInputs[i].style.display = 'none';
+        allInputs[i].value = '';
+    }
+}
+
+let trace = [] // record of strings explored this session
+
+var overlay;
+var guiState = 'noEdit';
+var linkClicks = 0;       // Keeps track of how many times 
+var linkSiteIDs = {       // Stores sites for adding link
+    first: {
+        id: null,
+        x: null,
+        y: null,
+        side: null
+    },
+    second: {
+        id: null,
+        x: null,
+        y: null,
+        side: null
+    }
+};         // Stores IDs and coordinates of a new link
 
 // Directs to appropriate gui function based on button
 let actionHandler = {
@@ -176,6 +211,26 @@ let actionHandler = {
         initializeOverlay();
         guiState = 'addLink';
 
+        let validLink = function(res) {
+            if (res.withinDist) {
+                // Makes sure it's on the same side
+                if (linkSiteIDs.first.side === res.closestEl.side) {
+                    // Makes sure the agents are distinct
+                    if (linkSiteIDs.first.id[0] !== res.closestEl.elID[0]) {
+                        // Ensures adding to a site
+                        if (res.closestEl.type === 'site') {
+                            let v = hoveredData[hoveredSide].port;
+                            if (!v || v.length === 0) {
+                                return true;
+                            }
+                            
+                        }
+                    }
+                }
+            } 
+            return false;
+        }
+
         svg.on('mouseenter', () => {
             overlay.append('line')
             .style('stroke-width', '2px')
@@ -186,24 +241,20 @@ let actionHandler = {
         svg.on('mousemove', () => {
             let e = d3.event;
             let res = isHoveringOverEl();
-
             document.getElementById('svgDiv').style.cursor = 'crosshair';
 
             // If they already selected first site, show a line extending from first point to current cursor
             // Color = red if not over valid site
             // Color = gray or green if over valid site
             if (linkClicks === 1) {
-                
                 overlay.select('line')
-                            .attr('x1', linkSiteIDs.first.x)
+                            .attr('x1', linkSiteIDs.first.side === 'lhs' ? linkSiteIDs.first.x : linkSiteIDs.first.x + w/2)
                             .attr('y1', linkSiteIDs.first.y)
                             .attr('x2', e.pageX - sidebarW)
                             .attr('y2', e.pageY - headerH)
-                            .style('stroke', res.withinDist ? 'gray' : 'red')
+                            .style('stroke', validLink(res) ? 'gray' : 'red')
                             .style('stroke-width', '5px')
-                            .style('opacity', res.withinDist ? 0.5: 0.3);
-
-                
+                            .style('opacity', 0.5);
             }
         })
 
@@ -220,28 +271,26 @@ let actionHandler = {
                 let res = isHoveringOverEl();
                 console.log(res);
 
-                if (res.withinDist) {
-                    console.log(linkClicks);
-                    if (linkClicks === 0) {
+                if (res.closestEl.type === 'site') {
+                    let v = hoveredData[hoveredSide].port;
+                    if (linkClicks === 0 && (!v || v.length === 0)) {
                         linkSiteIDs.first.id = res.closestEl.elID;
                         linkSiteIDs.first.x = res.closestEl.x;
                         linkSiteIDs.first.y = res.closestEl.y;
+                        linkSiteIDs.first.side = res.closestEl.side;
                         linkClicks++;
                     } 
-                    else if (linkClicks === 1) {
+                    else if (linkClicks === 1 && validLink(res)) {
                         linkSiteIDs.second.id = res.closestEl.elID;
                         linkSiteIDs.second.x = res.closestEl.x;
                         linkSiteIDs.second.y = res.closestEl.y;
+                        linkSiteIDs.second.side = res.closestEl.side;
 
                         // Add a bond to the rule
                         rule.addBond(linkSiteIDs.first.id, linkSiteIDs.second.id);
 
                         // Then reset everything
                         linkClicks = 0;
-                        // for (var key in linkSiteIDs) {
-                        //     if (linkSiteIDs[key].value === null) { linkSiteIDs[key] = null; }
-                        // }
-
                         inputBox.node().value = rule.toString()
                         updateExpression(inputBox.node().value)
 
@@ -299,28 +348,11 @@ let actionHandler = {
     }, */
 }
 
+// Code for returning to a previous 
 function undo(updateString) {
-    console.log(updateString);
-}
+    console.log('undo!');
 
-// Reveals an input field if user clicks on a gui editor button
-function toggleInput(parentDivID) {
-    console.log("parentDivID = " + parentDivID);
-
-    let inputID = parentDivID + "Input";
-    let inputElement = document.getElementById(inputID);
-    closeInputs();
-    inputElement.style.display = 'block';
-}
-
-// Closes all input tabs
-function closeInputs() {
-    let allInputs = document.getElementsByClassName('gui-input');
-
-    for (var i = 0; i < allInputs.length; i++) {
-        allInputs[i].style.display = 'none';
-        allInputs[i].value = '';
-    }
+    makeParsingCallback(updateString)()
 }
 
 function updateTraceGUI() {
@@ -334,7 +366,7 @@ function updateTraceGUI() {
 
             // if the option doesn't exist yet, create it by appending to gui div
             if (option === null) {
-                let guiDiv = document.getElementById('guiDiv');
+                let historyDiv = document.getElementById('history');
                 let div = document.createElement("div");
                     div.id = currID;
                     div.className = 'undo-options';
@@ -342,7 +374,7 @@ function updateTraceGUI() {
                         // Pass the string to undo function
                         undo(div.innerHTML);
                     })
-                guiDiv.appendChild(div);
+                historyDiv.appendChild(div);
                 option = div;
             }
         
@@ -352,6 +384,10 @@ function updateTraceGUI() {
     }
 }
 
+let hoveredData = undefined,
+    hoveredSide = '',
+    hoveredType = '';
+
 // Looks through all agents to see if pointer overlaps with one; returns closest overlapping agent
 // withinDist: true if pointer is within distance of at least one agent in a group of overlapping agents; 
 // closestAgent: id of agent closest to pointer; distance to that agent
@@ -359,17 +395,22 @@ function isHoveringOverEl() {
     let response = {
         withinDist: false,
         closestEl: {
+            type: '',
             elID: null,
             //distToPointer: Number.MAX_SAFE_INTEGER,
             x: 0,
-            y: 0
+            y: 0,
+            side: ''
         }
+        
     };
     response.withinDist = Boolean(hovered)
     if (hovered) {
+        response.closestEl.type = hovered[0];
         response.closestEl.elID = hovered[1].id;
         response.closestEl.x = hovered[1].x;
         response.closestEl.y = hovered[1].y;
+        response.closestEl.side = hovered[2];
         
     }
     return response;
@@ -388,36 +429,6 @@ for (var i = 0; i < guiButtons.length; i++) {
         
     });
 }
-
-
-// Action associated w/ Download JSON Button 
-function downloadJSON(data) {
-
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-  var dlAnchorElem = document.getElementById('downloadAnchorElem');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "expression.json");
-  dlAnchorElem.click();
-}
-
-var uploadBox = exportDiv.append('textarea')
-                          .attr('id', 'uploadJSON')
-                          .attr('placeholder', 'Paste JSON');
-
-uploadBox.on('input', function() {
-
-  data = JSON.parse(uploadBox.property('value'));
-  console.log(data);
-  clearExpressions();
-  visualizeFromJSON(data,
-           [svg.append('g').attr('transform', `translate(0,0)`),
-            svg.append('g').attr('transform', `translate(${w/2},0)`)])
-
-});
-
-
-
-
 
 var svg, svgGroups
 
@@ -440,13 +451,14 @@ function updateExpression(str) {
 
 
 let rule = new KappaRule('') // TODO: handle empty string gracefully
-
-inputBox.on("input", () => {
-    rule = new KappaRule(...inputBox.property('value').split('->'))
+let makeParsingCallback = (str) => () => {
+    rule = new KappaRule(...str.split('->'))
 
     // HACK: implicitly fails if the KappaRule is invalid.
-    updateExpression(inputBox.property('value'))
-});
+    updateExpression(str)
+}
+let onInput = makeParsingCallback(inputBox.property('value'))
+inputBox.on('input', onInput);
 
 function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
@@ -474,6 +486,36 @@ function initializeOverlay() {
     // ASSUME agent placement for now
     overlay = svg.append('g')
                 .attr('id', 'overlay');
+    
+    
+}
+
+function addArrow() {
+    let arrowBase = overlay.append('line')
+                .attr('x1', w/2 - 30)
+                .attr('y1', h/2)
+                .attr('x2', w/2 + 30)
+                .attr('y2', h/2)
+                .style('stroke', '#eeeeee')
+                .style('stroke-width', '5px')
+                .style('stroke-linecap', 'round');
+
+    let arrowHeadTop = overlay.append('line')
+                .attr('x1', w/2 + 5)
+                .attr('y1', h/2 - 10)
+                .attr('x2', w/2 + 30)
+                .attr('y2', h/2)
+                .style('stroke', '#eeeeee')
+                .style('stroke-width', '5px')
+                .style('stroke-linecap', 'round');
+    let arrowHeadBottom = overlay.append('line')
+                .attr('x1', w/2 + 5)
+                .attr('y1', h/2 + 10)
+                .attr('x2', w/2 + 30)
+                .attr('y2', h/2)
+                .style('stroke', '#eeeeee')
+                .style('stroke-width', '5px')
+                .style('stroke-linecap', 'round');
 }
 
 function clearOverlay() {
@@ -546,19 +588,33 @@ function visualizeExpression(rule, group) {
     group.forEach((root, i) => {
         link[i] = root.append("g")
                         .selectAll("line")
-                        .data(links)
+                        .data(links.filter(d => d.isParent || d.side == side[i]))
                         .enter()
                             .append("line")
                             .attr("stroke-width", d => d.isParent ? 1 : 5)
-                            .attr("stroke", d => d.isParent ? "darkgray" : "black")
-                            .attr("stroke-opacity", d => // d.source[side[i]] && d.target[side[i]]
-                                                         d.side == side[i] ? 0.4 : 0)
-                            .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
-                            .on("mouseenter", d => {
-                                hovered = ['link', d, side[i]];
-                                console.log(d);
+                            .attr("stroke", "darkgray")
+                            //.attr("stroke", d => d.isParent ? "darkgray" : "black")
+                            // .attr("stroke-opacity", d => {
+                            //     console.log(d.source)
+                            //     return d.source.side === side[i] ? 1 : 0
+                            // })
+                            .attr("stroke-dasharray", d => {
+                                return d.isAnonymous ? 4 : null 
                             })
-                            .on("mouseleave", () => {hovered = undefined})
+                            .on("mouseenter", function(d) {
+                                hoveredData = d;
+                                hoveredSide = side[i];
+                                hoveredType = 'link';
+                                hovered = ['link', d, side[i]];
+                                d3.select(this).style('stroke', "#d1d1d1");
+                            })
+                            .on("mouseleave", function(d) {
+                                hovered = undefined;
+                                hoveredData = undefined;
+                                hoveredSide = '';
+                                hoveredType = '';
+                                d3.select(this).style('stroke', 'darkgray');
+                            })
 
         // node base
         nodeGroup[i] = root.selectAll('.node')
@@ -575,11 +631,23 @@ function visualizeExpression(rule, group) {
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            .on("mouseenter", d => {
+                            .on("mouseenter", function(d) {
+                                hoveredData = d;
+                                hoveredSide = side[i];
+                                hoveredType = d.isAgent ? 'agent' : 'site';
                                 hovered = [d.isAgent ? 'agent': 'site', d, side[i]];
-                                console.log(d);
+                                d3.select(this).style('fill', d.isAgent ? '#49d3a0' : '#ffdb85');
+                                d3.select(this).style('stroke', d.isAgent ? '#49d3a0' : '#ffdb85');
                             })
-                            .on("mouseleave", () => {hovered = undefined})
+                            .on("mouseleave", function(d) {
+                                hoveredData = undefined;
+                                hoveredSide = '';
+                                hoveredType = '';
+                                hovered = undefined;
+                                d3.select(this).style('fill', d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                                                      d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
+                                                      d3.select(this).style('stroke', d.isAgent ? coloragent : colorsite)
+                            })
 
         // node annotations
         freeNode[i] = root.append("g")
@@ -658,6 +726,9 @@ function visualizeExpression(rule, group) {
             .attr("x", d => d.x)
             .attr("y", d => d.y+14))
         });
+
+    // add the arrow to the overlay
+    addArrow();
 
     // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
     jsonBlob = {...rule, text: inputBox.property('value')}
