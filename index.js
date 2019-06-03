@@ -28,12 +28,10 @@ let onWindowResize = () => {
     h = document.getElementById('svgDiv').clientHeight;
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
-    console.log( w + ", " + h);
 }
 window.addEventListener('resize', onWindowResize, false)
 
 window.addEventListener('load', function() {
-    console.log("page loaded");
     onWindowResize() // initialize metrics
     // canvas will be initialized on update
 
@@ -45,7 +43,6 @@ window.addEventListener('load', function() {
     rule = new KappaRule(...res.split('->'))
 
     inputBox.node().value = rule.toString()
-    console.log('calling update');
     updateExpression(res)
 })
 // Reveals an input field if user clicks on a gui editor button
@@ -137,7 +134,6 @@ let actionHandler = {
             rule.addAgent(inputValue, p.x, p.y)
     
             inputBox.node().value = rule.toString()
-            console.log('calling update');
             updateExpression(inputBox.node().value)
     
             actionHandler['addAgent']();
@@ -197,7 +193,6 @@ let actionHandler = {
             }
         
             inputBox.node().value = rule.toString()
-            console.log('calling update');
             updateExpression(inputBox.node().value)
     
             actionHandler['addSite']();
@@ -288,7 +283,6 @@ let actionHandler = {
                         // Then reset everything
                         linkClicks = 0;
                         inputBox.node().value = rule.toString()
-                        console.log('calling update');
                         updateExpression(inputBox.node().value)
 
                         actionHandler['addLink']();
@@ -329,7 +323,6 @@ let actionHandler = {
              }
 
              inputBox.node().value = rule.toString()
-             console.log('calling update');
              updateExpression(inputBox.node().value)
 
              actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
@@ -451,7 +444,6 @@ let parseString = (str) => {
     rule = new KappaRule(...str.split('->'))
 
     // HACK: implicitly fails if the KappaRule is invalid.
-    console.log('calling update');
     updateExpression(str)
 }
 inputBox.on('input', function () {
@@ -786,3 +778,36 @@ uploadBox.on('input', function() {
             svg.append('g').attr('transform', `translate(${w/2},0)`)])
 
 });
+
+let handleMenuClick = function(e) {
+    // Id of newly clicked element
+    let itemID = e.id;
+
+    for (let option = 0; option < menuOptions.length; option++) {
+        // id of the menu option clicked
+        let currOption = menuOptions[option];
+        // div associated with the id        
+        let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
+
+        // If we find the current element, add active class and display associated div
+        if (currOption.id === itemID) {
+            currOption.classList.add('active');
+            currOptionDiv.style.display = 'block';
+        } else {
+            if (currOption.classList.contains('active')) {
+                currOption.classList.remove('active');
+            }
+            currOptionDiv.style.display = 'none';
+        }
+
+        // If switching to a non-GUI tab, remove SVG mouse interactions and overlay
+        if (currOption.id !== 'gui') {
+            actionHandler['noEdit']();
+        }
+    }
+}
+for (let i = 0; i < menuOptions.length; i++) {
+    menuOptions[i].addEventListener('click', 
+        function() { handleMenuClick(menuOptions[i]) } 
+    );
+}
