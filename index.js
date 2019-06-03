@@ -28,10 +28,12 @@ let onWindowResize = () => {
     h = document.getElementById('svgDiv').clientHeight;
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
+    console.log( w + ", " + h);
 }
 window.addEventListener('resize', onWindowResize, false)
 
 window.addEventListener('load', function() {
+    console.log("page loaded");
     onWindowResize() // initialize metrics
     // canvas will be initialized on update
 
@@ -43,6 +45,7 @@ window.addEventListener('load', function() {
     rule = new KappaRule(...res.split('->'))
 
     inputBox.node().value = rule.toString()
+    console.log('calling update');
     updateExpression(res)
 })
 // Reveals an input field if user clicks on a gui editor button
@@ -134,6 +137,7 @@ let actionHandler = {
             rule.addAgent(inputValue, p.x, p.y)
     
             inputBox.node().value = rule.toString()
+            console.log('calling update');
             updateExpression(inputBox.node().value)
     
             actionHandler['addAgent']();
@@ -193,6 +197,7 @@ let actionHandler = {
             }
         
             inputBox.node().value = rule.toString()
+            console.log('calling update');
             updateExpression(inputBox.node().value)
     
             actionHandler['addSite']();
@@ -283,6 +288,7 @@ let actionHandler = {
                         // Then reset everything
                         linkClicks = 0;
                         inputBox.node().value = rule.toString()
+                        console.log('calling update');
                         updateExpression(inputBox.node().value)
 
                         actionHandler['addLink']();
@@ -323,6 +329,7 @@ let actionHandler = {
              }
 
              inputBox.node().value = rule.toString()
+             console.log('calling update');
              updateExpression(inputBox.node().value)
 
              actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
@@ -429,6 +436,7 @@ function downloadSVG() {
 }
 
 function updateExpression(str) {
+    console.log("inside updateExp: str = " + str);
     clearExpressions()
     visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 
@@ -443,9 +451,14 @@ let parseString = (str) => {
     rule = new KappaRule(...str.split('->'))
 
     // HACK: implicitly fails if the KappaRule is invalid.
+    console.log('calling update');
     updateExpression(str)
 }
-inputBox.on('input', parseString(inputBox.property('value')));
+inputBox.on('input', function () {
+    if (w !== undefined) {
+        parseString(inputBox.property('value'));
+    }
+});
 
 function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
