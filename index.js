@@ -3,6 +3,11 @@ let header = d3.select("#header");
 
 var expression;
 
+let hovered = undefined;
+let guiState = 'none';
+let linkClicks = 0;
+let linkSiteIDs = {first: {}, second: {}}
+
 // Create container div for styling purposes
 let main = d3.select('div#main');
 let sidebar = d3.select('div#sidebar');
@@ -19,18 +24,17 @@ let svgDiv = d3.select('div#svgDiv');
 let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
 let menuMap = new Map(menuMapArray);
 
-// Height of header + 15px of margin on top and bottom
-let headerH, h, w, sidebarW
-let onWindowResize = (e) => {
+let headerH, h, w, sidebarW // Height of header + 15px of margin on top and bottom
+
+// SETUP
+let onWindowResize = () => {
     headerH = document.getElementById('header').clientHeight;
     h = document.getElementById('svgDiv').clientHeight;
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
 }
-
 window.addEventListener('resize', onWindowResize, false)
 
-// SETUP
 window.addEventListener('load', function() {
     onWindowResize() // initialize metrics
     clearExpressions() // initialize canvas
@@ -49,7 +53,7 @@ window.addEventListener('load', function() {
 let actionHandler = {
     // Move button calls noEdit but is not a true move; if add another site, moves back to original position
     'noEdit': () => {
-        state = 'noEdit';
+        guiState = 'noEdit';
         clearSVGListeners();
         closeInputs();
         clearOverlay();
@@ -57,10 +61,10 @@ let actionHandler = {
     'addAgent': () => {
         // If the user *just* clicked on addAgent button, open the input div
         // Else, the div is already open and they are adding another agent
-        if (state !== 'addAgent') { toggleInput('addAgent'); }
+        if (guiState !== 'addAgent') { toggleInput('addAgent'); }
         initializeOverlay();     
 
-        state = 'addAgent';
+        guiState = 'addAgent';
         
         svg.on('mouseenter', () => {
             overlay.append('circle')
@@ -99,7 +103,9 @@ let actionHandler = {
             clearExpressions()
             visualizeExpression(rule, svgGroups)
     
-            inputBox.node().value = rule.toString()
+            inputBox.node().value = rule.toString();
+            trace.push(inputBox.node().value);
+            updateTraceGUI();
     
             actionHandler['addAgent']();
     
@@ -107,9 +113,9 @@ let actionHandler = {
         
     },
     'addSite': () => {
-        if (state !== 'addSite') { toggleInput('addSite'); }
+        if (guiState !== 'addSite') { toggleInput('addSite'); }
         initializeOverlay();
-        state = 'addSite';
+        guiState = 'addSite';
 
         svg.on('mouseenter', () => {
             overlay.append('circle')
@@ -168,7 +174,7 @@ let actionHandler = {
     'addLink': () => {
         closeInputs();
         initializeOverlay();
-        state = 'addLink';
+        guiState = 'addLink';
 
         svg.on('mouseenter', () => {
             overlay.append('line')
@@ -251,8 +257,7 @@ let actionHandler = {
     'deleteItem': (data) => {
         closeInputs();
         initializeOverlay();
-
-        state = 'delete';
+        guiState = 'delete';
 
         svg.on('mouseenter', () => {
             overlay.style('pointer-events', 'none');
@@ -290,43 +295,13 @@ let actionHandler = {
         toggleInput('editSite');
     },
     'editState': () => {
-        toggleInput('editState');
+        toggleInput('editguiState');
     }, */
 }
 
-let handleMenuClick = function(e) {
-    // Id of newly clicked element
-    let itemID = e.id;
-
-    for (let option = 0; option < menuOptions.length; option++) {
-        // id of the menu option clicked
-        let currOption = menuOptions[option];
-        // div associated with the id        
-        let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
-
-        // If we find the current element, add active class and display associated div
-        if (currOption.id === itemID) {
-            currOption.classList.add('active');
-            currOptionDiv.style.display = 'block';
-        } else {
-            if (currOption.classList.contains('active')) {
-                currOption.classList.remove('active');
-            }
-            currOptionDiv.style.display = 'none';
-        }
-
-        // If switching to a non-GUI tab, remove SVG mouse interactions and overlay
-        if (currOption.id !== 'gui') {
-            actionHandler['noEdit']();
-        }
-    }
+function undo(updateString) {
+    console.log(updateString);
 }
-for (let i = 0; i < menuOptions.length; i++) {
-    menuOptions[i].addEventListener('click', 
-        function() { handleMenuClick(menuOptions[i]) } 
-    );
-}
-
 
 // Reveals an input field if user clicks on a gui editor button
 function toggleInput(parentDivID) {
@@ -348,35 +323,33 @@ function closeInputs() {
     }
 }
 
-// record of strings explored this session
-let trace = []
+function updateTraceGUI() {
+    // Iterate backwards over trace for five steps
+    // In menu, most recent changes will be shown first
+    for (var i = 0; i < 5; i++) {        
+        // if there is another element 
+        if (trace[trace.length - i - 1]) {
+            let currID = 'trace' + i;            
+            let option = document.getElementById(currID);
 
-var overlay;
-var state = 'noEdit';
-var linkClicks = 0;       // Keeps track of how many times 
-var linkSiteIDs = {       // Stores sites for adding link
-    first: {
-        id: null,
-        x: null,
-        y: null
-    },
-    second: {
-        id: null,
-        x: null,
-        y: null
+            // if the option doesn't exist yet, create it by appending to gui div
+            if (option === null) {
+                let guiDiv = document.getElementById('guiDiv');
+                let div = document.createElement("div");
+                    div.id = currID;
+                    div.className = 'undo-options';
+                    div.addEventListener('click', function() {
+                        // Pass the string to undo function
+                        undo(div.innerHTML);
+                    })
+                guiDiv.appendChild(div);
+                option = div;
+            }
+        
+            console.log(trace[trace.length-i-1]);
+            option.innerHTML = trace[trace.length - i - 1];
+        } else { break; }
     }
-};         // Stores IDs and coordinates of a new link
-
-
-let hovered = undefined;
-
-// Calculates the distance between two points (x1, y1) and (x2, y2)
-function findDistance(x1, y1, x2, y2) {
-    let xDist = x1 - x2;
-    let yDist = y1 - y2;
-    let dist = Math.sqrt(xDist*xDist + yDist*yDist);
-
-    return dist;
 }
 
 // Looks through all agents to see if pointer overlaps with one; returns closest overlapping agent
@@ -392,32 +365,6 @@ function isHoveringOverEl() {
             y: 0
         }
     };
-    /* let elSet;
-    let minDist = (elType === 'agents' ? 38 : 24);
-
-    if (elType === 'agents') {
-        elSet = rule.agents;
-    } else if (elType === 'sites') {
-        elSet = rule.sites;
-    }
-
-    // Look through all existing agents to see if pointer is overlapping with an element 
-    for (var i = 0; i < elSet.length; i++) {
-        let el = elSet[i];
-        let dist = findDistance(el.x, el.y, x, y);
-
-        // If you are hovering over an agent
-        if (dist < minDist) {
-            response.withinDist = true;
-            // Guards against agents that are overlapping
-            if (dist < response.closestEl.distToPointer) {
-                response.closestEl.elID = el.id;        // DOesn't work w/ sites because sites are an array
-                response.closestEl.distToPointer = dist;
-                response.closestEl.x = el.x;
-                response.closestEl.y = el.y;
-            }
-        }
-    } */
     response.withinDist = Boolean(hovered)
     if (hovered) {
         response.closestEl.elID = hovered[1].id;
@@ -483,13 +430,12 @@ function downloadSVG() {
 }
 
 function updateExpression(str) {
-    console.log('store ' + str)
+    clearExpressions()
+    visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 
     trace.push(str)
     localStorage.setItem('trace', trace.join(';'))
-
-    clearExpressions()
-    visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
+    updateTraceGUI();
 }
 
 
@@ -609,7 +555,8 @@ function visualizeExpression(rule, group) {
                                                          d.side == side[i] ? 0.4 : 0)
                             .attr("stroke-dasharray", d => d.isAnonymous ? 4 : null )
                             .on("mouseenter", d => {
-                                hovered = ['link', d, side[i]]
+                                hovered = ['link', d, side[i]];
+                                console.log(d);
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
@@ -623,12 +570,14 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", d => d.isAgent ? 27 : 13)
-                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" : colorsite)
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                                               d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
                             .attr("stroke", d => d.isAgent ? coloragent : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
                             .on("mouseenter", d => {
-                                hovered = [d.isAgent ? 'agent': 'site', d, side[i]]
+                                hovered = [d.isAgent ? 'agent': 'site', d, side[i]];
+                                console.log(d);
                             })
                             .on("mouseleave", () => {hovered = undefined})
 
@@ -680,7 +629,7 @@ function visualizeExpression(rule, group) {
             }
         });
         link[i].on("click", function (d, i) {
-            if (state === 'delete') {
+            if (guiState === 'delete') {
                 console.log(d);
                 //actionHandler['deleteItem'](d);
             }
@@ -727,8 +676,6 @@ function getJSON(input) {
     return expression.text();
 };
 
-
-let guiState = 'none';
 
 // Styles the active GUI action button + div so the user knows which action they are performing
 function addActiveStyle(divID) {
