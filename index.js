@@ -33,12 +33,13 @@ window.addEventListener('resize', onWindowResize, false)
 
 window.addEventListener('load', function() {
     onWindowResize() // initialize metrics
-    clearExpressions() // initialize canvas
+    // canvas will be initialized on update
 
     trace = localStorage.getItem('trace')
     trace = trace ? trace.split(';') : []
 
     let res = trace.slice(-1)[0]
+    if (!res) res = ''
     rule = new KappaRule(...res.split('->'))
 
     inputBox.node().value = rule.toString()
@@ -113,7 +114,6 @@ let actionHandler = {
         })
         svg.on('mousemove', () => {
             let e = d3.event
-            //console.log(e.pageX, e.pageY)
             overlay.select('circle') 
                     .attr('cx', e.pageX - sidebarW)
                     .attr('cy', e.pageY - headerH)
@@ -125,8 +125,6 @@ let actionHandler = {
         })
     
         svg.on('click', () => {
-            console.log('canvas touched')
-    
             let inputValue = document.getElementById('addAgentInput').value;
             if (inputValue === '') {
                 inputValue = 'A';
@@ -135,12 +133,8 @@ let actionHandler = {
             let p = d3.event
             rule.addAgent(inputValue, p.x, p.y)
     
-            clearExpressions()
-            visualizeExpression(rule, svgGroups)
-    
-            inputBox.node().value = rule.toString();
-            trace.push(inputBox.node().value);
-            updateTraceGUI();
+            inputBox.node().value = rule.toString()
+            updateExpression(inputBox.node().value)
     
             actionHandler['addAgent']();
     
@@ -183,7 +177,6 @@ let actionHandler = {
             clearOverlay();
         })
         svg.on('click', () => {
-            console.log('canvas touched')
             let inputValue = document.getElementById('addSiteInput').value;
             if (inputValue === '') {
                 inputValue = 'x';
@@ -195,7 +188,6 @@ let actionHandler = {
             let res = isHoveringOverEl();
 
             // check if it is hovering over an agent
-            console.log(res)
             if (res.withinDist && res.closestEl.elID !== null) {
                 rule.addSite(res.closestEl.elID, inputValue, x, y)
             }
@@ -269,7 +261,6 @@ let actionHandler = {
 
             if (linkClicks < 2) {
                 let res = isHoveringOverEl();
-                console.log(res);
 
                 if (res.closestEl.type === 'site') {
                     let v = hoveredData[hoveredSide].port;
@@ -348,13 +339,6 @@ let actionHandler = {
     }, */
 }
 
-// Code for returning to a previous 
-function undo(updateString) {
-    console.log('undo!');
-
-    makeParsingCallback(updateString)()
-}
-
 function updateTraceGUI() {
     // Iterate backwards over trace for five steps
     // In menu, most recent changes will be shown first
@@ -370,10 +354,13 @@ function updateTraceGUI() {
                 let div = document.createElement("div");
                     div.id = currID;
                     div.className = 'undo-options';
-                    div.addEventListener('click', function() {
-                        // Pass the string to undo function
-                        undo(div.innerHTML);
-                    })
+                    
+                div.addEventListener('click', function() {
+                    console.log('undo: revert to ' + div.textContent)
+                    // Pass the string to undo function
+                    parseString(div.textContent)
+                })
+                    
                 historyDiv.appendChild(div);
                 option = div;
             }
@@ -413,6 +400,7 @@ function isHoveringOverEl() {
         response.closestEl.side = hovered[2];
         
     }
+    // console.log(response)
     return response;
 }
 
@@ -451,14 +439,13 @@ function updateExpression(str) {
 
 
 let rule = new KappaRule('') // TODO: handle empty string gracefully
-let makeParsingCallback = (str) => () => {
+let parseString = (str) => {
     rule = new KappaRule(...str.split('->'))
 
     // HACK: implicitly fails if the KappaRule is invalid.
     updateExpression(str)
 }
-let onInput = makeParsingCallback(inputBox.property('value'))
-inputBox.on('input', onInput);
+inputBox.on('input', parseString(inputBox.property('value')));
 
 function clearExpressions() {
     // Clear svg before loading new graph (accommodates for added text)
@@ -477,6 +464,7 @@ function clearExpressions() {
 
     initializeOverlay() // depends on svg
 
+    console.log('w: ' + w) 
     svgGroups =
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
