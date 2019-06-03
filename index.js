@@ -28,6 +28,10 @@ let onWindowResize = () => {
     h = document.getElementById('svgDiv').clientHeight;
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
+    if (svg) {
+        
+        updateArrow();
+    }
 }
 window.addEventListener('resize', onWindowResize, false)
 
@@ -68,6 +72,7 @@ function closeInputs() {
 let trace = [] // record of strings explored this session
 
 var overlay;
+var arrow;
 var guiState = 'noEdit';
 var linkClicks = 0;       // Keeps track of how many times 
 var linkSiteIDs = {       // Stores sites for adding link
@@ -411,11 +416,14 @@ for (var i = 0; i < guiButtons.length; i++) {
     let parentDivID = guiButtons[i].parentElement.id;
     console.log(parentDivID)
 
-    guiButtons[i].addEventListener('click', () => {
-        clearOverlay();
-        actionHandler[parentDivID]()
-        
-    });
+    // Don't highlight the history Div
+    if (parentDivID !== 'history') {
+        guiButtons[i].addEventListener('click', () => {
+            clearOverlay();
+            addActiveStyle(parentDivID);
+            actionHandler[parentDivID]();
+        });
+    }
 }
 
 var svg, svgGroups
@@ -479,12 +487,19 @@ function initializeOverlay() {
     // ASSUME agent placement for now
     overlay = svg.append('g')
                 .attr('id', 'overlay');
-    
-    
 }
 
-function addArrow() {
-    let arrowBase = overlay.append('line')
+function initializeArrow() {
+    arrow = svg.append('g')
+                .attr('id', 'arrow');
+    updateArrow();
+}
+
+function updateArrow() {
+    arrow.selectAll('line')
+                .remove();
+                
+    let arrowBase = arrow.append('line')
                 .attr('x1', w/2 - 30)
                 .attr('y1', h/2)
                 .attr('x2', w/2 + 30)
@@ -493,7 +508,7 @@ function addArrow() {
                 .style('stroke-width', '5px')
                 .style('stroke-linecap', 'round');
 
-    let arrowHeadTop = overlay.append('line')
+    let arrowHeadTop = arrow.append('line')
                 .attr('x1', w/2 + 5)
                 .attr('y1', h/2 - 10)
                 .attr('x2', w/2 + 30)
@@ -501,7 +516,7 @@ function addArrow() {
                 .style('stroke', '#eeeeee')
                 .style('stroke-width', '5px')
                 .style('stroke-linecap', 'round');
-    let arrowHeadBottom = overlay.append('line')
+    let arrowHeadBottom = arrow.append('line')
                 .attr('x1', w/2 + 5)
                 .attr('y1', h/2 + 10)
                 .attr('x2', w/2 + 30)
@@ -721,7 +736,7 @@ function visualizeExpression(rule, group) {
         });
 
     // add the arrow to the overlay
-    addArrow();
+    initializeArrow();
 
     // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
     jsonBlob = {...rule, text: inputBox.property('value')}
@@ -752,6 +767,9 @@ function addActiveStyle(divID) {
     // Once all active classes are remove, re-add the active class to the divID 
     document.getElementById(divID).classList.add('gui-button-div-active');
     document.getElementById(divID + "Button").classList.add('gui-button-div-active');
+    // if (document.getElementById(divID + "Button")) {
+        
+    // }
 }
 
 // Action associated w/ Download JSON Button
@@ -780,15 +798,12 @@ uploadBox.on('input', function() {
 });
 
 let handleMenuClick = function(e) {
-    // Id of newly clicked element
     let itemID = e.id;
-
     for (let option = 0; option < menuOptions.length; option++) {
         // id of the menu option clicked
         let currOption = menuOptions[option];
         // div associated with the id        
         let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
-
         // If we find the current element, add active class and display associated div
         if (currOption.id === itemID) {
             currOption.classList.add('active');
