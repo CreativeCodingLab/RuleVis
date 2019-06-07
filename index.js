@@ -571,8 +571,10 @@ function visualizeExpression(rule, group) {
                         ).flat() */
                         // HACK: a poor workaround for webcola failing to lay out disconnected graphs
     let nodesAndBounds = [...nodes,
-        {x: 0, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'left'}},
-        {x: w/2, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'right'}}]
+        {x: 0, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'left_bound'}},
+        {x: w/2, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'right_bound'}},
+        {x: w/4, y: 0, fixed: true, fixedWeight: 1e5, lhs: {name: 'top_bound'}},
+        {x: w/4, y: h, fixed: true, fixedWeight: 1e5, lhs: {name: 'bot_bound'}}]
 
     simulation = cola
         .d3adaptor(d3)
@@ -583,7 +585,9 @@ function visualizeExpression(rule, group) {
             .avoidOverlaps(true)
             .constraints(d3.range(nodes.length-1).map( i =>
                 [{axis: 'x', type: 'separation', right: i, left: nodes.length, gap: 27},
-                 {axis: 'x', type: 'separation', left: i, right: nodes.length+1, gap: 27}] )
+                 {axis: 'x', type: 'separation', left: i, right: nodes.length+1, gap: 27},
+                 {axis: 'y', type: 'separation', right: i, left: nodes.length+2, gap: 27},
+                 {axis: 'y', type: 'separation', left: i, right: nodes.length+3, gap: 27}] )
                 .flat())
 
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
