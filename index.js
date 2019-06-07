@@ -196,6 +196,7 @@ let actionHandler = {
 
             // if it is hovering over an agent, the id will be valid
             if (res.withinDist) {
+                console.log(res.closestEl.id)
                 rule.addSite(res.closestEl.id, inputValue, x, y)
             }
         
