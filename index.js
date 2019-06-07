@@ -114,7 +114,7 @@ let actionHandler = {
                     .attr('r', 27)
                     .style('fill', 'none')
                     .style('stroke', 'black')
-                    .style('fill', coloragent)
+                    .style('fill', paletteagent[0])
                     .style('opacity', 0.5)
                     .style('stroke-dasharray', '8 4')
                     .style('pointer-events', 'none')
@@ -143,7 +143,7 @@ let actionHandler = {
             inputBox.node().value = rule.toString()
             updateExpression(inputBox.node().value)
     
-            actionHandler['addAgent']();
+            actionHandler['addAgent'](); // FIXME: odd place to rebind the modal callbacks
     
         })
         
@@ -194,9 +194,9 @@ let actionHandler = {
             let y = p.pageY - headerH;
             let res = isHoveringOverEl();
 
-            // check if it is hovering over an agent
-            if (res.withinDist && res.closestEl.elID !== null) {
-                rule.addSite(res.closestEl.elID, inputValue, x, y)
+            // if it is hovering over an agent, the id will be valid
+            if (res.withinDist) {
+                rule.addSite(res.closestEl.id, inputValue, x, y)
             }
         
             inputBox.node().value = rule.toString()
@@ -215,7 +215,7 @@ let actionHandler = {
                 // Makes sure it's on the same side
                 if (linkSiteIDs.first.side === res.closestEl.side) {
                     // Makes sure the agents are distinct
-                    if (linkSiteIDs.first.id[0] !== res.closestEl.elID[0]) {
+                    if (linkSiteIDs.first.id[0] !== res.closestEl.id[0]) {
                         // Ensures adding to a site
                         if (res.closestEl.type === 'site') {
                             let v = hoveredData[hoveredSide].port;
@@ -272,17 +272,11 @@ let actionHandler = {
                 if (res.closestEl.type === 'site') {
                     let v = hoveredData[hoveredSide].port;
                     if (linkClicks === 0 && (!v || v.length === 0)) {
-                        linkSiteIDs.first.id = res.closestEl.elID;
-                        linkSiteIDs.first.x = res.closestEl.x;
-                        linkSiteIDs.first.y = res.closestEl.y;
-                        linkSiteIDs.first.side = res.closestEl.side;
+                        linkSiteIDs.first = {...res.closestEl}
                         linkClicks++;
                     } 
                     else if (linkClicks === 1 && validLink(res)) {
-                        linkSiteIDs.second.id = res.closestEl.elID;
-                        linkSiteIDs.second.x = res.closestEl.x;
-                        linkSiteIDs.second.y = res.closestEl.y;
-                        linkSiteIDs.second.side = res.closestEl.side;
+                        linkSiteIDs.second = {...res.closestEl}
 
                         // Add a bond to the rule
                         rule.addBond(linkSiteIDs.first.id, linkSiteIDs.second.id);
@@ -316,16 +310,20 @@ let actionHandler = {
 
         svg.on('click', () => {
              let res = isHoveringOverEl();
+             console.log('deleting item:')
+             console.log(res)
+
              if (res.withinDist) {
+                let v = res.closestEl
                 // Call appropriate backend function whether it's a link or node 
-                if (hovered[0] === 'link') {
-                    rule.deleteBond(hovered[2], hovered[1].id)  // Line above passes side to function 
+                if (v.type == 'link') {
+                    rule.deleteBond(v.side, v.id)  // Line above passes side to function 
                     
-                } else if (hovered[0] === 'agent') {
-                    rule.deleteAgent(hovered[2], hovered[1].id)
+                } else if (v.type == 'agent') {
+                    rule.deleteAgent(v.side, v.id)
                 }
-                else {
-                    rule.deleteSite(hovered[1].id)
+                else if (v.type == 'site') {
+                    rule.deleteSite(v.id)
                 }
              }
 
@@ -390,7 +388,8 @@ function isHoveringOverEl() {
         withinDist: false,
         closestEl: {
             type: '',
-            elID: null,
+            index: -1,
+            id: -1,
             //distToPointer: Number.MAX_SAFE_INTEGER,
             x: 0,
             y: 0,
@@ -401,11 +400,11 @@ function isHoveringOverEl() {
     response.withinDist = Boolean(hovered)
     if (hovered) {
         response.closestEl.type = hovered[0];
-        response.closestEl.elID = hovered[1].id;
+        response.closestEl.id = hovered[1].id;
+
         response.closestEl.x = hovered[1].x;
         response.closestEl.y = hovered[1].y;
         response.closestEl.side = hovered[2];
-        
     }
     // console.log(response)
     return response;
@@ -547,7 +546,7 @@ function clearSVGListeners() {
 var nodes, links,
     simulation
 
-var coloragent = '#3eb78a';
+var paletteagent = ['#3eb78a', '#3e9eb7', '#3e64b7', '#403eb7', '#723eb7', '#9c3eb7'];
 var colorsite = '#fcc84e';
 
 function visualizeExpression(rule, group) {
@@ -593,8 +592,11 @@ function visualizeExpression(rule, group) {
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
-    let currSide;
-    let currLink = null;        // Stores index of current link; null if not over it
+    // let currSide;
+    // let currLink = null;        // Stores index of current link; null if not over it
+
+    let colorKey = [...new Set(rule.agents.map(u => u.lhs.name).concat(rule.agents.map(u => u.rhs.name)))]
+    let coloragent = (d,i) => d[side[i]] ? paletteagent[colorKey.indexOf(d[side[i]].name) % paletteagent.length] : '#fff'
 
     // visualization stores
     let link = [], node = [], freeNode = [],
@@ -640,9 +642,9 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", d => d.isAgent ? 27 : 13)
-                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent(d,i) : "#fff" :
                                                d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
-                            .attr("stroke", d => d.isAgent ? coloragent : colorsite)
+                            .attr("stroke", d => d.isAgent ? coloragent(d,i) : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
                             .on("mouseenter", function(d) {
@@ -652,15 +654,16 @@ function visualizeExpression(rule, group) {
                                 hovered = [d.isAgent ? 'agent': 'site', d, side[i]];
                                 d3.select(this).style('fill', d.isAgent ? '#49d3a0' : '#ffdb85');
                                 d3.select(this).style('stroke', d.isAgent ? '#49d3a0' : '#ffdb85');
+                                // TODO: lighten and darken dynamically
                             })
                             .on("mouseleave", function(d) {
                                 hoveredData = undefined;
                                 hoveredSide = '';
                                 hoveredType = '';
                                 hovered = undefined;
-                                d3.select(this).style('fill', d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                                d3.select(this).style('fill', d.isAgent ? d[side[i]].name ? coloragent(d,i) : "#fff" :
                                                       d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
-                                                      d3.select(this).style('stroke', d.isAgent ? coloragent : colorsite)
+                                                      d3.select(this).style('stroke', d.isAgent ? coloragent(d,i) : colorsite)
                             })
 
         // node annotations

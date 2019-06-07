@@ -272,7 +272,9 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                         .forEach(w => w.sibCount += 1)
         }
     },
-    addBond: function (a, b) {
+    addBond: function (srcId, tarId) {
+        let a = srcId,
+            b = tarId
         if (a[0] == b[0]) {
             if (a[1] == b[1]) {
                 // HACK: wiring an EMPTY to itself makes an ANY
@@ -332,8 +334,9 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         }
     },
 
-    deleteAgent: function (side, index) {
-        let u = this.agents.find(u => u.id == index)
+    deleteAgent: function (side, id) {
+        let index = this.agents.findIndex(u => u.id == id),
+            u = this.agents[index]
         if (u) {
             // delete self
             u[side] = new Agent(index)
@@ -349,14 +352,17 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             if (!u.lhs.name && !u.rhs.name) {
                 // remove children sites
                 d3.range(u.siteCount).forEach(i => {this.deleteSite([index, i])} )
-                this.agents.splice(index, 1) // VERIFY    
+
+                // dereference self
+                this.agents.splice(index, 1)
             }
         }
     },
-    deleteSite: function(index) {
+    deleteSite: function(id) {
+        console.log('deleting site ' + id)
         // no asymmetry between sites is allowed, because they are part of their agent's signature
 
-        let idx = this.sites.findIndex(v => v.id[0] == index[0] && v.id[1] == index[1]),
+        let idx = this.sites.findIndex(v => v.id[0] == id[0] && v.id[1] == id[1]),
             v = idx != -1 ? this.sites[idx] : undefined
         if (v) {
             // unbind port
@@ -364,32 +370,32 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             unbind(v.lhs.port)
             unbind(v.rhs.port)
             // (TODO: delete virtual site, if my port is _)
-
-            // delete self
             
             // unbind from parent
-            this.agents[index[0]].siteCount -= 1
+            this.agents.find(u => u.id == id[0]).siteCount -= 1
+
             rule.parents = rule.parents.filter((({target: tar}) =>
                 tar.id[0] != v.id[0] || tar.id[1] != v.id[1] ))
 
             // reindex siblings
             this.sites.splice(idx, 1)
-            this.sites.filter(v => v.id[0] == index[0] && v.id[1] > index[1])
+            this.sites.filter(v => v.id[0] == id[0] && v.id[1] > id[1])
                       .forEach(v => { v.id[1] -= 1 }) // VERIFY: GUI'd ids aren't contiguous, but does this at least not break?
         }
     },
-    deleteBond: function (side, index) {
+    deleteBond: function (side, id) {
         // VERIFY: assume link indexes are preserved on lhs, rhs of rule
         
         // find sites whose port has this link
         
-        console.log('unbinding ' + side + ' sites with bond ' + index)
-        let friends = this.sites.filter(v => v[side] && v[side].port == index)
+        console.log('unbinding ' + side + ' sites with bond ' + id)
+
+        let friends = this.sites.filter(v => v[side] && v[side].port == id)
         friends.forEach(v => {
             v[side].port = [] // unbind them
         })
 
-        let idx = this.bonds.findIndex(bnd => bnd[side] && bnd[side].id == index ),
+        let idx = this.bonds.findIndex(bnd => bnd[side] && bnd[side].id == id ),
             bnd = idx != -1 ? this.bonds[idx] : undefined
 
         if (bnd) {
