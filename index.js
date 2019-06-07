@@ -806,7 +806,7 @@ let handleMenuClick = function(e) {
         let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
         // If we find the current element, add active class and display associated div
         if (currOption.id === itemID) {
-            currOption.classList.add('active');
+            currOption.classList.add('active'); 
             currOptionDiv.style.display = 'block';
         } else {
             if (currOption.classList.contains('active')) {
@@ -826,3 +826,14 @@ for (let i = 0; i < menuOptions.length; i++) {
         function() { handleMenuClick(menuOptions[i]) } 
     );
 }
+
+// Hotkey functionality
+window.addEventListener('keyup', function (e) { 
+    
+    if (e.key === "Escape") {
+        console.log('keypress');
+        guiState = 'noEdit';
+        addActiveStyle('noEdit');
+        actionHandler['noEdit']();
+    }
+})
