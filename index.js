@@ -213,6 +213,8 @@ let actionHandler = {
 
         let validLink = function(res) {
             if (res.withinDist) {
+                console.log(linkSiteIDs)
+
                 // Makes sure it's on the same side
                 if (linkSiteIDs.first.side === res.closestEl.side) {
                     // Makes sure the agents are distinct
@@ -223,7 +225,6 @@ let actionHandler = {
                             if (!v || v.length === 0) {
                                 return true;
                             }
-                            
                         }
                     }
                 }
@@ -269,9 +270,11 @@ let actionHandler = {
 
             if (linkClicks < 2) {
                 let res = isHoveringOverEl();
+                console.log(res)
 
                 if (res.closestEl.type === 'site') {
                     let v = hoveredData[hoveredSide].port;
+
                     if (linkClicks === 0 && (!v || v.length === 0)) {
                         linkSiteIDs.first = {...res.closestEl}
                         linkClicks++;
@@ -389,7 +392,6 @@ function isHoveringOverEl() {
         withinDist: false,
         closestEl: {
             type: '',
-            index: -1,
             id: -1,
             //distToPointer: Number.MAX_SAFE_INTEGER,
             x: 0,
@@ -479,7 +481,7 @@ function clearExpressions() {
 
     initializeOverlay() // depends on svg
 
-    console.log('w: ' + w) 
+    // console.log('w: ' + w) 
     svgGroups =
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]

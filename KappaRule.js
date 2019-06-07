@@ -249,7 +249,9 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         })
     },
     addSite: function (parent, name, x=0, y=0) {
-        let u = this.agents.find(u => u.id == parent) // TODO: take reference itself as arg
+        // TODO: take reference itself as argument?
+        let idx = this.agents.findIndex(u => u.id == parent),
+            u = this.agents[idx]
         if (u) {
             let v = new Site(parent, u.siteCount)
             v.name = name
@@ -263,7 +265,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             u.siteCount += 1
 
             this.parents.push(
-                {'source': u.id,
+                {'source': idx, // u.id,
                 'target': this.getIndex(v.id),
                 'isParent': true,
                 'sibCount': u.siteCount
@@ -342,7 +344,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             u[side] = new Agent(index)
 
             // delete children sites & their edges
-            this.sites.filter(v => v.id[0] == index)
+            this.sites.filter(v => v.id[0] == id)
                       .forEach(v => {
                           if (typeof v[side].port == 'number')
                             this.deleteBond(side, v[side].port)
@@ -351,7 +353,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
 
             if (!u.lhs.name && !u.rhs.name) {
                 // remove children sites
-                d3.range(u.siteCount).forEach(i => {this.deleteSite([index, i])} )
+                d3.range(u.siteCount).forEach(i => {this.deleteSite([id, i])} )
 
                 // dereference self
                 this.agents.splice(index, 1)
