@@ -29,8 +29,10 @@ let onWindowResize = () => {
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
     if (svg) {
-        
         updateArrow();
+
+        clearExpressions()
+        visualizeExpression(rule, svgGroups)
     }
 }
 window.addEventListener('resize', onWindowResize, false)
