@@ -600,7 +600,7 @@ function visualizeExpression(rule, group) {
 
     let colorKey = [...new Set(rule.agents.map(u => u.lhs.name)
                       .concat(rule.agents.map(u => u.rhs.name)))].filter(s => s)
-                      
+
     let coloragent = (d,i) => d[side[i]] ? paletteagent[
         colorKey.indexOf(d[side[i]].name) % paletteagent.length
     ] : '#fff'
@@ -695,7 +695,7 @@ function visualizeExpression(rule, group) {
                         .style('opacity', d => d.label ? 1 : 0);
 
         state[i] = nodeGroup[i].append("text")
-                        .text(d => d.state)
+                        .text(d => d[side[i]].state)
                         .attr("fill", "black")
                         .attr("font-size", 12)
                         .style('opacity', d => d.label ? 1 : 0);
