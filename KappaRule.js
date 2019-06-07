@@ -88,6 +88,7 @@ function KappaRule(lhs, rhs) {
                                 'isParent': true,
                                 'sibCount': this.agents[u.id[0]].siteCount,
                                 }))
+
     // treat bonds (site-site links)
     this.bonds = e[0].bonds
                 .map((u,k) => [u,k]) // enumerate
@@ -96,9 +97,10 @@ function KappaRule(lhs, rhs) {
                                                 'target': this.getIndex(tar),
                                                 'side': 'lhs',
                                                 'id': k},
-                                          'rhs': undefined})
+                                          'rhs': undefined,
+                                          'id': k})
     )
-    console.log(e.map(ei => ei.bonds))
+    // console.log(e.map(ei => ei.bonds))
     if (e[1])
         e[1].bonds.forEach( ([src, tar], k) => {
             // merge named bonds only
@@ -113,7 +115,8 @@ function KappaRule(lhs, rhs) {
                             'id': k}
                 if (u === undefined)
                     this.bonds.push({'lhs': undefined,
-                                    'rhs': res})
+                                    'rhs': res,
+                                    'id': k})
                 else
                     u.rhs = res
             }
@@ -292,8 +295,9 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         let u = this.sites.find(v => v.id[0] == a[0] && v.id[1] == a[1]),
             w = this.sites.find(v => v.id[0] == b[0] && v.id[1] == b[1])
         if (u && w) {
-            let ks = d3.range(this.bonds.length).filter(k => !this.bonds[k+1]),
-                k = ks.length > 0 ? ks[0]+2 : 1
+            let used = new Set(this.bonds.map(w => w.id))
+            let ks = d3.range(this.bonds.length).filter(k => !used.has(k+1)),
+                k = ks.length == 0 ? this.bonds.length + 1 : ks[0]+1
 
             // let clobber = new Set()
             let isEmpty = (v) => { // FIXME: ew, side effects
@@ -324,7 +328,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             }
 
             // console.log(k, added)
-            let res = {}
+            let res = {id: k}
             if (added[0])
                 res.lhs = {id: k, 'side': 'lhs', source: this.getIndex(a), target: this.getIndex(b)}
             if (added[1])
