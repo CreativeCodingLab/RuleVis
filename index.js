@@ -374,7 +374,7 @@ function updateTraceGUI() {
                 option = div;
             }
         
-            console.log(trace[trace.length-i-1]);
+            // console.log(trace[trace.length-i-1]);
             option.innerHTML = trace[trace.length - i - 1];
         } else { break; }
     }
@@ -598,8 +598,12 @@ function visualizeExpression(rule, group) {
     // let currSide;
     // let currLink = null;        // Stores index of current link; null if not over it
 
-    let colorKey = [...new Set(rule.agents.map(u => u.lhs.name).concat(rule.agents.map(u => u.rhs.name)))]
-    let coloragent = (d,i) => d[side[i]] ? paletteagent[colorKey.indexOf(d[side[i]].name) % paletteagent.length] : '#fff'
+    let colorKey = [...new Set(rule.agents.map(u => u.lhs.name)
+                      .concat(rule.agents.map(u => u.rhs.name)))].filter(s => s)
+                      
+    let coloragent = (d,i) => d[side[i]] ? paletteagent[
+        colorKey.indexOf(d[side[i]].name) % paletteagent.length
+    ] : '#fff'
 
     // visualization stores
     let link = [], node = [], freeNode = [],

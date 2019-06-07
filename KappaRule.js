@@ -356,9 +356,14 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                         })
 
             if (!u.lhs.name && !u.rhs.name) {
+                console.log('removing children of ' + id)
                 // remove children sites
-                d3.range(u.siteCount).forEach(i => {this.deleteSite([id, i])} )
-
+                this.sites.filter(v => v.id[0] == id ).forEach(v =>
+                    this.deleteSite(v.id)
+                )
+                // FIXME: siteCount may be inaccurate
+                // d3.range(u.siteCount).forEach(i => { this.deleteSite([id, i]) })
+                
                 // dereference self
                 this.agents.splice(index, 1)
             }
