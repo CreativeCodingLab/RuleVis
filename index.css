@@ -68,6 +68,8 @@ input {
     border: 1px solid rgb(161, 161, 161);
     height: calc(100vh - 77px);
     float: left;
+    overflow: scroll;
+
 }
 
 #sidebarMenu {
@@ -207,11 +209,20 @@ div.gui-button-div > select option:hover {
     padding: 10px;
     margin: 10px;
     line-height: 1.2em;
+    overflow-wrap: break-word;
+    overflow: scroll;
+    background-color: white;
+    color: black;
 }
 
 .undo-options:hover {
     cursor: pointer;
     background-color: #eeeeee;
+}
+
+.undo-options-active {
+    background-color: #666666;
+    color: white;
 }
 
 /*-----------------SVG STYLING--------------------------*/

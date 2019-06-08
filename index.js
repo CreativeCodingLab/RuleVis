@@ -94,12 +94,14 @@ var linkSiteIDs = {       // Stores sites for adding link
 let actionHandler = {
     // Move button calls noEdit but is not a true move; if add another site, moves back to original position
     'noEdit': () => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         guiState = 'noEdit';
         clearSVGListeners();
         closeInputs();
         clearOverlay();
     },
     'addAgent': () => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         // If the user *just* clicked on addAgent button, open the input div
         // Else, the div is already open and they are adding another agent
         if (guiState !== 'addAgent') { toggleInput('addAgent'); }
@@ -147,6 +149,7 @@ let actionHandler = {
         
     },
     'addSite': () => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         if (guiState !== 'addSite') { toggleInput('addSite'); }
         initializeOverlay();
         guiState = 'addSite';
@@ -230,15 +233,17 @@ let actionHandler = {
 
         svg.on('mouseenter', () => {
             overlay.append('line')
-            .style('stroke-width', '2px')
-            .style('opacity', 0.5)
-            .style('pointer-events', 'none');
+                .style('stroke-width', '2px')
+                .style('opacity', 0.5)
+                .style('pointer-events', 'none');
+
+            document.getElementById('svgDiv').style.cursor = 'crosshair';
         })
 
         svg.on('mousemove', () => {
             let e = d3.event;
             let res = isHoveringOverEl();
-            document.getElementById('svgDiv').style.cursor = 'crosshair';
+            
 
             // If they already selected first site, show a line extending from first point to current cursor
             // Color = red if not over valid site
@@ -300,6 +305,7 @@ let actionHandler = {
 
     },
     'deleteItem': (data) => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         closeInputs();
         initializeOverlay();
         guiState = 'delete';
@@ -368,12 +374,19 @@ function updateTraceGUI() {
                     
                 historyDiv.appendChild(div);
                 option = div;
+            } else {
+                option.classList.add('undo-options');
+                if (option.classList.contains('undo-options-active')) {
+                    option.classList.remove('undo-options-active');
+                }
             }
         
             console.log(trace[trace.length-i-1]);
             option.innerHTML = trace[trace.length - i - 1];
         } else { break; }
     }
+
+    document.getElementById('trace0').classList.add('undo-options-active');
 }
 
 let hoveredData = undefined,
@@ -829,9 +842,7 @@ for (let i = 0; i < menuOptions.length; i++) {
 
 // Hotkey functionality
 window.addEventListener('keyup', function (e) { 
-    
     if (e.key === "Escape") {
-        console.log('keypress');
         guiState = 'noEdit';
         addActiveStyle('noEdit');
         actionHandler['noEdit']();
