@@ -1,5 +1,5 @@
 // Titles & headers
-let header = d3.select("#header");
+//let header = d3.select("#header");
 
 var expression;
 let hovered = undefined;
@@ -20,11 +20,11 @@ let svgDiv = d3.select('div#svgDiv');
 let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
 let menuMap = new Map(menuMapArray);
 
-let headerH, h, w, sidebarW // Height of header + 15px of margin on top and bottom
+let h, w, sidebarW // Height of header + 15px of margin on top and bottom
 
 // SETUP
 let onWindowResize = () => {
-    headerH = document.getElementById('header').clientHeight;
+    //headerH = 0;
     h = document.getElementById('svgDiv').clientHeight;
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
@@ -123,7 +123,7 @@ let actionHandler = {
             let e = d3.event
             overlay.select('circle') 
                     .attr('cx', e.pageX - sidebarW)
-                    .attr('cy', e.pageY - headerH)
+                    .attr('cy', e.pageY)
                     .style('pointer-events', 'none')
                     
         })
@@ -167,7 +167,7 @@ let actionHandler = {
         svg.on('mousemove', () => {
             let e = d3.event  
 
-            let res = isHoveringOverEl('agents', (e.pageX - sidebarW), (e.pageY - headerH));
+            let res = isHoveringOverEl('agents', (e.pageX - sidebarW), (e.pageY));
             
             if (res.withinDist) {
                 overlay.select('circle') 
@@ -179,7 +179,7 @@ let actionHandler = {
 
             overlay.select('circle')
                     .attr('cx', e.pageX - sidebarW)
-                    .attr('cy', e.pageY - headerH) 
+                    .attr('cy', e.pageY) 
         })
         svg.on('mouseleave', () => {
             clearOverlay();
@@ -192,7 +192,7 @@ let actionHandler = {
     
             let p = d3.event
             let x = p.pageX - sidebarW;
-            let y = p.pageY - headerH;
+            let y = p.pageY;
             let res = isHoveringOverEl();
 
             // check if it is hovering over an agent
@@ -253,7 +253,7 @@ let actionHandler = {
                             .attr('x1', linkSiteIDs.first.side === 'lhs' ? linkSiteIDs.first.x : linkSiteIDs.first.x + w/2)
                             .attr('y1', linkSiteIDs.first.y)
                             .attr('x2', e.pageX - sidebarW)
-                            .attr('y2', e.pageY - headerH)
+                            .attr('y2', e.pageY)
                             .style('stroke', validLink(res) ? 'gray' : 'red')
                             .style('stroke-width', '5px')
                             .style('opacity', 0.5);
