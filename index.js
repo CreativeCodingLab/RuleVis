@@ -52,19 +52,22 @@ window.addEventListener('load', function() {
     updateExpression(res)
 })
 // Reveals an input field if user clicks on a gui editor button
-// TODO: first, style all input elements to be hidden, then reveal appropriate one
 function toggleInput(parentDivID) {
     console.log("parentDivID = " + parentDivID);
 
     let inputID = parentDivID + "Input";
     let inputElement = document.getElementById(inputID);
+    closeInputs();
+    inputElement.style.display = 'block';
+}
 
-    if (inputElement.style.display == 'block') {
-        console.log("hide");
-        inputElement.style.display = 'none';
-    } else {
-        inputElement.style.display = 'block';
-        console.log('show');
+// Closes all input tabs
+function closeInputs() {
+    let allInputs = document.getElementsByClassName('gui-input');
+
+    for (var i = 0; i < allInputs.length; i++) {
+        allInputs[i].style.display = 'none';
+        allInputs[i].value = '';
     }
 }
 
@@ -93,7 +96,6 @@ let actionHandler = {
     'noEdit': () => {
         document.getElementById('svgDiv').style.cursor = 'auto';
         guiState = 'noEdit';
-        clearSVGListeners();
         closeInputs();
         clearOverlay();
     },
@@ -691,6 +693,8 @@ function visualizeExpression(rule, group) {
                             })
 
         // node annotations
+        let siteNote = (d) => `s${d.id[0]}-${d.id[1]}`
+
         freeNode[i] = root.append("g")
                         .selectAll("circle")
                         .data(nodes)
@@ -703,7 +707,8 @@ function visualizeExpression(rule, group) {
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)
-                        .attr("class", d => d.isAgent ? "agent" : "site")
+                        // .attr("class", d => d.isAgent ? "agent" : "site")
+                        .attr("class", d => d.isAgent ? `a${d.id}` : siteNote(d))
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
                         .attr("font-size", d => d.isAgent ? 16 : 12)
@@ -711,7 +716,9 @@ function visualizeExpression(rule, group) {
                         .style('opacity', d => d.label ? 1 : 0);
 
         state[i] = nodeGroup[i].append("text")
+                        // .data(nodes.filter(d => !d.isAgent)) // TODO: is not parallel to 'nodes', suppress state text another way
                         .text(d => d[side[i]].state)
+                        .attr("class", d => d.isAgent ? `moot` : siteNote(d))
                         .attr("fill", "black")
                         .attr("font-size", 12)
                         .style('opacity', d => d.label ? 1 : 0);
@@ -729,23 +736,23 @@ function visualizeExpression(rule, group) {
         });
         nodeGroup[i].on("click", function(d,i) {
             if (d.label === false) {
-                d.label = true;
-                console.log(d)
-                d3.select(this).selectAll('text').style('opacity', 1);
+                // d.label = true; // TODO: less brittle equivalence check for IDs
+                if (d.isAgent) nodes.filter(u => u.id == d.id).forEach( u => u.label = true )
+                else nodes.filter(v => v.id[0] == d.id[0] && v.id[1] == d.id[1]).forEach( v => v.label = true )
+
+                d3.selectAll(`text.${d.isAgent ? `a${d.id}` : siteNote(d)}`)
+                  .style('opacity', 1);
 
                 //d.lhs.name != d.rhs.name
             } else {
-                d.label = false;
-                console.log(d)
-                d3.select(this).selectAll('text').style('opacity', 0);
+                ///d.label = false;
+                if (d.isAgent) nodes.filter(u => u.id == d.id).forEach( u => u.label = false )
+                else nodes.filter(v => v.id[0] == d.id[0] && v.id[1] == d.id[1]).forEach( v => v.label = false )
+
+                d3.selectAll(`text.${d.isAgent ? `a${d.id}` : siteNote(d)}`)
+                  .style('opacity', 0);
             }
         });
-        link[i].on("click", function (d, i) {
-            if (guiState === 'delete') {
-                console.log(d);
-                //actionHandler['deleteItem'](d);
-            }
-        })
     })
 
     simulation.on("tick", () => {
