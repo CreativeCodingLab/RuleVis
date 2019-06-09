@@ -7,10 +7,11 @@ body {
 h1 {
     color: white;
     font-family: 'Helvetica Neue', sans-serif;
-    font-size: 20px;
+    font-size: 30px;
     font-weight: bold;
     line-height: 1;
-    text-align: center;
+    padding: 0px;
+    margin: 5px;
 }
 
 /* Page subheading */
@@ -56,7 +57,7 @@ input {
 
 /* Header div styling */
 #header {
-    background-color: rgb(119, 135, 160);
+    background-color: #224A62;
     padding: 15px;
     margin: 0;
 }
@@ -65,13 +66,15 @@ input {
 
 #sidebar {
     width: calc(30% - 2px);
-    border: 1px solid rgb(161, 161, 161);
-    height: calc(100vh - 77px);
+    /* border: 1px solid rgb(161, 161, 161); */
+    height: 100vh;
     float: left;
+    overflow: scroll;
+    background-color: #F5F7F9;
 }
 
 #sidebarMenu {
-    background-color: rgb(219, 219, 219);
+    background-color: #8CAABB;
     text-align: left;
     width: 100%;
 }
@@ -79,21 +82,21 @@ input {
 /* styling for each sidebar menu option/button */
 .menuOption {
     padding: 10px 10px;
-    background-color:rgb(219, 219, 219);
+    background-color: #8CAABB;
     border: none;
     height: 40px;
     font-size: 14px;
     transition: 0.3s;
-    margin: 0;
+    margin: 0px;
 }
 
 .active {
-    background-color: white;
+    background-color: #E5EBEF;
 }
 
 .menuOption:hover:not(.active) {
     cursor: pointer;
-    background-color: rgb(228, 228, 228);
+    background-color: #ADC2CE;
 }
 
 
@@ -134,7 +137,7 @@ textarea:focus {
 }
 
 .gui-button {
-    background-color: white;
+    background-color: #F5F7F9;
     border: none;
     color: rgb(75, 75, 75);
     padding: 18px 22px;
@@ -148,11 +151,11 @@ textarea:focus {
 }
 
 .gui-button:hover {
-    background-color: #eeeeee;
+    background-color: #D8DEE1;
 }
 
 .gui-button-div:not(:last-child) {
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid #D8DEE1;
     width: 100%;
 }
 
@@ -188,11 +191,11 @@ div.gui-button-div > select option {
 
 div.gui-button-div > select option:hover {
     cursor: pointer;
-    background-color: #eeeeee;
+    background-color: #D8DEE1;
 }
 
 .gui-button-div-active {
-    background-color: #eeeeee;
+    background-color: #D8DEE1;
 }
 
 .icon {
@@ -200,30 +203,37 @@ div.gui-button-div > select option:hover {
     width: auto;
     padding-right: 20px;
 }
-
 /* undo option styling */
 .undo-options {
     font-family: Arial, Helvetica, sans-serif;
-    padding: 10px;
-    margin: 10px;
+    padding: 20px;
+    /* margin: 10px; */
     line-height: 1.2em;
+    overflow-wrap: break-word;
+    /* overflow: scroll; */
+    background-color: #F5F7F9;
+    color: black;
 }
 
 .undo-options:hover {
     cursor: pointer;
-    background-color: #eeeeee;
+}
+
+.undo-options-active {
+    /* background-color: #628AA1; */
+    /* color: white; */
 }
 
 /*-----------------SVG STYLING--------------------------*/
 #svgDiv {
     width: 70%;
-    height: calc(100vh - 77px);
+    height: 100vh;
 }
 
 svg {
     position: absolute;
     width: 70%;
-    height: calc(100vh - 77px);
+    height: 100vh;
     top: 77;
     right: 0;
 }

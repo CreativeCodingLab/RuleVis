@@ -1,5 +1,5 @@
 // Titles & headers
-let header = d3.select("#header");
+//let header = d3.select("#header");
 
 var expression;
 let hovered = undefined;
@@ -20,11 +20,11 @@ let svgDiv = d3.select('div#svgDiv');
 let menuMapArray = [['inputText', 'inputDiv'], ['export', 'exportDiv'], ['gui', 'guiDiv']];
 let menuMap = new Map(menuMapArray);
 
-let headerH, h, w, sidebarW // Height of header + 15px of margin on top and bottom
+let h, w, sidebarW // Height of header + 15px of margin on top and bottom
 
 // SETUP
 let onWindowResize = () => {
-    headerH = document.getElementById('header').clientHeight;
+    //headerH = 0;
     h = document.getElementById('svgDiv').clientHeight;
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
@@ -96,12 +96,14 @@ var linkSiteIDs = {       // Stores sites for adding link
 let actionHandler = {
     // Move button calls noEdit but is not a true move; if add another site, moves back to original position
     'noEdit': () => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         guiState = 'noEdit';
         clearSVGListeners();
         closeInputs();
         clearOverlay();
     },
     'addAgent': () => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         // If the user *just* clicked on addAgent button, open the input div
         // Else, the div is already open and they are adding another agent
         if (guiState !== 'addAgent') { toggleInput('addAgent'); }
@@ -123,7 +125,7 @@ let actionHandler = {
             let e = d3.event
             overlay.select('circle') 
                     .attr('cx', e.pageX - sidebarW)
-                    .attr('cy', e.pageY - headerH)
+                    .attr('cy', e.pageY)
                     .style('pointer-events', 'none')
                     
         })
@@ -149,6 +151,7 @@ let actionHandler = {
         
     },
     'addSite': () => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         if (guiState !== 'addSite') { toggleInput('addSite'); }
         initializeOverlay();
         guiState = 'addSite';
@@ -166,7 +169,7 @@ let actionHandler = {
         svg.on('mousemove', () => {
             let e = d3.event  
 
-            let res = isHoveringOverEl('agents', (e.pageX - sidebarW), (e.pageY - headerH));
+            let res = isHoveringOverEl('agents', (e.pageX - sidebarW), (e.pageY));
             
             if (res.withinDist) {
                 overlay.select('circle') 
@@ -178,7 +181,7 @@ let actionHandler = {
 
             overlay.select('circle')
                     .attr('cx', e.pageX - sidebarW)
-                    .attr('cy', e.pageY - headerH) 
+                    .attr('cy', e.pageY) 
         })
         svg.on('mouseleave', () => {
             clearOverlay();
@@ -191,7 +194,7 @@ let actionHandler = {
     
             let p = d3.event
             let x = p.pageX - sidebarW;
-            let y = p.pageY - headerH;
+            let y = p.pageY;
             let res = isHoveringOverEl();
 
             // if it is hovering over an agent, the id will be valid
@@ -234,15 +237,17 @@ let actionHandler = {
 
         svg.on('mouseenter', () => {
             overlay.append('line')
-            .style('stroke-width', '2px')
-            .style('opacity', 0.5)
-            .style('pointer-events', 'none');
+                .style('stroke-width', '2px')
+                .style('opacity', 0.5)
+                .style('pointer-events', 'none');
+
+            document.getElementById('svgDiv').style.cursor = 'crosshair';
         })
 
         svg.on('mousemove', () => {
             let e = d3.event;
             let res = isHoveringOverEl();
-            document.getElementById('svgDiv').style.cursor = 'crosshair';
+            
 
             // If they already selected first site, show a line extending from first point to current cursor
             // Color = red if not over valid site
@@ -252,7 +257,7 @@ let actionHandler = {
                             .attr('x1', linkSiteIDs.first.side === 'lhs' ? linkSiteIDs.first.x : linkSiteIDs.first.x + w/2)
                             .attr('y1', linkSiteIDs.first.y)
                             .attr('x2', e.pageX - sidebarW)
-                            .attr('y2', e.pageY - headerH)
+                            .attr('y2', e.pageY)
                             .style('stroke', validLink(res) ? 'gray' : 'red')
                             .style('stroke-width', '5px')
                             .style('opacity', 0.5);
@@ -300,6 +305,7 @@ let actionHandler = {
 
     },
     'deleteItem': (data) => {
+        document.getElementById('svgDiv').style.cursor = 'auto';
         closeInputs();
         initializeOverlay();
         guiState = 'delete';
@@ -372,12 +378,19 @@ function updateTraceGUI() {
                     
                 historyDiv.appendChild(div);
                 option = div;
+            } else {
+                option.classList.add('undo-options');
+                if (option.classList.contains('undo-options-active')) {
+                    option.classList.remove('undo-options-active');
+                }
             }
         
             // console.log(trace[trace.length-i-1]);
             option.innerHTML = trace[trace.length - i - 1];
         } else { break; }
     }
+
+    document.getElementById('trace0').classList.add('undo-options-active');
 }
 
 let hoveredData = undefined,
@@ -822,7 +835,7 @@ let handleMenuClick = function(e) {
         let currOptionDiv = document.getElementById(menuMap.get(currOption.id));
         // If we find the current element, add active class and display associated div
         if (currOption.id === itemID) {
-            currOption.classList.add('active');
+            currOption.classList.add('active'); 
             currOptionDiv.style.display = 'block';
         } else {
             if (currOption.classList.contains('active')) {
@@ -842,3 +855,12 @@ for (let i = 0; i < menuOptions.length; i++) {
         function() { handleMenuClick(menuOptions[i]) } 
     );
 }
+
+// Hotkey functionality
+window.addEventListener('keyup', function (e) { 
+    if (e.key === "Escape") {
+        guiState = 'noEdit';
+        addActiveStyle('noEdit');
+        actionHandler['noEdit']();
+    }
+})
