@@ -52,26 +52,21 @@ window.addEventListener('load', function() {
     updateExpression(res)
 })
 // Reveals an input field if user clicks on a gui editor button
+// TODO: first, style all input elements to be hidden, then reveal appropriate one
 function toggleInput(parentDivID) {
     console.log("parentDivID = " + parentDivID);
 
     let inputID = parentDivID + "Input";
     let inputElement = document.getElementById(inputID);
-    closeInputs();
-    inputElement.style.display = 'block';
-}
 
-// Closes all input tabs
-function closeInputs() {
-    let allInputs = document.getElementsByClassName('gui-input');
-
-    for (var i = 0; i < allInputs.length; i++) {
-        allInputs[i].style.display = 'none';
-        allInputs[i].value = '';
+    if (inputElement.style.display == 'block') {
+        console.log("hide");
+        inputElement.style.display = 'none';
+    } else {
+        inputElement.style.display = 'block';
+        console.log('show');
     }
 }
-
-let trace = [] // record of strings explored this session
 
 var overlay;
 var arrow;
@@ -339,19 +334,8 @@ let actionHandler = {
 
              inputBox.node().value = rule.toString()
              updateExpression(inputBox.node().value)
-
-             actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
         })
     },
-    /* 'editAgent': () => {
-        toggleInput('editAgent');
-    },
-    'editSite': () => {
-        toggleInput('editSite');
-    },
-    'editState': () => {
-        toggleInput('editguiState');
-    }, */
 }
 
 function updateTraceGUI() {
@@ -425,14 +409,13 @@ function isHoveringOverEl() {
     // console.log(response)
     return response;
 }
-
 // Attach an event listener to all GUI buttons
 let guiButtons = document.getElementsByClassName('gui-button');
 
 for (var i = 0; i < guiButtons.length; i++) {
     let parentDivID = guiButtons[i].parentElement.id;
     console.log(parentDivID)
-
+    
     // Don't highlight the history Div
     if (parentDivID !== 'history') {
         guiButtons[i].addEventListener('click', () => {
@@ -443,10 +426,37 @@ for (var i = 0; i < guiButtons.length; i++) {
     }
 }
 
+// Action associated w/ Download JSON Button
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(CircularJSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
+});
+
+
 var svg, svgGroups
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
+
     var config = {
         filename: 'kappa_rulevis',
     }
@@ -456,6 +466,7 @@ function downloadSVG() {
 function updateExpression(str) {
     console.log("inside updateExp: str = " + str);
     clearExpressions()
+
     visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 
     trace.push(str)
@@ -499,9 +510,10 @@ function clearExpressions() {
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
 }
-
-function initializeOverlay() {    
+function initializeOverlay() {
     // ASSUME agent placement for now
+
+    // Need this for this function, other handlers are action-specific in functions
     overlay = svg.append('g')
                 .attr('id', 'overlay');
 }
@@ -547,15 +559,6 @@ function clearOverlay() {
     overlay.selectAll('circle')
                 .remove()
 
-    overlay.selectAll('line')
-                .remove();
-}
-
-function clearSVGListeners() {
-    svg.on('mousemove', null);
-    svg.on('mouseenter', null);
-    svg.on('mouseleave', null);
-    svg.on('click', null);
 }
 
 // simulation stores
@@ -571,10 +574,11 @@ function visualizeExpression(rule, group) {
   
     nodes = [...rule.agents, ...rule.sites]
     nodes.forEach((d) => {
-        d.label = d.isAgent ? true :
+      d.label = true;
+        /*d.label = d.isAgent ? true :
                      d.lhs && d.rhs &&
                      (d.lhs.name != d.rhs.name || d.lhs.state != d.rhs.state) ?
-                     true : false
+                     true : false*/
     }) // FIXME: don't mutate the KappaRule
 
     links = [...rule.bonds.map(u => u.lhs).filter(u => u),
@@ -695,8 +699,7 @@ function visualizeExpression(rule, group) {
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black")
-                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            // .on("mouseenter", function () { currSide = side[i]; } );
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)
@@ -727,9 +730,13 @@ function visualizeExpression(rule, group) {
         nodeGroup[i].on("click", function(d,i) {
             if (d.label === false) {
                 d.label = true;
+                console.log(d)
                 d3.select(this).selectAll('text').style('opacity', 1);
+
+                //d.lhs.name != d.rhs.name
             } else {
                 d.label = false;
+                console.log(d)
                 d3.select(this).selectAll('text').style('opacity', 0);
             }
         });
@@ -768,7 +775,13 @@ function visualizeExpression(rule, group) {
     initializeArrow();
 
     // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
-    jsonBlob = {...rule, text: inputBox.property('value')}
+    // console.log(inputBox.property('value')); -> this is fine
+    // console.log(rule.agents);
+    // console.log(rule.sites)
+    // agents bonds parents sites
+    jsonBlob = {agents: rule.agents, parents: rule.parents, bonds: rule.bonds, sites: rule.sites, text: inputBox.property('value')};
+    console.log(typeof(jsonBlob));
+    console.log(jsonBlob);
     downloadButton.on('click', function() {
       downloadJSON(jsonBlob);
     })
@@ -793,22 +806,12 @@ function addActiveStyle(divID) {
         prevActive[i].classList.remove('gui-button-div-active');
     }
 
-    // Once all active classes are remove, re-add the active class to the divID 
+    // Once all active classes are remove, re-add the active class to the divID
     document.getElementById(divID).classList.add('gui-button-div-active');
     document.getElementById(divID + "Button").classList.add('gui-button-div-active');
     // if (document.getElementById(divID + "Button")) {
         
     // }
-}
-
-// Action associated w/ Download JSON Button
-function downloadJSON(data) {
-
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-  var dlAnchorElem = document.getElementById('downloadAnchorElem');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "expression.json");
-  dlAnchorElem.click();
 }
 
 var uploadBox = exportDiv.append('textarea')

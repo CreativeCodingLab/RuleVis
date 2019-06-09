@@ -8,6 +8,7 @@
       <script type="text/javascript" src="earley-oop.js"></script>
       <script type="text/javascript" src="cola.min.js"></script>
       <script type="text/javascript" src="d3-save-svg.min.js"></script>
+      <script type="text/javascript" src="circular-json.js"></script>
     </head>
 
     <body>
@@ -23,8 +24,8 @@
             <button id="gui" class="menuOption active">GUI Editor</button>
             <button id="inputText" class="menuOption">Text Input</button>
             <button id="export" class="menuOption">Export</button>
-          </div>  
-          
+          </div>
+
           <div id="inputDiv">
             <textarea id="inputBox" rows="30" cols="90" name="expression" placeholder="Begin typing an expression to visualize it."></textarea>
           </div>
@@ -32,12 +33,13 @@
           <div id="exportDiv">
             <button id="download" onclick="downloadSVG()">Export SVG</button>
             <button id="downloadJSON" onclick="downloadJSON()">Download JSON</button>
-          </div> 
-          
+          </div>
+
 
           <div id="guiDiv">
 
             <!--Div ids are named for that functionality
+<<<<<<< HEAD
                 Append "Button" or "Input" to the div id to access the button and input associated w/ that fuctionality, respectively.-->
             <div class="gui-button-div gui-button-div-active" id="noEdit">
               <button id="noEditButton" class="gui-button">
@@ -45,6 +47,10 @@
                   Move
               </button>
             </div>
+=======
+                Append "Button" or "Input" to the div id to access the button and input
+                  associated w/ that fuctionality, respectively.-->
+>>>>>>> mahika
             <div class="gui-button-div" id="addAgent">
               <button id="addAgentButton" class="gui-button">
                 <img class="icon" src="./icons/agent.svg">
@@ -54,11 +60,16 @@
             </div>
 
             <div class="gui-button-div" id="addSite">
+<<<<<<< HEAD
               <button id="addSiteButton" class="gui-button">
                   <img class="icon" src="./icons/site.svg">
                   Add Site
               </button>
               <input class="gui-input" type=text id="addSiteInput" placeholder="Site X">
+=======
+              <button id="addSiteButton" class="gui-button">Add Site</button>
+              <input class="gui-input" type=text id="addSiteInput">
+>>>>>>> mahika
             </div>
 
             <div class="gui-button-div" id="addLink">
@@ -67,7 +78,7 @@
                   Add Link</button>
             </div>
 
-            <!-- <div class="gui-button-div" id="editAgent">
+            <div class="gui-button-div" id="editAgent">
               <button id="editAgentButton" class="gui-button">Edit Agent</button>
               <input class="gui-input" type=text id="editAgentInput">
             </div>
@@ -80,7 +91,7 @@
             <div class="gui-button-div" id="editState">
               <button id="editStateButton" class="gui-button">Edit Internal State</button>
               <input class="gui-input" type=text id="editStateInput">
-            </div> -->
+            </div>
 
             <div class="gui-button-div" id="deleteItem">
               <button id="deleteItemButton" class="gui-button">

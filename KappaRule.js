@@ -89,6 +89,7 @@ function KappaRule(lhs, rhs) {
                                 'sibCount': this.agents[u.id[0]].siteCount,
                                 }))
 
+    
     // treat bonds (site-site links)
     this.bonds = e[0].bonds
                 .map((u,k) => [u,k]) // enumerate
@@ -186,8 +187,7 @@ function KappaRule(lhs, rhs) {
 KappaRule.prototype = { // n.b. arrow notation on helper functions would discard 'this' context
     getIndex: function(siteId) {
         // helper function to create links  
-        if (siteId === undefined)
-            throw new Error("expression merger cannot look up a site without its index")
+        if (!siteId) throw new Error("expression merger cannot look up a site without its index")
     
         let [a,b] = siteId
         return this.agents.length +
@@ -200,12 +200,12 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         // return `${this.agents[0].lhs.name}(${this.sites[0].lhs.name}[${this.ports.lhs[0]}])`
         let agentStrings = {lhs: [], rhs: []}
         this.agents.forEach((u, i) => {
-            let children = this.sites.filter(v => v.id[0] == u.id) 
+            let children = this.sites.filter(v => v.id[0] == i) 
             
             let bake = (w) => {
                 let siteStrings = []
                 children.forEach(v => {
-                    let res = v[w] && v[w].name ? v[w].name : '.'
+                    let res = v[w] ? v[w].name : '.'
                     if (v[w] && v[w].port) {
                         if (v[w].port.length == 0)
                             res += `[.]`
@@ -219,6 +219,7 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
                     if (v[w] && v[w].state) res += `{${v[w].state}}`
                     if (res !== '.') siteStrings.push(res)
                 })
+                console.log(siteStrings)
                 // if (siteStrings.length == 0) siteStrings = ['.']
 
                 let name = u[w].name || '.'
@@ -339,7 +340,6 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
             // clobber.forEach(idx => this.bonds.splice(idx, 1))
         }
     },
-
     deleteAgent: function (side, id) {
         let index = this.agents.findIndex(u => u.id == id),
             u = this.agents[index]
