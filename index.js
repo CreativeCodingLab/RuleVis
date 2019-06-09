@@ -336,6 +336,8 @@ let actionHandler = {
 
              inputBox.node().value = rule.toString()
              updateExpression(inputBox.node().value)
+
+             actionHandler['deleteItem']();
         })
     },
 }
