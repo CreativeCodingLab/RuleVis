@@ -167,8 +167,9 @@ function KappaRule(lhs, rhs) {
             isAnonymous: true,
         }
         let res = new Site([-1, e[0].virtual.length + j]) // brittle?
-        res.state = port.agent_name ? `of ${v.port.agent_name}` : ''
-        res.name = port.site_name ? v.port.site_name : '.'
+        
+        res.state = port.agent_name ? `of ${port.agent_name}` : ''
+        res.name = port.site_name ? port.site_name : '.'
 
         if (i == -1) {
             this.bonds.push( {'lhs': undefined, 'rhs': link })
