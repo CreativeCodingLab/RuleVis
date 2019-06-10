@@ -111,7 +111,8 @@ textarea {
     padding: 10px;
     height: calc(100vh - 116px);
     box-sizing: border-box;
-    border: 0px solid rgb(189, 189, 189);
+    border: none;
+    border-right: 1px solid rgb(189, 189, 189);
     border-radius: 2px;
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 15px;
@@ -151,7 +152,7 @@ textarea:focus {
 }
 
 .gui-button:hover {
-    background-color: #D8DEE1;
+    background-color: #E7EAEC;
 }
 
 .gui-button-div:not(:last-child) {
@@ -168,13 +169,17 @@ div.gui-button-div > input[type=text] {
     width: calc(100% - 60px);
     display: none;
     margin: 15px 20px;
+    background-color: #E7EAEC;
+    border: none;
+    border-bottom: 1px solid #888888;
+    font-size: 13px;
 }
 
 div.gui-button-div > input[type=text]:focus {
     outline: none;
 }
 
-div.gui-button-div > select {
+/* div.gui-button-div > select {
     width: 100%;
     border: none;
 }
@@ -192,10 +197,10 @@ div.gui-button-div > select option {
 div.gui-button-div > select option:hover {
     cursor: pointer;
     background-color: #D8DEE1;
-}
+} */
 
 .gui-button-div-active {
-    background-color: #D8DEE1;
+    background-color: #E7EAEC;
 }
 
 .icon {

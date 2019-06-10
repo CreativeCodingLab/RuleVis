@@ -3,15 +3,17 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 50 50" style="enable-background:new 0 0 50 50;" xml:space="preserve">
 <style type="text/css">
-	.st0{fill:#939598;}
-	.st1{fill:#6D6E71;stroke:#808285;stroke-width:3;stroke-linecap:round;stroke-miterlimit:10;}
+	.st0{fill:#454545;}
+	.st1{fill:#6E6E6E;stroke:#454545;stroke-width:3;stroke-linecap:round;stroke-miterlimit:10;}
 	.st2{fill:none;stroke:#BCBEC0;stroke-width:2;stroke-linecap:round;stroke-miterlimit:10;}
 </style>
-<path class="st0" d="M34.87,48.57l-19.54,0c-1.5,0-2.76-1.14-2.92-2.64L9.06,12.76c-0.17-1.73,1.18-3.23,2.92-3.23h26.06
-	c1.73,0,3.08,1.49,2.92,3.21l-3.17,33.17C37.65,47.42,36.38,48.57,34.87,48.57z"/>
-<path class="st0" d="M18.24,6.48V1.96c0-1.01,1.02-1.82,2.28-1.82h8.95c1.26,0,2.28,0.82,2.28,1.82v4.65L18.24,6.48z"/>
-<line class="st1" x1="9.05" y1="7.06" x2="40.97" y2="7.06"/>
-<line class="st2" x1="17.43" y1="19" x2="19.36" y2="41.65"/>
-<line class="st2" x1="32.72" y1="19" x2="30.79" y2="41.65"/>
-<line class="st2" x1="25" y1="18.29" x2="25" y2="41.65"/>
+<path class="st0" d="M34.9,48.6H15.3c-1.5,0-2.8-1.1-2.9-2.6L9.1,12.8C8.9,11,10.2,9.5,12,9.5H38c1.7,0,3.1,1.5,2.9,3.2l-3.2,33.2
+	C37.7,47.4,36.4,48.6,34.9,48.6z"/>
+<path class="st0" d="M18.2,6.5V2c0-1,1-1.8,2.3-1.8h9c1.3,0,2.3,0.8,2.3,1.8v4.7L18.2,6.5z"/>
+<line class="st1" x1="9.1" y1="7.1" x2="41" y2="7.1"/>
+<g>
+	<line class="st2" x1="17.4" y1="19" x2="19.4" y2="41.7"/>
+	<line class="st2" x1="32.7" y1="19" x2="30.8" y2="41.7"/>
+	<line class="st2" x1="25" y1="18.3" x2="25" y2="41.7"/>
+</g>
 </svg>

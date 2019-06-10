@@ -3,17 +3,16 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 50 50" style="enable-background:new 0 0 50 50;" xml:space="preserve">
 <style type="text/css">
-	.st0{fill:#939598;}
+	.st0{fill:#454545;}
 </style>
 <g>
-	<rect x="19.84" y="9.37" class="st0" width="10.32" height="31.26"/>
-	<polygon class="st0" points="24.9,0 13.63,9.49 36.37,9.49 	"/>
-	<polygon class="st0" points="24.9,50 13.63,40.51 36.37,40.51 	"/>
+	<rect x="19.8" y="9.4" class="st0" width="10.3" height="31.3"/>
+	<polygon class="st0" points="24.9,0 13.6,9.5 36.4,9.5 	"/>
+	<polygon class="st0" points="24.9,50 13.6,40.5 36.4,40.5 	"/>
 </g>
 <g>
-	
-		<rect x="19.84" y="9.37" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 50 -9.059420e-13)" class="st0" width="10.32" height="31.26"/>
-	<polygon class="st0" points="50,24.9 40.51,13.63 40.51,36.37 	"/>
-	<polygon class="st0" points="0,24.9 9.49,13.63 9.49,36.37 	"/>
+	<rect x="9.4" y="19.8" class="st0" width="31.3" height="10.3"/>
+	<polygon class="st0" points="50,24.9 40.5,13.6 40.5,36.4 	"/>
+	<polygon class="st0" points="0,24.9 9.5,13.6 9.5,36.4 	"/>
 </g>
 </svg>

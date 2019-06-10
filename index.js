@@ -57,6 +57,8 @@ function toggleInput(parentDivID) {
     let inputElement = document.getElementById(inputID);
     closeInputs();
     inputElement.style.display = 'block';
+    inputElement.focus();
+
 }
 
 // Closes all input tabs
@@ -517,7 +519,7 @@ function updateArrow() {
                 .attr('y1', h/2)
                 .attr('x2', w/2 + 30)
                 .attr('y2', h/2)
-                .style('stroke', '#eeeeee')
+                .style('stroke', '#dddddd')
                 .style('stroke-width', '5px')
                 .style('stroke-linecap', 'round');
 
@@ -526,7 +528,7 @@ function updateArrow() {
                 .attr('y1', h/2 - 10)
                 .attr('x2', w/2 + 30)
                 .attr('y2', h/2)
-                .style('stroke', '#eeeeee')
+                .style('stroke', '#dddddd')
                 .style('stroke-width', '5px')
                 .style('stroke-linecap', 'round');
     let arrowHeadBottom = arrow.append('line')
@@ -534,7 +536,7 @@ function updateArrow() {
                 .attr('y1', h/2 + 10)
                 .attr('x2', w/2 + 30)
                 .attr('y2', h/2)
-                .style('stroke', '#eeeeee')
+                .style('stroke', '#dddddd')
                 .style('stroke-width', '5px')
                 .style('stroke-linecap', 'round');
 }
@@ -831,6 +833,10 @@ let handleMenuClick = function(e) {
         // If switching to a non-GUI tab, remove SVG mouse interactions and overlay
         if (currOption.id !== 'gui') {
             actionHandler['noEdit']();
+        }
+
+        if (currOption.id === 'inputText') {
+            document.getElementById('inputBox').focus();
         }
     }
 }
