@@ -29,8 +29,10 @@ let onWindowResize = () => {
     w = document.getElementById('svgDiv').clientWidth;
     sidebarW = document.getElementById('sidebar').clientWidth;
     if (svg) {
-        
         updateArrow();
+
+        clearExpressions()
+        visualizeExpression(rule, svgGroups)
     }
 }
 window.addEventListener('resize', onWindowResize, false)
@@ -71,8 +73,6 @@ function closeInputs() {
     }
 }
 
-let trace = [] // record of strings explored this session
-
 var overlay;
 var arrow;
 var guiState = 'noEdit';
@@ -98,7 +98,6 @@ let actionHandler = {
     'noEdit': () => {
         document.getElementById('svgDiv').style.cursor = 'auto';
         guiState = 'noEdit';
-        clearSVGListeners();
         closeInputs();
         clearOverlay();
     },
@@ -116,7 +115,7 @@ let actionHandler = {
                     .attr('r', 27)
                     .style('fill', 'none')
                     .style('stroke', 'black')
-                    .style('fill', coloragent)
+                    .style('fill', paletteagent[0])
                     .style('opacity', 0.5)
                     .style('stroke-dasharray', '8 4')
                     .style('pointer-events', 'none')
@@ -145,7 +144,7 @@ let actionHandler = {
             inputBox.node().value = rule.toString()
             updateExpression(inputBox.node().value)
     
-            actionHandler['addAgent']();
+            actionHandler['addAgent'](); // FIXME: odd place to rebind the modal callbacks
     
         })
         
@@ -197,9 +196,10 @@ let actionHandler = {
             let y = p.pageY;
             let res = isHoveringOverEl();
 
-            // check if it is hovering over an agent
-            if (res.withinDist && res.closestEl.elID !== null) {
-                rule.addSite(res.closestEl.elID, inputValue, x, y)
+            // if it is hovering over an agent, the id will be valid
+            if (res.withinDist) {
+                console.log(res.closestEl.id)
+                rule.addSite(res.closestEl.id, inputValue, x, y)
             }
         
             inputBox.node().value = rule.toString()
@@ -215,17 +215,18 @@ let actionHandler = {
 
         let validLink = function(res) {
             if (res.withinDist) {
+                console.log(linkSiteIDs)
+
                 // Makes sure it's on the same side
                 if (linkSiteIDs.first.side === res.closestEl.side) {
                     // Makes sure the agents are distinct
-                    if (linkSiteIDs.first.id[0] !== res.closestEl.elID[0]) {
+                    if (linkSiteIDs.first.id[0] !== res.closestEl.id[0]) {
                         // Ensures adding to a site
                         if (res.closestEl.type === 'site') {
                             let v = hoveredData[hoveredSide].port;
                             if (!v || v.length === 0) {
                                 return true;
                             }
-                            
                         }
                     }
                 }
@@ -273,21 +274,17 @@ let actionHandler = {
 
             if (linkClicks < 2) {
                 let res = isHoveringOverEl();
+                console.log(res)
 
                 if (res.closestEl.type === 'site') {
                     let v = hoveredData[hoveredSide].port;
+
                     if (linkClicks === 0 && (!v || v.length === 0)) {
-                        linkSiteIDs.first.id = res.closestEl.elID;
-                        linkSiteIDs.first.x = res.closestEl.x;
-                        linkSiteIDs.first.y = res.closestEl.y;
-                        linkSiteIDs.first.side = res.closestEl.side;
+                        linkSiteIDs.first = {...res.closestEl}
                         linkClicks++;
                     } 
                     else if (linkClicks === 1 && validLink(res)) {
-                        linkSiteIDs.second.id = res.closestEl.elID;
-                        linkSiteIDs.second.x = res.closestEl.x;
-                        linkSiteIDs.second.y = res.closestEl.y;
-                        linkSiteIDs.second.side = res.closestEl.side;
+                        linkSiteIDs.second = {...res.closestEl}
 
                         // Add a bond to the rule
                         rule.addBond(linkSiteIDs.first.id, linkSiteIDs.second.id);
@@ -322,34 +319,29 @@ let actionHandler = {
 
         svg.on('click', () => {
              let res = isHoveringOverEl();
+             console.log('deleting item:')
+             console.log(res)
+
              if (res.withinDist) {
+                let v = res.closestEl
                 // Call appropriate backend function whether it's a link or node 
-                if (hovered[0] === 'link') {
-                    rule.deleteBond(hovered[2], hovered[1].id)  // Line above passes side to function 
+                if (v.type == 'link') {
+                    rule.deleteBond(v.side, v.id)  // Line above passes side to function 
                     
-                } else if (hovered[0] === 'agent') {
-                    rule.deleteAgent(hovered[2], hovered[1].id)
+                } else if (v.type == 'agent') {
+                    rule.deleteAgent(v.side, v.id)
                 }
-                else {
-                    rule.deleteSite(hovered[1].id)
+                else if (v.type == 'site') {
+                    rule.deleteSite(v.id)
                 }
              }
 
              inputBox.node().value = rule.toString()
              updateExpression(inputBox.node().value)
 
-             actionHandler['deleteItem'](); // VERIFY: what's clobbering the actionHandler?
+             actionHandler['deleteItem']();
         })
     },
-    /* 'editAgent': () => {
-        toggleInput('editAgent');
-    },
-    'editSite': () => {
-        toggleInput('editSite');
-    },
-    'editState': () => {
-        toggleInput('editguiState');
-    }, */
 }
 
 function updateTraceGUI() {
@@ -383,7 +375,7 @@ function updateTraceGUI() {
                 }
             }
         
-            console.log(trace[trace.length-i-1]);
+            // console.log(trace[trace.length-i-1]);
             option.innerHTML = trace[trace.length - i - 1];
         } else { break; }
     }
@@ -403,7 +395,7 @@ function isHoveringOverEl() {
         withinDist: false,
         closestEl: {
             type: '',
-            elID: null,
+            id: -1,
             //distToPointer: Number.MAX_SAFE_INTEGER,
             x: 0,
             y: 0,
@@ -414,23 +406,22 @@ function isHoveringOverEl() {
     response.withinDist = Boolean(hovered)
     if (hovered) {
         response.closestEl.type = hovered[0];
-        response.closestEl.elID = hovered[1].id;
+        response.closestEl.id = hovered[1].id;
+
         response.closestEl.x = hovered[1].x;
         response.closestEl.y = hovered[1].y;
         response.closestEl.side = hovered[2];
-        
     }
     // console.log(response)
     return response;
 }
-
 // Attach an event listener to all GUI buttons
 let guiButtons = document.getElementsByClassName('gui-button');
 
 for (var i = 0; i < guiButtons.length; i++) {
     let parentDivID = guiButtons[i].parentElement.id;
     console.log(parentDivID)
-
+    
     // Don't highlight the history Div
     if (parentDivID !== 'history') {
         guiButtons[i].addEventListener('click', () => {
@@ -441,10 +432,37 @@ for (var i = 0; i < guiButtons.length; i++) {
     }
 }
 
+// Action associated w/ Download JSON Button
+function downloadJSON(data) {
+
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(CircularJSON.stringify(data));
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "expression.json");
+  dlAnchorElem.click();
+}
+
+var uploadBox = exportDiv.append('textarea')
+                          .attr('id', 'uploadJSON')
+                          .attr('placeholder', 'Paste JSON');
+
+uploadBox.on('input', function() {
+
+  data = JSON.parse(uploadBox.property('value'));
+  console.log(data);
+  clearExpressions();
+  visualizeFromJSON(data,
+           [svg.append('g').attr('transform', `translate(0,0)`),
+            svg.append('g').attr('transform', `translate(${w/2},0)`)])
+
+});
+
+
 var svg, svgGroups
 
 // Action associated w/ Export SVG button
 function downloadSVG() {
+
     var config = {
         filename: 'kappa_rulevis',
     }
@@ -454,6 +472,7 @@ function downloadSVG() {
 function updateExpression(str) {
     console.log("inside updateExp: str = " + str);
     clearExpressions()
+
     visualizeExpression(rule, svgGroups) // TODO: ignore malformed expression on either side of rule
 
     trace.push(str)
@@ -492,14 +511,15 @@ function clearExpressions() {
 
     initializeOverlay() // depends on svg
 
-    console.log('w: ' + w) 
+    // console.log('w: ' + w) 
     svgGroups =
         [svg.append('g').attr('transform', `translate(0,0)`),
             svg.append('g').attr('transform', `translate(${w/2},0)`)]
 }
-
-function initializeOverlay() {    
+function initializeOverlay() {
     // ASSUME agent placement for now
+
+    // Need this for this function, other handlers are action-specific in functions
     overlay = svg.append('g')
                 .attr('id', 'overlay');
 }
@@ -545,22 +565,13 @@ function clearOverlay() {
     overlay.selectAll('circle')
                 .remove()
 
-    overlay.selectAll('line')
-                .remove();
-}
-
-function clearSVGListeners() {
-    svg.on('mousemove', null);
-    svg.on('mouseenter', null);
-    svg.on('mouseleave', null);
-    svg.on('click', null);
 }
 
 // simulation stores
 var nodes, links,
     simulation
 
-var coloragent = '#3eb78a';
+var paletteagent = ['#3eb78a', '#3e9eb7', '#3e64b7', '#403eb7', '#723eb7', '#9c3eb7'];
 var colorsite = '#fcc84e';
 
 function visualizeExpression(rule, group) {
@@ -569,10 +580,11 @@ function visualizeExpression(rule, group) {
   
     nodes = [...rule.agents, ...rule.sites]
     nodes.forEach((d) => {
-        d.label = d.isAgent ? true :
+      d.label = true;
+        /*d.label = d.isAgent ? true :
                      d.lhs && d.rhs &&
                      (d.lhs.name != d.rhs.name || d.lhs.state != d.rhs.state) ?
-                     true : false
+                     true : false*/
     }) // FIXME: don't mutate the KappaRule
 
     links = [...rule.bonds.map(u => u.lhs).filter(u => u),
@@ -584,8 +596,10 @@ function visualizeExpression(rule, group) {
                         ).flat() */
                         // HACK: a poor workaround for webcola failing to lay out disconnected graphs
     let nodesAndBounds = [...nodes,
-        {x: 0, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'left'}},
-        {x: w/2, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'right'}}]
+        {x: 0, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'left_bound'}},
+        {x: w/2, y: h/2, fixed: true, fixedWeight: 1e5, lhs: {name: 'right_bound'}},
+        {x: w/4, y: 0, fixed: true, fixedWeight: 1e5, lhs: {name: 'top_bound'}},
+        {x: w/4, y: h, fixed: true, fixedWeight: 1e5, lhs: {name: 'bot_bound'}}]
 
     simulation = cola
         .d3adaptor(d3)
@@ -596,14 +610,23 @@ function visualizeExpression(rule, group) {
             .avoidOverlaps(true)
             .constraints(d3.range(nodes.length-1).map( i =>
                 [{axis: 'x', type: 'separation', right: i, left: nodes.length, gap: 27},
-                 {axis: 'x', type: 'separation', left: i, right: nodes.length+1, gap: 27}] )
+                 {axis: 'x', type: 'separation', left: i, right: nodes.length+1, gap: 27},
+                 {axis: 'y', type: 'separation', right: i, left: nodes.length+2, gap: 27},
+                 {axis: 'y', type: 'separation', left: i, right: nodes.length+3, gap: 27}] )
                 .flat())
 
     simulation.start(30,30,30); // expand link 'source' and 'target' ids into references
 
     const side = ['lhs', 'rhs'] // cludge (objects cannot have numerical fields)
-    let currSide;
-    let currLink = null;        // Stores index of current link; null if not over it
+    // let currSide;
+    // let currLink = null;        // Stores index of current link; null if not over it
+
+    let colorKey = [...new Set(rule.agents.map(u => u.lhs.name)
+                      .concat(rule.agents.map(u => u.rhs.name)))].filter(s => s)
+
+    let coloragent = (d,i) => d[side[i]] ? paletteagent[
+        colorKey.indexOf(d[side[i]].name) % paletteagent.length
+    ] : '#fff'
 
     // visualization stores
     let link = [], node = [], freeNode = [],
@@ -649,9 +672,9 @@ function visualizeExpression(rule, group) {
 
         node[i] = nodeGroup[i].append('circle')
                             .attr("r", d => d.isAgent ? 27 : 13)
-                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                            .attr("fill", d => d.isAgent ? d[side[i]].name ? coloragent(d,i) : "#fff" :
                                                d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
-                            .attr("stroke", d => d.isAgent ? coloragent : colorsite)
+                            .attr("stroke", d => d.isAgent ? coloragent(d,i) : colorsite)
                             .attr("stroke-width", 3)
                             .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
                             .on("mouseenter", function(d) {
@@ -661,18 +684,21 @@ function visualizeExpression(rule, group) {
                                 hovered = [d.isAgent ? 'agent': 'site', d, side[i]];
                                 d3.select(this).style('fill', d.isAgent ? '#49d3a0' : '#ffdb85');
                                 d3.select(this).style('stroke', d.isAgent ? '#49d3a0' : '#ffdb85');
+                                // TODO: lighten and darken dynamically
                             })
                             .on("mouseleave", function(d) {
                                 hoveredData = undefined;
                                 hoveredSide = '';
                                 hoveredType = '';
                                 hovered = undefined;
-                                d3.select(this).style('fill', d.isAgent ? d[side[i]].name ? coloragent : "#fff" :
+                                d3.select(this).style('fill', d.isAgent ? d[side[i]].name ? coloragent(d,i) : "#fff" :
                                                       d[side[i]] && d[side[i]].port && d[side[i]].port.length == 0 ? colorsite : colorsite)
-                                                      d3.select(this).style('stroke', d.isAgent ? coloragent : colorsite)
+                                                      d3.select(this).style('stroke', d.isAgent ? coloragent(d,i) : colorsite)
                             })
 
         // node annotations
+        let siteNote = (d) => `s${d.id[0]}-${d.id[1]}`
+
         freeNode[i] = root.append("g")
                         .selectAll("circle")
                         .data(nodes)
@@ -681,12 +707,12 @@ function visualizeExpression(rule, group) {
                             .append("circle")
                             .attr("r", 4)
                             .attr("fill", "black")
-                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0)
-                            // .on("mouseenter", function () { currSide = side[i]; } );
+                            .style("opacity", d => d[side[i]] && d[side[i]].name ? 1 : 0);
 
         name[i] = nodeGroup[i].append("text")
                         .text(d => d[side[i]] && d[side[i]].name)
-                        .attr("class", d => d.isAgent ? "agent" : "site")
+                        // .attr("class", d => d.isAgent ? "agent" : "site")
+                        .attr("class", d => d.isAgent ? `a${d.id}` : siteNote(d))
                         .attr("fill", "black")
                         .attr("text-anchor", "middle")
                         .attr("font-size", d => d.isAgent ? 16 : 12)
@@ -694,7 +720,9 @@ function visualizeExpression(rule, group) {
                         .style('opacity', d => d.label ? 1 : 0);
 
         state[i] = nodeGroup[i].append("text")
-                        .text(d => d.state)
+                        // .data(nodes.filter(d => !d.isAgent)) // TODO: is not parallel to 'nodes', suppress state text another way
+                        .text(d => d[side[i]].state)
+                        .attr("class", d => d.isAgent ? `moot` : siteNote(d))
                         .attr("fill", "black")
                         .attr("font-size", 12)
                         .style('opacity', d => d.label ? 1 : 0);
@@ -712,19 +740,23 @@ function visualizeExpression(rule, group) {
         });
         nodeGroup[i].on("click", function(d,i) {
             if (d.label === false) {
-                d.label = true;
-                d3.select(this).selectAll('text').style('opacity', 1);
+                // d.label = true; // TODO: less brittle equivalence check for IDs
+                if (d.isAgent) nodes.filter(u => u.id == d.id).forEach( u => u.label = true )
+                else nodes.filter(v => v.id[0] == d.id[0] && v.id[1] == d.id[1]).forEach( v => v.label = true )
+
+                d3.selectAll(`text.${d.isAgent ? `a${d.id}` : siteNote(d)}`)
+                  .style('opacity', 1);
+
+                //d.lhs.name != d.rhs.name
             } else {
-                d.label = false;
-                d3.select(this).selectAll('text').style('opacity', 0);
+                ///d.label = false;
+                if (d.isAgent) nodes.filter(u => u.id == d.id).forEach( u => u.label = false )
+                else nodes.filter(v => v.id[0] == d.id[0] && v.id[1] == d.id[1]).forEach( v => v.label = false )
+
+                d3.selectAll(`text.${d.isAgent ? `a${d.id}` : siteNote(d)}`)
+                  .style('opacity', 0);
             }
         });
-        link[i].on("click", function (d, i) {
-            if (guiState === 'delete') {
-                console.log(d);
-                //actionHandler['deleteItem'](d);
-            }
-        })
     })
 
     simulation.on("tick", () => {
@@ -754,7 +786,13 @@ function visualizeExpression(rule, group) {
     initializeArrow();
 
     // jsonBlob = {sites: sites, agents: agents, bonds: bonds, text: inputBox.property('value')};
-    jsonBlob = {...rule, text: inputBox.property('value')}
+    // console.log(inputBox.property('value')); -> this is fine
+    // console.log(rule.agents);
+    // console.log(rule.sites)
+    // agents bonds parents sites
+    jsonBlob = {agents: rule.agents, parents: rule.parents, bonds: rule.bonds, sites: rule.sites, text: inputBox.property('value')};
+    console.log(typeof(jsonBlob));
+    console.log(jsonBlob);
     downloadButton.on('click', function() {
       downloadJSON(jsonBlob);
     })
@@ -779,22 +817,12 @@ function addActiveStyle(divID) {
         prevActive[i].classList.remove('gui-button-div-active');
     }
 
-    // Once all active classes are remove, re-add the active class to the divID 
+    // Once all active classes are remove, re-add the active class to the divID
     document.getElementById(divID).classList.add('gui-button-div-active');
     document.getElementById(divID + "Button").classList.add('gui-button-div-active');
     // if (document.getElementById(divID + "Button")) {
         
     // }
-}
-
-// Action associated w/ Download JSON Button
-function downloadJSON(data) {
-
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-  var dlAnchorElem = document.getElementById('downloadAnchorElem');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "expression.json");
-  dlAnchorElem.click();
 }
 
 var uploadBox = exportDiv.append('textarea')
