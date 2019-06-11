@@ -31,8 +31,10 @@ let onWindowResize = () => {
     if (svg) {
         updateArrow();
 
-        clearExpressions()
-        visualizeExpression(rule, svgGroups)
+        clearExpressions();
+        visualizeExpression(rule, svgGroups);
+        addActiveStyle('noEdit');
+//        actionHandler['noEdit']();
     }
 }
 window.addEventListener('resize', onWindowResize, false)
@@ -565,6 +567,9 @@ function clearOverlay() {
     overlay.selectAll('circle')
                 .remove()
 
+    overlay.selectAll('line')
+                .remove()
+
 }
 
 // simulation stores
@@ -572,6 +577,7 @@ var nodes, links,
     simulation
 
 var paletteagent = ['#3eb78a', '#3e9eb7', '#3e64b7', '#403eb7', '#723eb7', '#9c3eb7'];
+//var paletteagenthover = ['#6EC9A7', ]
 var colorsite = '#fcc84e';
 
 function visualizeExpression(rule, group) {

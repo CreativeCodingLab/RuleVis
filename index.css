@@ -112,11 +112,9 @@ textarea {
     height: calc(100vh - 116px);
     box-sizing: border-box;
     border: none;
-    border-right: 1px solid rgb(189, 189, 189);
-    border-radius: 2px;
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 15px;
-    background-color: white;
+    background-color: #F5F7F9;
     letter-spacing: 1.3px;
     line-height: 1.5;
 }
