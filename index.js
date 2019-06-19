@@ -378,7 +378,9 @@ function updateTraceGUI() {
         } else { break; }
     }
 
-    document.getElementById('trace0').classList.add('undo-options-active');
+    if (document.getElementById('trace0')) {
+        document.getElementById('trace0').classList.add('undo-options-active');
+    }
 }
 
 let hoveredData = undefined,
