@@ -102,6 +102,7 @@ let actionHandler = {
         guiState = 'noEdit';
         closeInputs();
         clearOverlay();
+
     },
     'addAgent': () => {
         document.getElementById('svgDiv').style.cursor = 'auto';
@@ -382,7 +383,9 @@ function updateTraceGUI() {
         } else { break; }
     }
 
-    document.getElementById('trace0').classList.add('undo-options-active');
+    if (document.getElementById('trace0')) {
+        document.getElementById('trace0').classList.add('undo-options-active');
+    }
 }
 
 let hoveredData = undefined,
@@ -429,6 +432,7 @@ for (var i = 0; i < guiButtons.length; i++) {
         guiButtons[i].addEventListener('click', () => {
             clearOverlay();
             addActiveStyle(parentDivID);
+            console.log('parentDivId = ' + parentDivID);
             actionHandler[parentDivID]();
         });
     }
@@ -565,10 +569,10 @@ function updateArrow() {
 
 function clearOverlay() {
     overlay.selectAll('circle')
-                .remove()
+                .remove();
 
     overlay.selectAll('line')
-                .remove()
+                .remove();
 
 }
 
