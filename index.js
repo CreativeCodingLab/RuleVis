@@ -45,7 +45,7 @@ window.addEventListener('load', function() {
     trace = trace ? trace.split(';') : []
 
     let res = trace.slice(-1)[0]
-    if (!res) res = ''
+    if (!res) res = 'A(x,c[.]),C(x1{u}[.]) ->A(x,c[2]),C(x1{u}[2])'
     rule = new KappaRule(...res.split('->'))
 
     inputBox.node().value = rule.toString()
