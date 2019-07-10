@@ -96,6 +96,9 @@ let actionHandler = {
     'noEdit': () => {
         document.getElementById('svgDiv').style.cursor = 'auto';
         guiState = 'noEdit';
+
+        // explicitly remove stale listeners (as clearExpressions(), which resets the svg, is not called.)
+        ['mouseenter', 'mousemove', 'mouseleave', 'click'].forEach((s) => svg.on(s, null))
         closeInputs();
         clearOverlay();
     },
