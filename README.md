@@ -12,10 +12,10 @@ Above we see a screenshot of the *RuleVis* interface, depicting a user in the pr
 
 ## Authors & Contact Information
 
-David Abramov, Jasmine Otto, Mahika Dubey, Cassia Artanegara, Angus Forbes
-Department of Computational Media, University of California Santa Cruz
-{dabramov, jtotto, mahika, cartaneg, angus}@ucsc.edu
+David Abramov, Jasmine Otto, Mahika Dubey, Cassia Artanegara, Angus Forbes   
+Department of Computational Media, University of California Santa Cruz   
+{dabramov, jtotto, mahika, cartaneg, angus}@ucsc.edu   
 
-Pierre Boutillier, Walter Fontana
-Department of Systems Biology, Harvard Medical School
-{pierre_boutillier, walter_fontana}@hms.harvard.edu
+Pierre Boutillier, Walter Fontana    
+Department of Systems Biology, Harvard Medical School     
+{pierre_boutillier, walter_fontana}@hms.harvard.edu    
