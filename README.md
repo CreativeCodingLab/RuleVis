@@ -1,25 +1,21 @@
-# RuleVis
+# RuleVis: Constructing Patterns and Rules for Rule-based Models
 
-## Generating Expressive Visual Representations of Biochemical Patterns
+We introduce *RuleVis*, a web-based application for defining and editing "correct-by-construction" executable rules that model biochemical functionality, and which can be used to simulate the behavior of protein-protein interaction networks and other complex systems. Our application bridges the graph rewriting and systems biology research communities by providing an external visual representation of salient patterns that experts can use to determine the appropriate level of detail in a particular modeling context. 
 
-This project is an implementation of dynamically generated pattern site graphs in the context of modeling biological rules, such as molecular and protein interactions. This tool uses the same syntax from the [Kappa Language](https://kappalanguage.org/), a rule-based language for modeling interacting networks, as shown below in the example from the [Kappa Language Documentation](https://kappalanguage.org/documentation).
+This project is a collaboration between the UCSC Creative Coding Lab and the Walter Fontana Group at Harvard Medical School. Our short paper has been submitted for review to IEEE VIS 2019. The tool uses the same syntax from the [Kappa Language](https://kappalanguage.org/), a rule-based language for modeling interacting networks. The application is available online [here](https://creativecodinglab.github.io/RuleVis/).
 
-![Example](https://github.com/CreativeCodingLab/RuleVis/blob/master/pattern.png)
+![](media/teaser_rulevis.png)
 
-[Run in browser](https://creativecodinglab.github.io/RuleVis/)
+Above we see a screenshot of the *RuleVis* interface, depicting a user in the process of building a rule, consisting of two patterns representing the 'before' and 'after' states of the system (separated by an arrow). The editor panel (left) enables users to manually add, name, and delete agents, sites, and links to the visualization in the display panel (right). A user can also directly modify the text representation of the rule (the text string and visualization are mirrored, such that changes made to one are immediately reflected in the other).
 
-## API
+*RuleVis* is a lightweight web application written in Javascript that runs in any browser. [D3.js](https://d3js.org/) handles interaction with the dynamic SVG canvas while the [Cola.js library](https://ialab.it.monash.edu/webcola/) is used to for the constraint-based layout of our visualization. We used [Yurii Lahodiuk's implementation](https://github.com/lagodiuk/earley-parser-js) of an Earley parser in Javascript to implement the  context-free grammar (CFG) specified by Kappa documentation. 
 
-### KappaRule
+## Authors & Contact Information
 
-KappaRule (lhs, rhs=undefined): **constructor**
+David Abramov, Jasmine Otto, Mahika Dubey, Cassia Artanegara, Angus Forbes   
+Department of Computational Media, University of California Santa Cruz   
+{dabramov, jtotto, mahika, cartaneg, angus}@ucsc.edu   
 
-
-lhs and (optional) rhs are strings each representing a valid Kappa expression.
-
-**TODO:** Or, lhs (and rhs) are objects each representing a RuleVis expression.
-
-#### TODO:
-KappaRule.addAgent(name, symmetry=BOTH): Adds an agent to the lhs.
-
-etcetera
+Pierre Boutillier, Walter Fontana    
+Department of Systems Biology, Harvard Medical School     
+{pierre_boutillier, walter_fontana}@hms.harvard.edu    
