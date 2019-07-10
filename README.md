@@ -7,7 +7,7 @@ We introduce RuleVis, a web-based application for defining and editing "correct-
 
 This project is a collaboration between the UCSC Creative Coding Lab and the Walter Fontana Group at Harvard Medical School. Our short paper has been submitted for review to IEEE VIS 2019. The tool uses the same syntax from the [Kappa Language](https://kappalanguage.org/), a rule-based language for modeling interacting networks. The application is available online with this link: [Run in browser](https://creativecodinglab.github.io/RuleVis/)
 
-![Example](https://github.com/CreativeCodingLab/RuleVis/media/teaser_rulevis.png)
+![](media/teaser_rulevis.png)
 
 
 ## API
