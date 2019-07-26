@@ -16,7 +16,9 @@ const regex = {
     'digits': /^\d+$/g,
     'identifier': /^_?[A-Za-z]+[A-Za-z\d_~\-+]*$/g,
     // todo: labels
-    'token': /(\d+|_?[A-Za-z]+[A-Za-z\d_~\-+]*|[\[\]\(\)\{\}\/#,])/g
+    'token': /(\d+|_?[A-Za-z]+[A-Za-z\d_~\-+]*|[\[\]\(\)\{\}\/#,])/g,
+    'outerCommas': /,\s*(?![^()]*\))/g
+    // all commas outside (): https://stackoverflow.com/a/26634150
 }
 pattern.terminalSymbols = (token) => {
     // console.log(token)
@@ -243,52 +245,17 @@ KappaRule.prototype = { // n.b. arrow notation on helper functions would discard
         lhs = `${lhs},${name}`
         rhs = `${lhs},${name}`
         this.parse(lhs, rhs)
-
-        /* let u = new Agent(this.agents.length)
-        u.name = name
-        u.siteCount = 0
-        this.agents.push(
-            {id: u.id, // label: true,
-             lhs: u, rhs: {...u}, // addition to both sides of rule
-             isAgent: true,
-             siteCount: u.siteCount,
-             x: x, y: y // FIXME
-        })*/
     },
     addSite: function (parent, name){ //, x=0, y=0) {
-        // TODO: capture commas outside parentheses
-        let res = this.rule.map(s => s.split(/(?x),(?=(?:[^\(\)]*\([^\(\)]*\))*[^\(\)]*$)/g))
+        let res = this.rule.map(s => s.split(regex.outerCommas))
         res.forEach((side) => {
-            let signature = side[parent].split(',')
-            signature.push(name)
+            let signature = side[parent].slice(0, -1).split(',')
+            signature.push(name + ')')
             side[parent] = signature.join(',')
+
+            console.log(side[parent])
         })
-        this.parse(...res.map(side => side.join(')')))
-
-        /* // TODO: take reference itself as argument?
-        let idx = this.agents.findIndex(u => u.id == parent),
-            u = this.agents[idx]
-        if (u) {
-            let v = new Site(parent, u.siteCount)
-            v.name = name
-
-            this.sites.push(
-                {id: v.id,
-                lhs: u.lhs.name ? v : undefined,
-                rhs: u.rhs.name ? {...v} : undefined,
-                x: x, y: y
-                })
-            u.siteCount += 1
-
-            this.parents.push(
-                {'source': idx, // u.id,
-                'target': this.getIndex(v.id),
-                'isParent': true,
-                'sibCount': u.siteCount
-            })
-            this.parents.filter(w => w.source == u.id)
-                        .forEach(w => w.sibCount += 1)
-        } */
+        this.parse(...res.map(side => side.join(',')))
     },
     addBond: function (srcId, tarId) {
         let a = srcId,
