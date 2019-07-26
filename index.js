@@ -53,7 +53,7 @@ window.addEventListener('load', function() {
 })
 // Reveals an input field if user clicks on a gui editor button
 function toggleInput(parentDivID) {
-    console.log("parentDivID = " + parentDivID);
+    // console.log("parentDivID = " + parentDivID);
 
     let inputID = parentDivID + "Input";
     let inputElement = document.getElementById(inputID);
@@ -423,12 +423,13 @@ let guiButtons = document.getElementsByClassName('gui-button');
 
 for (var i = 0; i < guiButtons.length; i++) {
     let parentDivID = guiButtons[i].parentElement.id;
-    console.log(parentDivID)
+    // console.log(parentDivID)
     
     // Don't highlight the history Div
     if (parentDivID !== 'history') {
         guiButtons[i].addEventListener('click', () => {
             clearOverlay();
+
             addActiveStyle(parentDivID);
             actionHandler[parentDivID]();
         });
@@ -567,7 +568,6 @@ function updateArrow() {
 function clearOverlay() {
     overlay.selectAll('circle')
                 .remove()
-
 }
 
 // simulation stores
